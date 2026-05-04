@@ -1,0 +1,253 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--vsc-bg, #1e1e1e);
+  color: var(--vsc-text, #d4d4d4);
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  font-size: 13px;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #424242; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* Selection */
+::selection { background: #264f78; }
+
+/* Syntax tokens */
+.token-keyword  { color: #569cd6; }
+.token-string   { color: #ce9178; }
+.token-number   { color: #b5cea8; }
+.token-fn       { color: #dcdcaa; }
+.token-type     { color: #4ec9b0; }
+.token-comment  { color: #6a9955; font-style: italic; }
+.token-operator { color: #d4d4d4; }
+.token-prop     { color: #9cdcfe; }
+.token-punc     { color: #d4d4d4; }
+.token-bool     { color: #569cd6; }
+.token-var      { color: #9cdcfe; }
+
+/* Line numbers */
+.line-numbers {
+  user-select: none;
+  text-align: right;
+  color: #5a5a5a;
+  font-size: 13px;
+  line-height: 1.6;
+  padding-right: 12px;
+  min-width: 48px;
+}
+
+/* Typing cursor blink */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+  color: #569cd6;
+  font-weight: 300;
+}
+
+/* Fade in panels */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.panel-fade-in {
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Command palette backdrop */
+.palette-backdrop {
+  backdrop-filter: blur(2px);
+}
+
+/* Scrollable panel content */
+.panel-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Code block lines */
+.code-line {
+  display: flex;
+  align-items: baseline;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  padding: 0 24px 0 0;
+}
+
+/* Resizable AI panel */
+.ai-panel-resize {
+  cursor: row-resize;
+  height: 4px;
+  background: transparent;
+}
+.ai-panel-resize:hover {
+  background: #007acc;
+}
+
+/* Chat bubbles */
+.chat-user   { background: #264f78; align-self: flex-end; }
+.chat-assist { background: #2d2d2d; align-self: flex-start; border: 1px solid #454545; }
+
+/* Skill pill */
+.skill-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  border: 1px solid #454545;
+  background: #2d2d2d;
+  color: #d4d4d4;
+  margin: 3px;
+}
+
+/* ===== Theme CSS Variables ===== */
+:root {
+  --vsc-bg: #1e1e1e;
+  --vsc-sidebar: #252526;
+  --vsc-activitybar: #333333;
+  --vsc-titlebar: #1a1a1a;
+  --vsc-border: #454545;
+  --vsc-hover: #2a2d2e;
+  --vsc-selection: #264f78;
+  --vsc-text: #d4d4d4;
+  --vsc-muted: #858585;
+  --vsc-accent: #007acc;
+  --vsc-statusbar: #007acc;
+  --vsc-tab-active: #1e1e1e;
+  --vsc-tab-inactive: #2d2d2d;
+  --vsc-input: #3c3c3c;
+}
+
+:root[data-theme="rose-pine"] {
+  --vsc-bg: #191724;
+  --vsc-sidebar: #1f1d2e;
+  --vsc-activitybar: #26233a;
+  --vsc-titlebar: #15131e;
+  --vsc-border: #403d52;
+  --vsc-hover: #26233a;
+  --vsc-selection: #403d52;
+  --vsc-text: #e0def4;
+  --vsc-muted: #6e6a86;
+  --vsc-accent: #eb6f92;
+  --vsc-statusbar: #26233a;
+  --vsc-tab-active: #191724;
+  --vsc-tab-inactive: #1f1d2e;
+  --vsc-input: #26233a;
+}
+
+:root[data-theme="tokyo-night"] {
+  --vsc-bg: #1a1b26;
+  --vsc-sidebar: #16161e;
+  --vsc-activitybar: #16161e;
+  --vsc-titlebar: #13131a;
+  --vsc-border: #292e42;
+  --vsc-hover: #1f2335;
+  --vsc-selection: #2d3f76;
+  --vsc-text: #a9b1d6;
+  --vsc-muted: #565f89;
+  --vsc-accent: #7aa2f7;
+  --vsc-statusbar: #16161e;
+  --vsc-tab-active: #1a1b26;
+  --vsc-tab-inactive: #16161e;
+  --vsc-input: #1f2335;
+}
+
+:root[data-theme="catppuccin"] {
+  --vsc-bg: #1e1e2e;
+  --vsc-sidebar: #181825;
+  --vsc-activitybar: #11111b;
+  --vsc-titlebar: #181825;
+  --vsc-border: #313244;
+  --vsc-hover: #313244;
+  --vsc-selection: #45475a;
+  --vsc-text: #cdd6f4;
+  --vsc-muted: #6c7086;
+  --vsc-accent: #cba6f7;
+  --vsc-statusbar: #11111b;
+  --vsc-tab-active: #1e1e2e;
+  --vsc-tab-inactive: #181825;
+  --vsc-input: #313244;
+}
+
+:root[data-theme="nord"] {
+  --vsc-bg: #2e3440;
+  --vsc-sidebar: #3b4252;
+  --vsc-activitybar: #2e3440;
+  --vsc-titlebar: #242932;
+  --vsc-border: #434c5e;
+  --vsc-hover: #3b4252;
+  --vsc-selection: #434c5e;
+  --vsc-text: #d8dee9;
+  --vsc-muted: #616e88;
+  --vsc-accent: #88c0d0;
+  --vsc-statusbar: #5e81ac;
+  --vsc-tab-active: #2e3440;
+  --vsc-tab-inactive: #3b4252;
+  --vsc-input: #3b4252;
+}
+
+:root[data-theme="gruvbox"] {
+  --vsc-bg: #282828;
+  --vsc-sidebar: #32302f;
+  --vsc-activitybar: #3c3836;
+  --vsc-titlebar: #1d2021;
+  --vsc-border: #504945;
+  --vsc-hover: #3c3836;
+  --vsc-selection: #45403d;
+  --vsc-text: #ebdbb2;
+  --vsc-muted: #928374;
+  --vsc-accent: #d79921;
+  --vsc-statusbar: #d65d0e;
+  --vsc-tab-active: #282828;
+  --vsc-tab-inactive: #32302f;
+  --vsc-input: #3c3836;
+}
+
+/* Override Tailwind compiled colors with CSS variables */
+.bg-vsc-bg           { background-color: var(--vsc-bg) !important; }
+.bg-vsc-sidebar      { background-color: var(--vsc-sidebar) !important; }
+.bg-vsc-activitybar  { background-color: var(--vsc-activitybar) !important; }
+.bg-vsc-hover        { background-color: var(--vsc-hover) !important; }
+.bg-vsc-selection    { background-color: var(--vsc-selection) !important; }
+.bg-vsc-input        { background-color: var(--vsc-input) !important; }
+.bg-vsc-accent       { background-color: var(--vsc-accent) !important; }
+.bg-vsc-statusbar    { background-color: var(--vsc-statusbar) !important; }
+.bg-vsc-tab-active   { background-color: var(--vsc-tab-active) !important; }
+.bg-vsc-tab-inactive { background-color: var(--vsc-tab-inactive) !important; }
+.text-vsc-text       { color: var(--vsc-text) !important; }
+.text-vsc-muted      { color: var(--vsc-muted) !important; }
+.text-vsc-accent     { color: var(--vsc-accent) !important; }
+.border-vsc-border   { border-color: var(--vsc-border) !important; }
+
+/* ===== Status bar notification pulse ===== */
+/* Status bar notification pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+.ai-thinking { animation: pulse 1.2s ease-in-out infinite; }

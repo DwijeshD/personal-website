@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dwijen | Developer Portfolio</title>
+  <meta name="description" content="Dwijen's developer portfolio — built like VS Code. Explore projects, skills, and experience." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="vscode-dark">
+
+  <!-- ── TITLE BAR ── -->
+  <div class="title-bar" id="title-bar">
+    <div class="title-bar-left">
+      <div class="traffic-lights">
+        <span class="tl tl-red"></span>
+        <span class="tl tl-yellow"></span>
+        <span class="tl tl-green"></span>
+      </div>
+      <div class="menu-items">
+        <span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Help</span>
+      </div>
+    </div>
+    <div class="title-bar-center">
+      <span class="title-text">portfolio — VS Code</span>
+    </div>
+    <div class="title-bar-right">
+      <button class="icon-btn" id="search-btn" title="Command Palette (Ctrl+P)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── COMMAND PALETTE ── -->
+  <div class="palette-overlay" id="palette-overlay">
+    <div class="palette" id="palette">
+      <div class="palette-input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="palette-input" placeholder="Go to file..." autocomplete="off" spellcheck="false" />
+      </div>
+      <ul class="palette-results" id="palette-results"></ul>
+    </div>
+  </div>
+
+  <!-- ── MAIN LAYOUT ── -->
+  <div class="vscode-layout">
+
+    <!-- ACTIVITY BAR -->
+    <div class="activity-bar" id="activity-bar">
+      <div class="activity-icons-top">
+        <button class="activity-btn active" id="explorer-btn" title="Explorer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </button>
+        <button class="activity-btn" id="search-side-btn" title="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button class="activity-btn" id="git-btn" title="Source Control">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+        </button>
+      </div>
+      <div class="activity-icons-bottom">
+        <button class="activity-btn" id="settings-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR / EXPLORER -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span>EXPLORER</span>
+        <span class="sidebar-collapse" id="sidebar-collapse" title="Collapse">⌃</span>
+      </div>
+      <div class="folder-section">
+        <div class="folder-title" id="folder-toggle">
+          <span class="arrow">▾</span>
+          <span class="folder-icon">📁</span>
+          <span>PORTFOLIO</span>
+        </div>
+        <ul class="file-list" id="file-list">
+          <li class="file-item active" data-section="home" id="nav-home">
+            <span class="file-icon tsx">⚛</span>
+            <span class="file-name">home.tsx</span>
+          </li>
+          <li class="file-item" data-section="about" id="nav-about">
+            <span class="file-icon html">◇</span>
+            <span class="file-name">about.html</span>
+          </li>
+          <li class="file-item" data-section="projects" id="nav-projects">
+            <span class="file-icon js">⬡</span>
+            <span class="file-name">projects.js</span>
+          </li>
+          <li class="file-item" data-section="skills" id="nav-skills">
+            <span class="file-icon json">{}</span>
+            <span class="file-name">skills.json</span>
+          </li>
+          <li class="file-item" data-section="experience" id="nav-experience">
+            <span class="file-icon ts">TS</span>
+            <span class="file-name">experience.ts</span>
+          </li>
+          <li class="file-item" data-section="contact" id="nav-contact">
+            <span class="file-icon css">#</span>
+            <span class="file-name">contact.css</span>
+          </li>
+          <li class="file-item" data-section="readme" id="nav-readme">
+            <span class="file-icon md">M↓</span>
+            <span class="file-name">README.md</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- EDITOR AREA -->
+    <div class="editor-area">
+      <!-- TABS -->
+      <div class="tab-bar" id="tab-bar">
+        <div class="tab active" data-section="home" id="tab-home">
+          <span class="tab-icon tsx">⚛</span>
+          <span>home.tsx</span>
+          <button class="tab-close" data-section="home">✕</button>
+        </div>
+      </div>
+
+      <!-- BREADCRUMB -->
+      <div class="breadcrumb" id="breadcrumb">
+        <span>portfolio</span>
+        <span class="bc-sep">›</span>
+        <span>src</span>
+        <span class="bc-sep">›</span>
+        <span class="bc-active" id="bc-active">home.tsx</span>
+      </div>
+
+      <!-- CONTENT PANELS -->
+      <div class="editor-content" id="editor-content">
+
+        <!-- HOME -->
+        <section class="panel active" id="panel-home">
+          <div class="line-numbers" id="ln-home"></div>
+          <div class="panel-inner home-panel">
+            <div class="home-hero">
+              <p class="comment-line">// Hello, World! 👋</p>
+              <div class="home-greeting">
+                <span class="keyword">const</span>
+                <span class="var-name"> developer</span>
+                <span class="operator"> =</span>
+                <span class="punctuation"> {</span>
+              </div>
+              <div class="home-name-block">
+                <span class="property">  name</span><span class="operator">:</span>
+                <span class="string"> "Dwijen Wijesooriya"</span><span class="punctuation">,</span>
+              </div>
+              <div class="home-role-block">
+                <span class="property">  role</span><span class="operator">:</span>
+                <span class="string typed-text" id="typed-text">"Software Engineer"</span><span class="cursor-blink">|</span><span class="punctuation">,</span>
+              </div>
+              <div class="home-detail">
+                <span class="property">  passion</span><span class="operator">:</span>
+                <span class="string"> "Building cool stuff with AI &amp; code"</span><span class="punctuation">,</span>
+              </div>
+              <div class="home-detail">
+                <span class="property">  available</span><span class="operator">:</span>
+                <span class="boolean"> true</span><span class="punctuation">,</span>
+              </div>
+              <div class="punctuation">};</div>
+
+              <div class="home-stats">
+                <div class="stat-card">
+                  <span class="stat-num">3+</span>
+                  <span class="stat-label">Years Coding</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-num">10+</span>
+                  <span class="stat-label">Projects Built</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-num">∞</span>
+                  <span class="stat-label">Coffee Consumed</span>
+                </div>
+              </div>
+
+              <div class="home-ctas">
+                <button class="btn-primary" onclick="navigateTo('projects')">View Projects</button>
+                <button class="btn-secondary" onclick="navigateTo('contact')">Get In Touch</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ABOUT -->
+        <section class="panel" id="panel-about">
+          <div class="line-numbers" id="ln-about"></div>
+          <div class="panel-inner about-panel">
+            <div class="code-comment">&lt;!-- about.html --&gt;</div>
+            <div class="code-tag">&lt;<span class="tag-name">section</span> <span class="attr-name">class</span>=<span class="attr-val">"about"</span>&gt;</div>
+            <div class="about-content">
+              <div class="about-header">
+                <div class="avatar-ring">
+                  <div class="avatar">DW</div>
+                </div>
+                <div class="about-intro">
+                  <h1 class="about-name">Dwijen Wijesooriya</h1>
+                  <p class="about-tagline">Software Engineer · AI Enthusiast · Builder</p>
+                </div>
+              </div>
+              <div class="about-bio">
+                <p>I'm a passionate developer who loves creating elegant solutions to complex problems. I specialize in full-stack development and AI integrations — from backend APIs to autonomous agent pipelines.</p>
+                <p>When I'm not coding, you'll find me exploring new technologies, contributing to open source, or building side projects that scratch my own itch.</p>
+              </div>
+              <div class="about-cards">
+                <div class="info-card">
+                  <div class="info-card-icon">🎯</div>
+                  <h3>Current Focus</h3>
+                  <p>Building AI-powered automation pipelines and scalable backend systems. Exploring LLMs, agents, and real-time media generation.</p>
+                </div>
+                <div class="info-card">
+                  <div class="info-card-icon">🎓</div>
+                  <h3>Education</h3>
+                  <p>Computer Science background with hands-on experience in software engineering, machine learning, and systems design.</p>
+                </div>
+                <div class="info-card">
+                  <div class="info-card-icon">🌍</div>
+                  <h3>Location</h3>
+                  <p>Based in the UK. Open to remote opportunities worldwide.</p>
+                </div>
+              </div>
+            </div>
+            <div class="code-tag">&lt;/<span class="tag-name">section</span>&gt;</div>
+          </div>
+        </section>
+
+        <!-- PROJECTS -->
+        <section class="panel" id="panel-projects">
+          <div class="line-numbers" id="ln-projects"></div>
+          <div class="panel-inner projects-panel">
+            <div class="code-comment">// projects.js — my work</div>
+            <div class="code-line"><span class="keyword">const</span> <span class="var-name">projects</span> <span class="operator">=</span> <span class="punctuation">[</span></div>
+            <div class="projects-grid" id="projects-grid">
+              <!-- Injected by JS -->
+            </div>
+            <div class="punctuation">];</div>
+          </div>
+        </section>
+
+        <!-- SKILLS -->
+        <section class="panel" id="panel-skills">
+          <div class="line-numbers" id="ln-skills"></div>
+          <div class="panel-inner skills-panel">
+            <div class="code-comment">// skills.json</div>
+            <div class="code-line"><span class="punctuation">{</span></div>
+            <div class="skills-content">
+              <div class="skill-group">
+                <div class="skill-group-title"><span class="json-key">"languages"</span><span class="operator">:</span> <span class="punctuation">[</span></div>
+                <div class="skill-bars" id="skill-bars-languages"></div>
+                <div class="punctuation">],</div>
+              </div>
+              <div class="skill-group">
+                <div class="skill-group-title"><span class="json-key">"frameworks"</span><span class="operator">:</span> <span class="punctuation">[</span></div>
+                <div class="skill-tags" id="skill-tags-frameworks"></div>
+                <div class="punctuation">],</div>
+              </div>
+              <div class="skill-group">
+                <div class="skill-group-title"><span class="json-key">"tools"</span><span class="operator">:</span> <span class="punctuation">[</span></div>
+                <div class="skill-tags" id="skill-tags-tools"></div>
+                <div class="punctuation">],</div>
+              </div>
+              <div class="skill-group">
+                <div class="skill-group-title"><span class="json-key">"ai_ml"</span><span class="operator">:</span> <span class="punctuation">[</span></div>
+                <div class="skill-tags" id="skill-tags-ai"></div>
+                <div class="punctuation">]</div>
+              </div>
+            </div>
+            <div class="punctuation">}</div>
+          </div>
+        </section>
+
+        <!-- EXPERIENCE -->
+        <section class="panel" id="panel-experience">
+          <div class="line-numbers" id="ln-experience"></div>
+          <div class="panel-inner experience-panel">
+            <div class="code-comment">// experience.ts — professional timeline</div>
+            <div class="code-line"><span class="keyword">interface</span> <span class="type-name">Experience</span> <span class="punctuation">{</span></div>
+            <div class="code-line indent"><span class="property">company</span><span class="operator">:</span> <span class="type">string</span><span class="punctuation">;</span></div>
+            <div class="code-line indent"><span class="property">role</span><span class="operator">:</span> <span class="type">string</span><span class="punctuation">;</span></div>
+            <div class="code-line indent"><span class="property">period</span><span class="operator">:</span> <span class="type">string</span><span class="punctuation">;</span></div>
+            <div class="code-line indent"><span class="property">highlights</span><span class="operator">:</span> <span class="type">string[]</span><span class="punctuation">;</span></div>
+            <div class="code-line"><span class="punctuation">}</span></div>
+            <br/>
+            <div class="timeline" id="timeline"></div>
+          </div>
+        </section>
+
+        <!-- CONTACT -->
+        <section class="panel" id="panel-contact">
+          <div class="line-numbers" id="ln-contact"></div>
+          <div class="panel-inner contact-panel">
+            <div class="code-comment">/* contact.css */</div>
+            <div class="code-line"><span class="selector">.developer</span> <span class="punctuation">{</span></div>
+            <div class="contact-content">
+              <div class="contact-cards">
+                <a href="mailto:dwijen@example.com" class="contact-card" id="contact-email">
+                  <div class="contact-icon">📧</div>
+                  <div class="contact-info">
+                    <span class="css-prop">email</span><span class="operator">:</span>
+                    <span class="css-val">dwijen@example.com</span><span class="punctuation">;</span>
+                  </div>
+                </a>
+                <a href="https://github.com/" target="_blank" class="contact-card" id="contact-github">
+                  <div class="contact-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                  </div>
+                  <div class="contact-info">
+                    <span class="css-prop">github</span><span class="operator">:</span>
+                    <span class="css-val">github.com/dwijen</span><span class="punctuation">;</span>
+                  </div>
+                </a>
+                <a href="https://linkedin.com/" target="_blank" class="contact-card" id="contact-linkedin">
+                  <div class="contact-icon">💼</div>
+                  <div class="contact-info">
+                    <span class="css-prop">linkedin</span><span class="operator">:</span>
+                    <span class="css-val">linkedin.com/in/dwijen</span><span class="punctuation">;</span>
+                  </div>
+                </a>
+                <a href="#" class="contact-card" id="contact-twitter">
+                  <div class="contact-icon">🐦</div>
+                  <div class="contact-info">
+                    <span class="css-prop">twitter</span><span class="operator">:</span>
+                    <span class="css-val">@dwijen</span><span class="punctuation">;</span>
+                  </div>
+                </a>
+              </div>
+              <div class="contact-form-wrap">
+                <div class="code-comment">/* drop a message */</div>
+                <form class="contact-form" id="contact-form" onsubmit="handleFormSubmit(event)">
+                  <div class="form-group">
+                    <label class="css-prop">name<span class="operator">:</span></label>
+                    <input type="text" id="form-name" class="css-input" placeholder='"Your name"' required />
+                  </div>
+                  <div class="form-group">
+                    <label class="css-prop">email<span class="operator">:</span></label>
+                    <input type="email" id="form-email" class="css-input" placeholder='"your@email.com"' required />
+                  </div>
+                  <div class="form-group">
+                    <label class="css-prop">message<span class="operator">:</span></label>
+                    <textarea id="form-message" class="css-input" rows="4" placeholder='"Hello Dwijen..."' required></textarea>
+                  </div>
+                  <button type="submit" class="btn-primary" id="form-submit">Send Message →</button>
+                  <div class="form-success" id="form-success">✓ Message sent! I'll get back to you soon.</div>
+                </form>
+              </div>
+            </div>
+            <div class="code-line"><span class="punctuation">}</span></div>
+          </div>
+        </section>
+
+        <!-- README -->
+        <section class="panel" id="panel-readme">
+          <div class="line-numbers" id="ln-readme"></div>
+          <div class="panel-inner readme-panel">
+            <div class="md-content">
+              <div class="md-h1"># Dwijen Wijesooriya</div>
+              <div class="md-badge-row">
+                <span class="md-badge blue">Software Engineer</span>
+                <span class="md-badge purple">AI / ML</span>
+                <span class="md-badge green">Open to Work</span>
+              </div>
+              <div class="md-hr"></div>
+              <div class="md-h2">## About</div>
+              <div class="md-p">Full-stack developer and AI enthusiast building intelligent systems and beautiful interfaces. I thrive at the intersection of software engineering and machine learning.</div>
+              <div class="md-h2">## Tech Stack</div>
+              <div class="tech-grid">
+                <div class="tech-item">🐍 Python</div>
+                <div class="tech-item">⚡ FastAPI</div>
+                <div class="tech-item">⚛️ React</div>
+                <div class="tech-item">🟦 TypeScript</div>
+                <div class="tech-item">🐳 Docker</div>
+                <div class="tech-item">☁️ AWS</div>
+                <div class="tech-item">🤖 LangChain</div>
+                <div class="tech-item">🧠 PyTorch</div>
+              </div>
+              <div class="md-h2">## Connect</div>
+              <div class="md-links">
+                <a href="#" class="md-link">📧 Email</a>
+                <a href="#" class="md-link">🔗 LinkedIn</a>
+                <a href="#" class="md-link">💻 GitHub</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /editor-content -->
+    </div><!-- /editor-area -->
+  </div><!-- /vscode-layout -->
+
+  <!-- STATUS BAR -->
+  <div class="status-bar" id="status-bar">
+    <div class="status-left">
+      <span class="status-item git">⎇ main</span>
+      <span class="status-item">✓ 0 errors</span>
+    </div>
+    <div class="status-right">
+      <span class="status-item lang-mode" id="lang-mode">TypeScript JSX</span>
+      <span class="status-item">UTF-8</span>
+      <span class="status-item">Spaces: 2</span>
+      <button class="status-btn theme-btn" id="theme-btn" title="Change Theme">🎨 Theme</button>
+      <span class="status-item time" id="status-time"></span>
+    </div>
+  </div>
+
+  <!-- THEME PICKER -->
+  <div class="theme-picker" id="theme-picker">
+    <div class="theme-picker-title">Color Theme</div>
+    <ul>
+      <li class="theme-option active" data-theme="vscode-dark">● VS Code Dark</li>
+      <li class="theme-option" data-theme="tokyo-night">● Tokyo Night</li>
+      <li class="theme-option" data-theme="catppuccin">● Catppuccin Mocha</li>
+      <li class="theme-option" data-theme="nord">● Nord</li>
+      <li class="theme-option" data-theme="gruvbox">● Gruvbox</li>
+      <li class="theme-option" data-theme="rose-pine">● Rosé Pine</li>
+    </ul>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
