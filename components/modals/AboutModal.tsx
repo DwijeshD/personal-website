@@ -1,0 +1,82 @@
+'use client'
+
+interface Props {
+  open: boolean
+  onClose: () => void
+}
+
+export default function AboutModal({ open, onClose }: Props) {
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 palette-backdrop"
+      onClick={onClose}
+    >
+      <div
+        className="bg-vsc-sidebar border border-vsc-border rounded shadow-2xl w-[400px] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-vsc-border">
+          <span className="text-sm font-semibold text-vsc-text">About Portfolio</span>
+          <button
+            onClick={onClose}
+            className="text-vsc-muted hover:text-vsc-text text-xs w-5 h-5 flex items-center justify-center rounded hover:bg-vsc-hover"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-4 font-mono text-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded bg-vsc-accent/20 border border-vsc-accent/40 flex items-center justify-center text-2xl">
+              {'</>'}
+            </div>
+            <div>
+              <div className="text-vsc-text font-semibold text-base">Portfolio IDE</div>
+              <div className="text-vsc-muted text-xs">Version 1.0.0 (portfolio build)</div>
+            </div>
+          </div>
+
+          <div className="space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span className="token-prop">Built by</span>
+              <span className="token-string">"Dwijesh Dookraz"</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="token-prop">Framework</span>
+              <span className="token-string">"Next.js 15 + React 19"</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="token-prop">Styling</span>
+              <span className="token-string">"Tailwind CSS"</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="token-prop">AI</span>
+              <span className="token-string">"Llama 3.3 70B via OpenRouter"</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="token-prop">Theme</span>
+              <span className="token-string">"VS Code Dark+"</span>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-vsc-border text-xs text-vsc-muted text-center">
+            MIT License · github.com/DwijeshD
+          </div>
+        </div>
+
+        <div className="px-4 pb-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 bg-vsc-accent hover:bg-vsc-accent-hover text-white text-xs rounded transition-colors"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
