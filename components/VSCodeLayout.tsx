@@ -18,6 +18,7 @@ import SkillsPanel from './panels/SkillsPanel'
 import ExperiencePanel from './panels/ExperiencePanel'
 import ContactPanel from './panels/ContactPanel'
 import SourceControlPopup from './SourceControlPopup'
+import SettingsPopup from './SettingsPopup'
 import { TABS } from '@/lib/data'
 import type { TerminalHandle } from './TerminalTab'
 import type { SidePanel } from './ActivityBar'
@@ -46,9 +47,11 @@ export default function VSCodeLayout() {
   const [recentFiles, setRecentFiles]     = useState<string[]>([])
   const [lastCommand, setLastCommand]     = useState<string | null>(null)
   const [zoomIdx, setZoomIdx]             = useState(3)
-  const [aboutOpen, setAboutOpen]             = useState(false)
-  const [shortcutsOpen, setShortcutsOpen]     = useState(false)
+  const [aboutOpen, setAboutOpen]                 = useState(false)
+  const [shortcutsOpen, setShortcutsOpen]         = useState(false)
   const [sourceControlOpen, setSourceControlOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen]           = useState(false)
+  const [selectedTheme, setSelectedTheme]         = useState('default')
 
   const terminalRef = useRef<TerminalHandle | null>(null)
   const zoom = ZOOM_LEVELS[zoomIdx]
@@ -87,7 +90,7 @@ export default function VSCodeLayout() {
       if (ctrl && e.key === 'w')                              { e.preventDefault(); if (activeTab) closeTab(activeTab) }
       if (ctrl && e.shiftKey && e.key === 'W')                { e.preventDefault(); setOpenTabs([]) }
       if (ctrl && e.key === 't')                              { e.preventDefault(); navigate('home') }
-      if (ctrl && e.shiftKey && e.key.toLowerCase() === 'e') { e.preventDefault(); setSidePanel((p) => p ? null : 'explorer') }
+      if (ctrl && e.key === 'b')                              { e.preventDefault(); setSidePanel((p) => p ? null : 'explorer') }
       if (ctrl && e.key === '`')                              { e.preventDefault(); toggleTerminal() }
       if (ctrl && e.shiftKey && e.key.toLowerCase() === 'a') { e.preventDefault(); toggleCopilot() }
       if (e.key === 'F11')                                    { e.preventDefault(); enterFullscreen() }
@@ -100,6 +103,12 @@ export default function VSCodeLayout() {
     return () => window.removeEventListener('keydown', onKey)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, closeTab, navigate])
+
+  function applyTheme(theme: string) {
+    setSelectedTheme(theme)
+    if (theme === 'default') document.documentElement.removeAttribute('data-theme')
+    else document.documentElement.setAttribute('data-theme', theme)
+  }
 
   function enterFullscreen() {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {})
@@ -177,15 +186,30 @@ export default function VSCodeLayout() {
         <SourceControlPopup onClose={() => setSourceControlOpen(false)} />
       )}
 
+      {/* Settings popup */}
+      {settingsOpen && (
+        <SettingsPopup
+          onClose={() => setSettingsOpen(false)}
+          onCommandPalette={() => { setPalOpen(true); setSettingsOpen(false) }}
+          onToggleTerminal={() => { toggleTerminal(); setSettingsOpen(false) }}
+          onToggleCopilot={() => { toggleCopilot(); setSettingsOpen(false) }}
+          onEnterFullscreen={() => { enterFullscreen(); setSettingsOpen(false) }}
+          selectedTheme={selectedTheme}
+          onThemeChange={applyTheme}
+        />
+      )}
+
       {/* Main row */}
       <div className="flex flex-1 overflow-hidden">
         <ActivityBar
           activePanel={sidePanel}
           onToggle={toggleSide}
           onSourceControl={() => setSourceControlOpen((v) => !v)}
+          sourceControlOpen={sourceControlOpen}
           onToggleAI={toggleCopilot}
           aiOpen={copilotOpen}
-          sourceControlOpen={sourceControlOpen}
+          onSettings={() => setSettingsOpen((v) => !v)}
+          settingsOpen={settingsOpen}
         />
 
         <Sidebar
