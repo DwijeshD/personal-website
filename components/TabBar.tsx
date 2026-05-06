@@ -9,19 +9,39 @@ interface Props {
   onClose: (id: string) => void
 }
 
-export default function TabBar({ openTabs, activeTab, onSelect, onClose }: Props) {
-  const tabData = openTabs
-    .map((id) => TABS.find((t) => t.id === id))
-    .filter(Boolean) as typeof TABS
+function tabMeta(id: string) {
+  const known = TABS.find(t => t.id === id)
+  if (known) return known
+  if (id.startsWith('file:')) {
+    const name = id.slice(5)
+    const ext = name.split('.').pop()?.toLowerCase() ?? ''
+    const iconMap: Record<string, { icon: string; iconClass: string }> = {
+      tsx: { icon: '⚛',  iconClass: 'text-[#61dafb]' },
+      jsx: { icon: '⚛',  iconClass: 'text-[#61dafb]' },
+      ts:  { icon: 'TS', iconClass: 'text-[#3178c6]' },
+      js:  { icon: 'JS', iconClass: 'text-[#f1c40f]' },
+      html:{ icon: '<>', iconClass: 'text-[#e34c26]' },
+      css: { icon: '#',  iconClass: 'text-[#519aba]' },
+      json:{ icon: '{}', iconClass: 'text-[#f1c40f]' },
+      md:  { icon: 'M↓', iconClass: 'text-[#519aba]' },
+      pdf: { icon: 'PDF',iconClass: 'text-[#e44d26]' },
+    }
+    const { icon, iconClass } = iconMap[ext] ?? { icon: '·', iconClass: 'text-vsc-muted' }
+    return { id, label: name, icon, iconClass }
+  }
+  return { id, label: id, icon: '·', iconClass: 'text-vsc-muted' }
+}
 
+export default function TabBar({ openTabs, activeTab, onSelect, onClose }: Props) {
   return (
     <div className="h-[35px] bg-vsc-tab-inactive flex items-end shrink-0 overflow-x-auto overflow-y-hidden border-b border-vsc-border/40">
-      {tabData.map((tab) => {
-        const isActive = tab.id === activeTab
+      {openTabs.map((id) => {
+        const tab = tabMeta(id)
+        const isActive = id === activeTab
         return (
           <div
-            key={tab.id}
-            onClick={() => onSelect(tab.id)}
+            key={id}
+            onClick={() => onSelect(id)}
             className={`
               group flex items-center gap-1.5 px-3 h-full cursor-pointer shrink-0 select-none
               border-r border-vsc-border/30 text-sm transition-colors relative
@@ -33,7 +53,7 @@ export default function TabBar({ openTabs, activeTab, onSelect, onClose }: Props
             <span className={`text-[11px] ${tab.iconClass}`}>{tab.icon}</span>
             <span className="text-xs">{tab.label}</span>
             <button
-              onClick={(e) => { e.stopPropagation(); onClose(tab.id) }}
+              onClick={(e) => { e.stopPropagation(); onClose(id) }}
               className="ml-1 w-4 h-4 flex items-center justify-center rounded text-vsc-muted hover:text-vsc-text hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               ✕

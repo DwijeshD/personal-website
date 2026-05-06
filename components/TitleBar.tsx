@@ -60,7 +60,6 @@ export default function TitleBar({
   onClearTerminal,
   onShowShortcuts,
   onAbout,
-  copilotActive,
 }: Props) {
   const recentSubmenu = recentFiles.length > 0
     ? recentFiles.map((id) => {
@@ -89,8 +88,19 @@ export default function TitleBar({
       items: [
         { label: 'Find...',    action: onFind,      shortcut: 'Ctrl+F' },
         {},
-        { label: 'Select All', action: onSelectAll, shortcut: 'Ctrl+A' },
         { label: 'Copy',       action: onCopy,      shortcut: 'Ctrl+C' },
+      ],
+    },
+    {
+      label: 'Selection',
+      items: [
+        { label: 'Select All',       action: onSelectAll, shortcut: 'Ctrl+A' },
+        {},
+        { label: 'Expand Selection', disabled: true, shortcut: 'Shift+Alt+→' },
+        { label: 'Shrink Selection', disabled: true, shortcut: 'Shift+Alt+←' },
+        {},
+        { label: 'Add Cursor Above', disabled: true, shortcut: 'Ctrl+Alt+↑' },
+        { label: 'Add Cursor Below', disabled: true, shortcut: 'Ctrl+Alt+↓' },
       ],
     },
     {
@@ -98,7 +108,7 @@ export default function TitleBar({
       items: [
         { label: 'Command Palette',   action: onCommandPalette, shortcut: 'Ctrl+P' },
         {},
-        { label: 'Toggle Sidebar',    action: onToggleSidebar,  shortcut: 'Ctrl+Shift+E' },
+        { label: 'Toggle Sidebar',    action: onToggleSidebar,  shortcut: 'Ctrl+B' },
         { label: 'Toggle Terminal',   action: onToggleTerminal,  shortcut: 'Ctrl+`' },
         { label: "Dwijesh's Copilot", action: onToggleCopilot,  shortcut: 'Ctrl+Shift+A' },
         {},
@@ -122,7 +132,7 @@ export default function TitleBar({
       items: [
         { label: 'Start Terminal', action: onStartTerminal },
         {
-          label: lastCommand ? `Run Last Command: ${lastCommand}` : 'Run Last Command',
+          label: lastCommand ? `Run Last: ${lastCommand}` : 'Run Last Command',
           action: onRunLastCommand,
           disabled: !lastCommand,
         },
@@ -143,7 +153,7 @@ export default function TitleBar({
         { label: 'Command Palette',    action: onCommandPalette, shortcut: 'Ctrl+P' },
         { label: 'Keyboard Shortcuts', action: onShowShortcuts,  shortcut: 'Ctrl+K Ctrl+S' },
         {},
-        { label: 'GitHub Profile', action: () => window.open('https://github.com/DwijeshD', '_blank') },
+        { label: 'GitHub Profile', action: () => window.open('https://github.com/DwijeshD', '_blank', 'noopener,noreferrer') },
         {},
         { label: 'About', action: onAbout },
       ],
@@ -151,73 +161,134 @@ export default function TitleBar({
   ]
 
   return (
-    <div className="flex flex-col select-none shrink-0 border-b border-vsc-border/40" style={{ backgroundColor: 'var(--vsc-titlebar, #1a1a1a)' }}>
-      {/* Row 1: traffic lights + center search capsule */}
-      <div className="h-9 flex items-center px-3">
-        {/* Traffic lights */}
-        <div className="flex items-center gap-1.5 shrink-0 w-[60px]">
-          <button
-            onClick={() => window.close()}
-            title="Close"
-            className="w-3 h-3 rounded-full bg-[#ff5f57] hover:brightness-125 transition-all block cursor-pointer"
-          />
-          <button
-            onClick={() => window.blur()}
-            title="Minimize"
-            className="w-3 h-3 rounded-full bg-[#febc2e] hover:brightness-125 transition-all block cursor-pointer"
-          />
-          <button
-            onClick={onEnterFullscreen}
-            title="Fullscreen"
-            className="w-3 h-3 rounded-full bg-[#28c840] hover:brightness-125 transition-all block cursor-pointer"
-          />
-        </div>
-
-        {/* Center search capsule */}
-        <div className="flex-1 flex justify-center">
-          <button
-            onClick={onCommandPalette}
-            title="Command Palette (Ctrl+P)"
-            className="flex items-center gap-2 px-3 py-1 rounded bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] text-xs text-vsc-muted hover:text-vsc-text transition-colors w-[300px]"
-          >
-            {/* Search icon */}
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#519aba] shrink-0">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <span className="flex-1 text-left text-vsc-muted/80">
-              dwijesh-dookraz : portfolio
-            </span>
-            <kbd className="text-[10px] bg-white/[0.07] px-1.5 py-0.5 rounded border border-white/[0.15] text-vsc-muted/60 font-mono shrink-0">
-              Ctrl P
-            </kbd>
-          </button>
-        </div>
-
-        {/* Balancing spacer */}
-        <div className="w-[60px] shrink-0" />
+    <div
+      className="h-[32px] flex items-center shrink-0 select-none border-b border-vsc-border/40"
+      style={{ backgroundColor: 'var(--vsc-titlebar, #1a1a1a)' }}
+    >
+      {/* VS Code icon */}
+      <div className="w-[46px] h-full flex items-center justify-center shrink-0">
+        <svg width="16" height="16" viewBox="0 0 100 100">
+          <path fill="#007acc" d="M74.7 3.9L37.5 38.1 15.6 21.7 5 27.8v44.4l10.6 6.1 21.9-16.4 37.2 34.2 16.3-7.9V11.8L74.7 3.9zm.4 73.8L49 55.5l26.1-23.3v45.5zm-55.7-5.5V27.8l22 17.7-22 26.7z"/>
+        </svg>
       </div>
 
-      {/* Row 2: menu bar + Copilot button */}
-      <div className="h-[26px] flex items-center px-1 border-t border-vsc-border/20">
-        <MenuBar menus={menus} />
+      {/* Menu bar */}
+      <MenuBar menus={menus} />
 
+      {/* Back / Forward */}
+      <div className="flex items-center gap-0.5 px-1.5 shrink-0">
+        <button
+          onClick={() => window.history.back()}
+          title="Go Back"
+          className="w-6 h-6 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-white/10 transition-colors"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <button
+          onClick={() => window.history.forward()}
+          title="Go Forward"
+          className="w-6 h-6 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-white/10 transition-colors"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Center search capsule */}
+      <div className="flex-1 flex justify-center px-2 min-w-0">
+        <button
+          onClick={onCommandPalette}
+          title="Search or type a command (Ctrl+P)"
+          className="flex items-center gap-2 h-[22px] px-3 rounded bg-white/[0.07] hover:bg-white/[0.11] border border-white/[0.1] text-vsc-muted hover:text-vsc-text transition-colors w-[240px] max-w-full shrink"
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <span className="flex-1 text-left text-[11px] truncate">portfolio</span>
+          <kbd className="text-[10px] bg-white/[0.06] px-1 rounded border border-white/[0.1] text-vsc-muted/60 font-mono shrink-0">
+            Ctrl+P
+          </kbd>
+        </button>
+      </div>
+
+      {/* Layout toggle icons */}
+      <div className="flex items-center px-1 shrink-0 gap-0.5">
+        <button
+          onClick={onToggleSidebar}
+          title="Toggle Primary Sidebar (Ctrl+B)"
+          className="w-7 h-7 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-white/10 transition-colors"
+        >
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor">
+            <rect x="0" y="0" width="4" height="15" rx="1" opacity=".45"/>
+            <rect x="5.5" y="0" width="9.5" height="15" rx="1"/>
+          </svg>
+        </button>
+        <button
+          onClick={onToggleTerminal}
+          title="Toggle Panel (Ctrl+`)"
+          className="w-7 h-7 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-white/10 transition-colors"
+        >
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor">
+            <rect x="0" y="0" width="15" height="9" rx="1"/>
+            <rect x="0" y="10.5" width="15" height="4.5" rx="1" opacity=".45"/>
+          </svg>
+        </button>
         <button
           onClick={onToggleCopilot}
-          title="Dwijesh's Copilot (Ctrl+Shift+A)"
-          className={`
-            ml-1 flex items-center gap-1.5 px-2.5 h-full text-xs transition-colors
-            ${copilotActive
-              ? 'text-[#a78bfa]'
-              : 'text-vsc-muted hover:text-vsc-text'}
-          `}
+          title="Toggle Copilot Panel (Ctrl+Shift+A)"
+          className="w-7 h-7 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-white/10 transition-colors"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" />
-            <path d="M12 2v4M8 15h.01M16 15h.01" />
-            <circle cx="12" cy="7" r="1" />
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor">
+            <rect x="0" y="0" width="9" height="15" rx="1"/>
+            <rect x="10.5" y="0" width="4.5" height="15" rx="1" opacity=".45"/>
           </svg>
-          Copilot
+        </button>
+        <button
+          onClick={onCommandPalette}
+          title="Customize Layout"
+          className="w-7 h-7 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-white/10 transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <rect x="0" y="0" width="6" height="6" rx="1"/>
+            <rect x="8" y="0" width="6" height="6" rx="1"/>
+            <rect x="0" y="8" width="6" height="6" rx="1"/>
+            <rect x="8" y="8" width="6" height="6" rx="1"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Windows window controls */}
+      <div className="flex items-stretch shrink-0 h-full">
+        <button
+          onClick={() => window.blur()}
+          title="Minimize"
+          className="w-[46px] flex items-center justify-center text-vsc-muted hover:text-vsc-text hover:bg-white/[0.1] transition-colors"
+        >
+          <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
+            <rect width="10" height="1"/>
+          </svg>
+        </button>
+        <button
+          onClick={onEnterFullscreen}
+          title="Maximize"
+          className="w-[46px] flex items-center justify-center text-vsc-muted hover:text-vsc-text hover:bg-white/[0.1] transition-colors"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1">
+            <rect x="0.5" y="0.5" width="9" height="9"/>
+          </svg>
+        </button>
+        <button
+          onClick={() => window.close()}
+          title="Close"
+          className="w-[46px] flex items-center justify-center text-vsc-muted hover:text-white hover:bg-[#c42b1c] transition-colors"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
+            <line x1="0" y1="0" x2="10" y2="10"/>
+            <line x1="10" y1="0" x2="0" y2="10"/>
+          </svg>
         </button>
       </div>
     </div>

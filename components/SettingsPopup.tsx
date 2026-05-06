@@ -42,6 +42,8 @@ export default function SettingsPopup({
 
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
+      const btn = document.getElementById('settings-activity-btn')
+      if (btn && btn.contains(e.target as Node)) return
       if (ref.current && !ref.current.contains(e.target as Node)) onClose()
     }
     function onKey(e: KeyboardEvent) {

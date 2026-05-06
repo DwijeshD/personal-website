@@ -17,19 +17,27 @@ import ProjectsPanel from './panels/ProjectsPanel'
 import SkillsPanel from './panels/SkillsPanel'
 import ExperiencePanel from './panels/ExperiencePanel'
 import ContactPanel from './panels/ContactPanel'
+import ReadmePanel from './panels/ReadmePanel'
+import ResumePanel from './panels/ResumePanel'
+import FileEditorPanel, { type ViewMode } from './panels/FileEditorPanel'
 import SourceControlPopup from './SourceControlPopup'
 import SettingsPopup from './SettingsPopup'
+import AiActionModal from './AiActionModal'
 import { TABS } from '@/lib/data'
+import { DEFAULT_CONTENT } from '@/lib/defaultContent'
 import type { TerminalHandle } from './TerminalTab'
 import type { SidePanel } from './ActivityBar'
+import type { CustomFile, CustomFolder, AiFileAction } from '@/lib/fileSystem'
 
 const BREADCRUMB: Record<string, string> = {
   home:       'home.tsx',
-  about:      'about.md',
-  projects:   'projects.ts',
+  about:      'about.html',
+  projects:   'projects.js',
   skills:     'skills.json',
   experience: 'experience.ts',
   contact:    'contact.css',
+  readme:     'README.md',
+  resume:     'Dwijesh_Dookraz_Resume.pdf',
 }
 
 const ZOOM_LEVELS = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5]
@@ -52,6 +60,12 @@ export default function VSCodeLayout() {
   const [sourceControlOpen, setSourceControlOpen] = useState(false)
   const [settingsOpen, setSettingsOpen]           = useState(false)
   const [selectedTheme, setSelectedTheme]         = useState('default')
+  const [fileContents, setFileContents]           = useState<Record<string, string>>({})
+  const [fileModes, setFileModes]                 = useState<Record<string, ViewMode>>({})
+  const [hiddenBuiltins, setHiddenBuiltins]       = useState<string[]>([])
+  const [customFiles, setCustomFiles]             = useState<CustomFile[]>([])
+  const [customFolders, setCustomFolders]         = useState<CustomFolder[]>([])
+  const [pendingAiAction, setPendingAiAction]     = useState<AiFileAction | null>(null)
 
   const terminalRef = useRef<TerminalHandle | null>(null)
   const zoom = ZOOM_LEVELS[zoomIdx]
@@ -115,6 +129,39 @@ export default function VSCodeLayout() {
     else document.exitFullscreen().catch(() => {})
   }
 
+  function executeAiAction(action: AiFileAction) {
+    const { path, content = '' } = action
+    const id = 'file:' + path
+    switch (action.action) {
+      case 'create_file':
+        setCustomFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
+        setFileContents(prev => ({ ...prev, [id]: content }))
+        navigate(id)
+        break
+      case 'update_file':
+        setFileContents(prev => ({ ...prev, [id]: content }))
+        navigate(id)
+        break
+      case 'delete_file':
+        setCustomFiles(prev => prev.filter(f => f.id !== id))
+        setCustomFolders(prev => prev.map(folder => ({
+          ...folder, files: folder.files.filter(f => f.id !== id),
+        })))
+        closeTab(id)
+        setFileContents(prev => { const n = { ...prev }; delete n[id]; return n })
+        setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
+        break
+      case 'create_folder': {
+        const folderId = 'folder:' + path
+        setCustomFolders(prev =>
+          prev.some(f => f.id === folderId) ? prev : [...prev, { id: folderId, name: path, open: true, files: [] }]
+        )
+        break
+      }
+    }
+    setPendingAiAction(null)
+  }
+
   // Drag resize for terminal
   function startResize(e: React.MouseEvent) {
     e.preventDefault()
@@ -131,7 +178,9 @@ export default function VSCodeLayout() {
     window.addEventListener('mouseup', onUp)
   }
 
-  const activeFile = BREADCRUMB[activeTab] ?? 'untitled'
+  const activeFile = activeTab.startsWith('file:')
+    ? activeTab.slice(5)
+    : (BREADCRUMB[activeTab] ?? 'untitled')
 
   return (
     <div
@@ -221,6 +270,17 @@ export default function VSCodeLayout() {
           onSearchChange={setSearchQuery}
           onToggleCopilot={toggleCopilot}
           copilotOpen={copilotOpen}
+          hiddenBuiltins={hiddenBuiltins}
+          onHideBuiltin={(id) => setHiddenBuiltins(prev => [...prev, id])}
+          onFileDeleted={(id) => {
+            closeTab(id)
+            setFileContents(prev => { const n = { ...prev }; delete n[id]; return n })
+            setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
+          }}
+          customFiles={customFiles}
+          customFolders={customFolders}
+          onCustomFilesChange={setCustomFiles}
+          onCustomFoldersChange={setCustomFolders}
         />
 
         {/* Editor column */}
@@ -255,12 +315,42 @@ export default function VSCodeLayout() {
               </div>
             ) : (
               <div className="h-full overflow-hidden">
-                {activeTab === 'home'       && <HomePanel onNavigate={navigate} />}
-                {activeTab === 'about'      && <AboutPanel />}
-                {activeTab === 'projects'   && <ProjectsPanel />}
-                {activeTab === 'skills'     && <SkillsPanel />}
-                {activeTab === 'experience' && <ExperiencePanel />}
-                {activeTab === 'contact'    && <ContactPanel />}
+                {activeTab === 'resume' && <ResumePanel />}
+
+                {activeTab !== 'resume' && openTabs.includes(activeTab) && (() => {
+                  const isBuiltin = TABS.some(t => t.id === activeTab)
+                  const isCustom  = activeTab.startsWith('file:')
+                  if (!isBuiltin && !isCustom) return null
+
+                  const filename = isCustom
+                    ? activeTab.slice(5)
+                    : (BREADCRUMB[activeTab] ?? activeTab)
+
+                  const previewNode = isBuiltin ? (() => {
+                    switch (activeTab) {
+                      case 'home':       return <HomePanel onNavigate={navigate} />
+                      case 'about':      return <AboutPanel />
+                      case 'projects':   return <ProjectsPanel />
+                      case 'skills':     return <SkillsPanel />
+                      case 'experience': return <ExperiencePanel />
+                      case 'contact':    return <ContactPanel />
+                      case 'readme':     return <ReadmePanel />
+                      default:           return undefined
+                    }
+                  })() : undefined
+
+                  return (
+                    <FileEditorPanel
+                      key={activeTab}
+                      filename={filename}
+                      content={fileContents[activeTab] ?? (isBuiltin ? DEFAULT_CONTENT[activeTab] ?? '' : '')}
+                      onChange={(v) => setFileContents(prev => ({ ...prev, [activeTab]: v }))}
+                      mode={fileModes[activeTab] ?? (isBuiltin ? 'preview' : 'code')}
+                      onModeChange={(m) => setFileModes(prev => ({ ...prev, [activeTab]: m }))}
+                      previewNode={previewNode}
+                    />
+                  )
+                })()}
               </div>
             )}
           </div>
@@ -286,9 +376,24 @@ export default function VSCodeLayout() {
           <CopilotPanel
             onThinkingChange={setAiThinking}
             onClose={() => setCopilotOpen(false)}
+            onPendingAction={setPendingAiAction}
+            workspaceFiles={[
+              ...TABS.filter(t => !hiddenBuiltins.includes(t.id)).map(t => BREADCRUMB[t.id] ?? t.id),
+              ...customFolders.flatMap(f => f.files.map(fi => `${f.name}/${fi.name}`)),
+              ...customFiles.map(f => f.name),
+            ]}
           />
         )}
       </div>
+
+      {/* AI Action confirmation modal */}
+      {pendingAiAction && (
+        <AiActionModal
+          action={pendingAiAction}
+          onApprove={() => executeAiAction(pendingAiAction)}
+          onReject={() => setPendingAiAction(null)}
+        />
+      )}
 
       <StatusBar
         activeTab={activeTab}
