@@ -6,7 +6,15 @@
       "Bash(curl -s http://localhost:3001)",
       "Bash(taskkill /F /IM node.exe)",
       "PowerShell(Get-Process -Name node -ErrorAction SilentlyContinue)",
-      "PowerShell(Stop-Process -Force)"
+      "PowerShell(Stop-Process -Force)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(git rebase *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git clean *)",
+      "Bash(npx tsc *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\dwije\\.claude\\projects\\c--Users-dwije-OneDrive-Desktop-Projects-PortfolioWebsite"
