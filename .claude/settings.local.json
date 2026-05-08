@@ -14,10 +14,44 @@
       "Bash(git fetch *)",
       "Bash(git checkout *)",
       "Bash(git clean *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(curl -s -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -sk -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"model\":\"openrouter/free\",\"messages\":[{\"role\":\"system\",\"content\":\"Respond with JSON only.\"},{\"role\":\"user\",\"content\":\"create a hello world js file, respond with: {action, path, content}\"}],\"max_tokens\":512,\"temperature\":0.1,\"stream\":false}')",
+      "Bash(curl -sk -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"model\":\"meta-llama/llama-3.3-70b-instruct:free\",\"messages\":[{\"role\":\"system\",\"content\":\"Respond with valid JSON only. No markdown. No explanation.\"},{\"role\":\"user\",\"content\":\"create a hello world js file. respond exactly as: {\\\\\"action\\\\\":\\\\\"create_file\\\\\",\\\\\"path\\\\\":\\\\\"hello.js\\\\\",\\\\\"content\\\\\":\\\\\"...\\\\\"}\" }],\"max_tokens\":512,\"temperature\":0.1,\"stream\":false}')",
+      "Bash(curl -sk -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"model\":\"deepseek/deepseek-chat-v3-0324:free\",\"messages\":[{\"role\":\"system\",\"content\":\"Respond with valid JSON only. No markdown. No explanation.\"},{\"role\":\"user\",\"content\":\"create a hello world js file. respond exactly: {\\\\\"action\\\\\":\\\\\"create_file\\\\\",\\\\\"path\\\\\":\\\\\"hello.js\\\\\",\\\\\"content\\\\\":\\\\\"...\\\\\"}\" }],\"max_tokens\":512,\"temperature\":0.1,\"stream\":false}')",
+      "Bash(curl -sk -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"model\":\"google/gemma-3-27b-it:free\",\"messages\":[{\"role\":\"system\",\"content\":\"Respond with valid JSON only. No markdown. No explanation.\"},{\"role\":\"user\",\"content\":\"create a hello world js file. respond exactly: {\\\\\"action\\\\\":\\\\\"create_file\\\\\",\\\\\"path\\\\\":\\\\\"hello.js\\\\\",\\\\\"content\\\\\":\\\\\"...\\\\\"}\" }],\"max_tokens\":512,\"temperature\":0.1,\"stream\":false}')",
+      "Bash(wait)",
+      "Bash(curl -sk https://openrouter.ai/api/v1/models -H 'Authorization: Bearer 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')",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(curl -sk -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"model\":\"qwen/qwen3-coder:free\",\"messages\":[{\"role\":\"system\",\"content\":\"Respond with valid JSON only. No markdown, no thinking tags, no explanation.\"},{\"role\":\"user\",\"content\":\"create a hello world js file. respond: {\\\\\"action\\\\\":\\\\\"create_file\\\\\",\\\\\"path\\\\\":\\\\\"hello.js\\\\\",\\\\\"content\\\\\":\\\\\"...\\\\\"}\" }],\"max_tokens\":256,\"temperature\":0.1,\"stream\":false}')",
+      "Bash(curl -sk -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"model\":\"nousresearch/hermes-3-llama-3.1-405b:free\",\"messages\":[{\"role\":\"system\",\"content\":\"Respond with valid JSON only. No markdown, no explanation.\"},{\"role\":\"user\",\"content\":\"create a hello world js file. respond: {\\\\\"action\\\\\":\\\\\"create_file\\\\\",\\\\\"path\\\\\":\\\\\"hello.js\\\\\",\\\\\"content\\\\\":\\\\\"...\\\\\"}\" }],\"max_tokens\":256,\"temperature\":0.1,\"stream\":false}')",
+      "Bash(curl -sk -X POST https://openrouter.ai/api/v1/chat/completions -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"model\":\"__TRACKED_VAR__\",\"messages\":[{\"role\":\"system\",\"content\":\"Respond JSON only.\"},{\"role\":\"user\",\"content\":\"create hello.js with hello world\"}],\"max_tokens\":128,\"temperature\":0.1,\"stream\":false}')",
+      "Bash(npm start *)",
+      "Bash(curl -sk -X POST http://localhost:3000/api/ai-action -H 'Content-Type: application/json' -d '{\"message\":\"create a python hello world file\",\"files\":[\"home.tsx\",\"about.html\",\"projects.js\"]}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "Bash(npx kill-port *)",
+      "mcp__plugin_playwright_playwright__browser_type",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(rm -rf .next)",
+      "Bash(netstat -ano)",
+      "PowerShell(Stop-Process -Id 31960 -Force)",
+      "mcp__plugin_playwright_playwright__browser_run_code_unsafe",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -r taskkill //F //PID)",
+      "Read(//c/Users/dwije/OneDome/Desktop/Projects/PortfolioWebsite/lib/**)",
+      "mcp__plugin_playwright_playwright__browser_snapshot"
     ],
     "additionalDirectories": [
-      "c:\\Users\\dwije\\.claude\\projects\\c--Users-dwije-OneDrive-Desktop-Projects-PortfolioWebsite"
+      "c:\\Users\\dwije\\.claude\\projects\\c--Users-dwije-OneDrive-Desktop-Projects-PortfolioWebsite",
+      "c:\\Users\\dwije\\OneDrive\\Desktop\\Projects\\PortfolioWebsite\\.playwright-mcp",
+      "C:\\Users\\dwije\\OneDrive\\Desktop\\Projects\\PortfolioWebsite"
     ]
   }
 }

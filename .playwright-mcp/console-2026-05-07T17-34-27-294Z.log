@@ -1,0 +1,32 @@
+[    1269ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[    2106ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:28004
+[    2437ms] Error: ENOENT: no such file or directory, open 'C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\.next\server\app\page.js'
+    at Object.readFileSync (node:fs:440:20)
+    at defaultLoadImpl (node:internal/modules/cjs/loader:1105:17)
+    at loadSource (node:internal/modules/cjs/loader:1732:20)
+    at Object..js (node:internal/modules/cjs/loader:1831:44)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+    at mod.require (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\require-hook.js:68:28)
+    at require (node:internal/modules/helpers:147:16)
+    at requirePage (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\require.js:99:80)
+    at loadComponentsImpl (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\load-components.js:132:57)
+    at async DevServer.findPageComponentsImpl (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\next-server.js:899:36)
+    at async DevServer.findPageComponents (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\dev\next-dev-server.js:706:16)
+    at async DevServer.renderPageComponent (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\base-server.js:1460:24)
+    at async DevServer.renderToResponseImpl (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\base-server.js:1514:32)
+    at async DevServer.pipeImpl (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\next-server.js:393:17)
+    at async DevServer.handleRequestImpl (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\base-server.js:916:17)
+    at async (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\dev\next-dev-server.js:400:20)
+    at async Span.traceAsyncFn (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (file://C:\Users\dwije\OneDrive\Desktop\Projects\PortfolioWebsite\node_modules\next\dist\server\lib\start-server.js:226:13)
+[    2437ms] [LOG] [HMR] connected @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/websocket.js:45
+[    2474ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
