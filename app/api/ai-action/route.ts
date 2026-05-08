@@ -3,84 +3,183 @@ import { validateAiAction } from '@/lib/fileSystem'
 
 export const runtime = 'edge'
 
-// Simple per-IP rate limit: max 10 requests per minute (edge-local, resets per instance)
+// ── Rate limiting ────────────────────────────────────────────────────────────
 const rateLimitMap = new Map<string, { count: number; reset: number }>()
-const RATE_LIMIT    = 10
-const RATE_WINDOW   = 60_000 // 1 minute
+const RATE_LIMIT   = 15
+const RATE_WINDOW  = 60_000
 
 function checkRateLimit(ip: string): boolean {
   const now  = Date.now()
   const slot = rateLimitMap.get(ip)
-  if (!slot || now > slot.reset) {
-    rateLimitMap.set(ip, { count: 1, reset: now + RATE_WINDOW })
-    return true
-  }
+  if (!slot || now > slot.reset) { rateLimitMap.set(ip, { count: 1, reset: now + RATE_WINDOW }); return true }
   if (slot.count >= RATE_LIMIT) return false
   slot.count++
   return true
+}
+
+// ── Model fallback chain ─────────────────────────────────────────────────────
+// Ordered by quality. If a model is rate-limited (429) or returns bad JSON,
+// the next one is tried automatically.
+const MODELS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'qwen/qwen3-coder:free',
+  'nousresearch/hermes-3-llama-3.1-405b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'openai/gpt-oss-20b:free',
+]
+
+const MODEL_TIMEOUT_MS = 25_000
+
+// ── System prompt ────────────────────────────────────────────────────────────
+const SYSTEM = `You are an AI coding assistant inside a browser-based VSCode-style IDE.
+This is a portfolio website for Dwijesh Dookraz (Next.js 15, React 19, TypeScript, Tailwind CSS).
+
+You MUST respond with a single valid JSON object ONLY.
+Absolutely NO markdown fences, NO <think> blocks, NO explanations, NO text before or after the JSON.
+
+Available actions:
+  create_file   — create a new file
+  update_file   — overwrite an existing file completely
+  delete_file   — delete a file
+  create_folder — create a new folder
+
+Response schema:
+  {"action":"create_file","path":"relative/path.ext","content":"<complete file content>"}
+  {"action":"update_file","path":"relative/path.ext","content":"<complete file content>"}
+  {"action":"delete_file","path":"relative/path"}
+  {"action":"create_folder","path":"relative/folder"}
+
+Hard rules:
+  - ONE action, ONE JSON object, nothing else
+  - path is always relative — no leading "/" or "..", no "//"
+  - Use update_file if the file already exists; create_file if it is new
+  - content must be syntactically complete and valid for the file type
+  - Match TypeScript/React style for .ts/.tsx files; add 'use client' when needed
+  - NEVER output anything outside the JSON`
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function extractJson(text: string): unknown {
+  // Strip <think>...</think> reasoning blocks emitted by some models
+  let s = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+  // Strip markdown fences
+  s = s.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim()
+  // Direct parse
+  try { return JSON.parse(s) } catch { /* fall through */ }
+  // Find last JSON-like {...} block
+  const matches = [...s.matchAll(/\{[\s\S]*?\}/g)]
+  for (const m of matches.reverse()) {
+    try { return JSON.parse(m[0]) } catch { /* next */ }
+  }
+  // Greedy match
+  const greedy = s.match(/\{[\s\S]*\}/)
+  if (greedy) try { return JSON.parse(greedy[0]) } catch { /* fall through */ }
+  return null
+}
+
+function normalizeAction(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw
+  const obj = { ...(raw as Record<string, unknown>) }
+
+  // Handle 'filename' or 'name' in place of 'path'
+  if (!obj.path && obj.filename) { obj.path = obj.filename; delete obj.filename }
+  if (!obj.path && obj.name)     { obj.path = obj.name;     delete obj.name     }
+  // Handle 'type' in place of 'action'
+  if (!obj.action && obj.type)   { obj.action = obj.type;   delete obj.type     }
+
+  // Handle {files:[{path,content},...]} array format
+  if (!obj.action && Array.isArray(obj.files) && obj.files.length > 0) {
+    const f = obj.files[0] as Record<string, unknown>
+    return { action: 'create_file', path: f.path ?? f.filename ?? f.name, content: f.content }
+  }
+
+  return obj
+}
+
+async function callModel(model: string, userContent: string): Promise<{ ok: boolean; rateLimit: boolean; json: unknown }> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS)
+
+  try {
+    const apiKey = process.env.OPENROUTER_API_KEY!
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://dwijesh.dev', 'X-Title': 'Dwijesh Portfolio' },
+      signal:  controller.signal,
+      body: JSON.stringify({
+        model,
+        messages:    [{ role: 'system', content: SYSTEM }, { role: 'user', content: userContent }],
+        max_tokens:  2048,
+        temperature: 0.15,
+        stream:      false,
+      }),
+    })
+
+    if (res.status === 429)    return { ok: false, rateLimit: true,  json: null }
+    if (res.status === 404)    return { ok: false, rateLimit: false, json: null }
+    if (!res.ok)               return { ok: false, rateLimit: false, json: null }
+
+    const data = await res.json()
+    const raw  = (data as Record<string, unknown>)
+    const choices = raw.choices as Array<{ message: { content: string } }> | undefined
+    const content = choices?.[0]?.message?.content ?? ''
+    if (!content.trim()) return { ok: false, rateLimit: false, json: null }
+
+    const parsed = extractJson(content)
+    if (!parsed)              return { ok: false, rateLimit: false, json: null }
+
+    return { ok: true, rateLimit: false, json: normalizeAction(parsed) }
+  } catch {
+    return { ok: false, rateLimit: false, json: null }
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 function err(msg: string, status: number) {
   return NextResponse.json({ error: msg }, { status })
 }
 
-const AI_ACTION_SYSTEM = `You are an AI coding assistant embedded in a browser-based VSCode-style IDE.
-This IDE belongs to Dwijesh Dookraz's portfolio website (Next.js 15, React 19, TypeScript, Tailwind CSS).
+// ── Origin guard ─────────────────────────────────────────────────────────────
+function allowedOrigin(req: NextRequest): boolean {
+  const origin = req.headers.get('origin')
+  if (!origin) return true
+  try {
+    const host = req.headers.get('host') ?? ''
+    const { hostname } = new URL(origin)
+    return hostname === 'localhost' || hostname === host.split(':')[0]
+  } catch { return false }
+}
 
-You can perform file operations. You MUST respond with valid JSON ONLY.
-No markdown, no code fences, no explanations — ONLY the JSON object.
-
-Available actions (choose exactly ONE):
-  create_file   — create a new file with full content
-  update_file   — overwrite an existing file's content completely
-  delete_file   — delete a file by path
-  create_folder — create a new empty folder
-
-Response format:
-  {"action":"create_file","path":"relative/path/to/file.ext","content":"<complete file content>"}
-  {"action":"update_file","path":"relative/path/to/file.ext","content":"<complete file content>"}
-  {"action":"delete_file","path":"relative/path/to/file"}
-  {"action":"create_folder","path":"relative/folder/name"}
-
-Rules:
-  - Exactly ONE action per response
-  - path is always relative — no leading "/", no "..", no "//"
-  - If updating a file, use update_file (not create_file)
-  - If the file doesn't exist yet, use create_file
-  - content must be complete and syntactically valid for the file type
-  - Match the project's TypeScript/React style when creating .ts/.tsx files
-  - For new React components, include 'use client' if needed
-  - NEVER output anything outside the JSON object`
+// ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // Rate limit
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!allowedOrigin(req)) return err('Forbidden', 403)
+
+  // Use proxy-injected headers (non-spoofable): x-real-ip set by Vercel, cf-connecting-ip by Cloudflare
+  // Explicitly avoid x-forwarded-for which is fully attacker-controlled
+  const ip = req.headers.get('x-real-ip') ?? req.headers.get('cf-connecting-ip') ?? 'unknown'
   if (!checkRateLimit(ip)) return err('Rate limit exceeded. Try again in a minute.', 429)
 
   if (!(req.headers.get('content-type') ?? '').includes('application/json'))
     return err('Content-Type must be application/json', 400)
 
-  const contentLength = Number(req.headers.get('content-length') ?? 0)
-  if (contentLength > 8_000) return err('Request body too large', 400)
+  // Read raw bytes first — Content-Length is attacker-controlled and can be missing
+  let raw: ArrayBuffer
+  try { raw = await req.arrayBuffer() } catch { return err('Failed to read body', 400) }
+  if (raw.byteLength > 8_000) return err('Request body too large', 400)
 
   let body: { message?: unknown; files?: unknown }
-  try {
-    body = await req.json()
-  } catch {
-    return err('Invalid JSON body', 400)
-  }
+  try { body = JSON.parse(new TextDecoder().decode(raw)) }
+  catch { return err('Invalid JSON body', 400) }
 
   const { message, files } = body
+  if (typeof message !== 'string' || !message.trim()) return err('message must be a non-empty string', 400)
+  if (message.length > 1_000) return err('message too long (max 1000 chars)', 400)
 
-  if (typeof message !== 'string' || message.trim().length === 0)
-    return err('message must be a non-empty string', 400)
-  if (message.length > 1_000)
-    return err('message too long (max 1000 chars)', 400)
-
-  // Optional list of current file paths for context (validated, max 100 entries)
   const fileList: string[] = []
   if (Array.isArray(files)) {
-    for (const f of files.slice(0, 100)) {
+    for (const f of (files as unknown[]).slice(0, 100)) {
       if (typeof f === 'string' && f.length < 200) fileList.push(f)
     }
   }
@@ -88,67 +187,23 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) return err('AI assistant not configured', 503)
 
-  const model = process.env.OPENROUTER_MODEL ?? 'meta-llama/llama-3.3-70b-instruct:free'
+  const userContent = fileList.length > 0
+    ? `EXISTING FILES IN WORKSPACE:\n${fileList.map(f => `  - ${f}`).join('\n')}\n\nREQUEST: ${message.trim()}`
+    : message.trim()
 
-  let upstream: Response
-  try {
-    upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://dwijesh.dev',
-        'X-Title': 'Dwijesh Portfolio',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: AI_ACTION_SYSTEM },
-          {
-            role: 'user',
-            content: fileList.length > 0
-              ? `EXISTING FILES IN WORKSPACE:\n${fileList.map(f => `  - ${f}`).join('\n')}\n\nREQUEST: ${message.trim()}`
-              : message.trim(),
-          },
-        ],
-        max_tokens:  2048,
-        temperature: 0.2,
-        stream:      false,
-      }),
+  // Try each model in order until one returns valid JSON
+  for (const model of MODELS) {
+    const result = await callModel(model, userContent)
+    if (result.rateLimit) continue   // rate-limited, try next
+    if (!result.ok || !result.json)  continue   // bad response, try next
+
+    const validation = validateAiAction(result.json)
+    if (!validation.ok) continue  // invalid action schema, try next
+
+    return NextResponse.json({ action: validation.action, model }, {
+      headers: { 'X-Content-Type-Options': 'nosniff' },
     })
-  } catch {
-    return err('Failed to reach AI service', 502)
   }
 
-  if (!upstream.ok) {
-    const detail = await upstream.text().catch(() => 'no body')
-    return err(`AI service error ${upstream.status}: ${detail}`, 502)
-  }
-
-  let rawText: string
-  try {
-    const data = await upstream.json()
-    rawText = data.choices?.[0]?.message?.content ?? ''
-  } catch {
-    return err('Unexpected response from AI service', 502)
-  }
-
-  if (!rawText.trim()) return err('AI returned empty response', 502)
-
-  // Strip any accidental markdown fences
-  const cleaned = rawText.trim().replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim()
-
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(cleaned)
-  } catch {
-    return err(`AI returned invalid JSON: ${cleaned.slice(0, 120)}`, 422)
-  }
-
-  const result = validateAiAction(parsed)
-  if (!result.ok) return err(`Invalid action from AI: ${result.error}`, 422)
-
-  return NextResponse.json({ action: result.action }, {
-    headers: { 'X-Content-Type-Options': 'nosniff' },
-  })
+  return err('All AI models are currently unavailable. Please try again in a moment.', 503)
 }

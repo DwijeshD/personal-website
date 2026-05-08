@@ -21,7 +21,7 @@ const securityHeaders = [
       // Next.js App Router requires unsafe-inline; Monaco loads from jsdelivr CDN
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
       // Tailwind and Google Fonts need unsafe-inline + font CDN
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob:",
       // Client calls own API; Monaco fetches workers/types from jsdelivr CDN

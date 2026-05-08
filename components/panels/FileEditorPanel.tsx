@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { getLanguage, configureMonaco } from '@/lib/monacoConfig'
+import type * as MonacoTypes from 'monaco-editor'
 
 const MonacoEditor     = dynamic(() => import('@monaco-editor/react'),              { ssr: false, loading: () => <EditorSkeleton /> })
 const MarkdownRenderer = dynamic(() => import('../renderers/MarkdownRenderer'),      { ssr: false })
@@ -54,17 +56,46 @@ function EditorSkeleton() {
   )
 }
 
-// Monaco-backed code editor pane
+// Monaco-backed code editor pane — uncontrolled to preserve cursor/selection.
+// External content changes (e.g. AI writes) are pushed imperatively via ref.
 function CodePane({ filename, content, onChange }: { filename: string; content: string; onChange: (v: string) => void }) {
+  const editorRef     = useRef<MonacoTypes.editor.IStandaloneCodeEditor | null>(null)
+  const internalValue = useRef(content)
+
+  useEffect(() => {
+    const ed = editorRef.current
+    if (!ed || content === internalValue.current) return
+    internalValue.current = content
+    const model = ed.getModel()
+    if (!model || model.getValue() === content) return
+    const pos = ed.getPosition()
+    model.setValue(content)
+    if (pos) ed.setPosition(pos)
+  }, [content])
+
   return (
+    <div className="h-full w-full bg-[#1e1e1e]">
     <MonacoEditor
       height="100%"
       language={getLanguage(filename)}
-      value={content}
-      // Each unique path gets its own model → undo history preserved per file
+      defaultValue={content}
       path={`file:///${filename}`}
       theme="vs-dark"
-      onChange={(val) => onChange(val ?? '')}
+      onMount={(ed) => {
+        editorRef.current = ed
+        internalValue.current = ed.getValue()
+        // Monaco's CDN CSS sets !important background on these layers, hiding selection.
+        // Inline !important overrides stylesheet !important regardless of specificity.
+        const root = ed.getContainerDomNode()
+        root?.querySelectorAll<HTMLElement>('.view-lines, .lines-content').forEach(el => {
+          el.style.setProperty('background', 'transparent', 'important')
+        })
+      }}
+      onChange={(val) => {
+        const v = val ?? ''
+        internalValue.current = v
+        onChange(v)
+      }}
       beforeMount={configureMonaco}
       options={{
         fontSize:             13,
@@ -86,8 +117,10 @@ function CodePane({ filename, content, onChange }: { filename: string; content: 
         contextmenu:          true,
         folding:              true,
         bracketPairColorization: { enabled: true },
+        stickyScroll:         { enabled: false },
       }}
     />
+    </div>
   )
 }
 
@@ -95,7 +128,13 @@ export default function FileEditorPanel({ filename, content, onChange, mode, onM
   const type     = fileType(filename)
   const previews = supportsPreview(type, !!previewNode)
   const safeMode = previews ? mode : 'code'
-  const renderer = createRenderer(type, content, previewNode)
+
+  // Split: use live renderer for html/markdown (updates as user types).
+  //        Fall back to previewNode for other types (tsx/js/json — no live renderer).
+  // Preview: always prefer the rich hardcoded panel if provided.
+  const nativeRenderer  = createRenderer(type, content)
+  const splitRenderer   = nativeRenderer ?? previewNode ?? null
+  const previewRenderer = createRenderer(type, content, previewNode)
 
   return (
     <div className="panel-fade-in h-full flex flex-col overflow-hidden">
@@ -132,14 +171,14 @@ export default function FileEditorPanel({ filename, content, onChange, mode, onM
               <CodePane filename={filename} content={content} onChange={onChange} />
             </div>
             <div className="flex-1 overflow-hidden bg-vsc-bg">
-              {renderer}
+              {splitRenderer}
             </div>
           </>
         )}
 
         {safeMode === 'preview' && (
           <div className="flex-1 overflow-hidden">
-            {renderer}
+            {previewRenderer}
           </div>
         )}
       </div>

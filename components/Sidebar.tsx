@@ -22,6 +22,9 @@ interface Props {
   customFolders:        CustomFolder[]
   onCustomFilesChange:  (files: CustomFile[]) => void
   onCustomFoldersChange:(folders: CustomFolder[]) => void
+  // Content for Find in Files
+  fileContents:    Record<string, string>
+  defaultContents: Record<string, string>
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -188,6 +191,8 @@ export default function Sidebar({
   customFolders,
   onCustomFilesChange,
   onCustomFoldersChange,
+  fileContents,
+  defaultContents,
 }: Props) {
   const setCustomFiles   = onCustomFilesChange
   const setCustomFolders = onCustomFoldersChange
@@ -505,7 +510,7 @@ export default function Sidebar({
                     {folder.open && (
                       <>
                         {folder.files.map(f => (
-                          <FileRow key={f.id} id={f.id} name={f.name} icon={iconForFile(f.name)} depth={2} />
+                          <FileRow key={f.id} id={f.id} name={f.name} icon={iconForFile(f.name)} depth={2} folderId={folder.id} />
                         ))}
                         {newInFolder === folder.id && (
                           <li className="flex items-center gap-2 pr-3 py-[4px]" style={{ paddingLeft: '44px' }}>
@@ -583,23 +588,65 @@ export default function Sidebar({
               autoFocus
               className="w-full bg-vsc-input border border-vsc-border text-vsc-text text-sm px-3 py-1.5 rounded outline-none focus:border-vsc-accent placeholder:text-vsc-muted"
             />
-            {searchQuery && (
-              <ul className="mt-2 space-y-0.5">
-                {[...TABS, ...customFiles.map(f => ({ id: f.id, label: f.name, icon: '', iconClass: '' }))].filter(t =>
-                  t.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  t.id.toLowerCase().includes(searchQuery.toLowerCase())
-                ).map(tab => (
-                  <li
-                    key={tab.id}
-                    onClick={() => { onNavigate(tab.id); onSearchChange('') }}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer text-sm text-vsc-muted hover:bg-vsc-hover hover:text-vsc-text transition-colors"
-                  >
-                    <span className="shrink-0">{ICON_MAP[tab.id] ?? iconForFile(tab.label)}</span>
-                    <span>{tab.label}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {searchQuery && (() => {
+              const q = searchQuery.toLowerCase()
+              const allSearchable = [
+                ...TABS.filter(t => !hiddenBuiltins.includes(t.id)).map(t => ({
+                  id: t.id, label: t.label, path: t.label,
+                  content: fileContents[t.id] ?? defaultContents[t.id] ?? '',
+                })),
+                ...customFiles.map(f => ({
+                  id: f.id, label: f.name, path: f.name,
+                  content: fileContents[f.id] ?? '',
+                })),
+                ...customFolders.flatMap(folder =>
+                  folder.files.map(f => ({
+                    id: f.id, label: f.name, path: `${folder.name}/${f.name}`,
+                    content: fileContents[f.id] ?? '',
+                  }))
+                ),
+              ]
+              const results = allSearchable.flatMap(file => {
+                const lines = file.content.split('\n')
+                const hits = lines
+                  .map((line, i) => ({ line, lineNum: i + 1 }))
+                  .filter(({ line }) => line.toLowerCase().includes(q))
+                  .slice(0, 3)
+                const nameMatch = file.path.toLowerCase().includes(q)
+                return (hits.length > 0 || nameMatch) ? [{ ...file, hits }] : []
+              })
+              return (
+                <ul className="mt-2 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)] panel-scroll">
+                  {results.length === 0 && (
+                    <li className="px-2 py-2 text-sm text-vsc-muted">No results</li>
+                  )}
+                  {results.map(file => (
+                    <li key={file.id}>
+                      <div
+                        onClick={() => { onNavigate(file.id); onSearchChange('') }}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-vsc-hover transition-colors"
+                      >
+                        <span className="shrink-0">{ICON_MAP[file.id] ?? iconForFile(file.label)}</span>
+                        <span className="text-sm text-vsc-text font-medium truncate flex-1">{file.path}</span>
+                        {file.hits.length > 0 && (
+                          <span className="text-[10px] text-vsc-muted shrink-0">{file.hits.length}</span>
+                        )}
+                      </div>
+                      {file.hits.map(({ line, lineNum }) => (
+                        <div
+                          key={lineNum}
+                          onClick={() => { onNavigate(file.id); onSearchChange('') }}
+                          className="flex items-start gap-2 pl-8 pr-2 py-0.5 cursor-pointer hover:bg-vsc-hover/50 transition-colors"
+                        >
+                          <span className="text-[10px] text-vsc-muted w-6 text-right shrink-0 pt-px">{lineNum}</span>
+                          <span className="text-[11px] font-mono text-vsc-muted truncate">{line.trim()}</span>
+                        </div>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
+              )
+            })()}
           </div>
           <div className="flex-1" />
           <BottomSection />

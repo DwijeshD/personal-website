@@ -2,14 +2,32 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { TABS } from '@/lib/data'
+import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
 
 interface Props {
   open: boolean
   onClose: () => void
   onNavigate: (id: string) => void
+  customFiles: CustomFile[]
+  customFolders: CustomFolder[]
 }
 
-export default function CommandPalette({ open, onClose, onNavigate }: Props) {
+function iconForExt(name: string): { icon: string; iconClass: string } {
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  switch (ext) {
+    case 'tsx': case 'jsx': return { icon: '⚛',  iconClass: 'text-[#61dafb]' }
+    case 'ts':              return { icon: 'TS',  iconClass: 'text-[#3178c6]' }
+    case 'js':              return { icon: 'JS',  iconClass: 'text-[#f1c40f]' }
+    case 'html': case 'htm': return { icon: '<>', iconClass: 'text-[#e34c26]' }
+    case 'css': case 'scss': return { icon: '#',  iconClass: 'text-[#519aba]' }
+    case 'json':            return { icon: '{}', iconClass: 'text-[#f1c40f]' }
+    case 'md':              return { icon: 'M↓', iconClass: 'text-[#519aba]' }
+    case 'pdf':             return { icon: 'PDF', iconClass: 'text-[#e44d26]' }
+    default:                return { icon: '📄',  iconClass: 'text-vsc-muted' }
+  }
+}
+
+export default function CommandPalette({ open, onClose, onNavigate, customFiles, customFolders }: Props) {
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -20,7 +38,17 @@ export default function CommandPalette({ open, onClose, onNavigate }: Props) {
     }
   }, [open])
 
-  const filtered = TABS.filter(
+  const allFiles = [
+    ...TABS.map(t => ({ id: t.id, label: t.label, icon: t.icon, iconClass: t.iconClass, path: 'portfolio/src' })),
+    ...customFolders.flatMap(folder => folder.files.map(f => ({
+      id: f.id, label: f.name, path: `portfolio/src/${folder.name}`, ...iconForExt(f.name),
+    }))),
+    ...customFiles.map(f => ({
+      id: f.id, label: f.name, path: 'portfolio/src', ...iconForExt(f.name),
+    })),
+  ]
+
+  const filtered = allFiles.filter(
     (t) =>
       t.label.toLowerCase().includes(query.toLowerCase()) ||
       t.id.toLowerCase().includes(query.toLowerCase()),
@@ -67,7 +95,7 @@ export default function CommandPalette({ open, onClose, onNavigate }: Props) {
             >
               <span className={`text-sm font-mono ${tab.iconClass}`}>{tab.icon}</span>
               <span className="text-sm text-vsc-text">{tab.label}</span>
-              <span className="ml-auto text-xs text-vsc-muted">portfolio/src</span>
+              <span className="ml-auto text-xs text-vsc-muted">{tab.path}</span>
             </li>
           ))}
           {filtered.length === 0 && (

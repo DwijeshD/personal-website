@@ -16,7 +16,7 @@ export default function HTMLRenderer({ content }: Props) {
 
   return (
     <iframe
-      sandbox="allow-scripts"
+      sandbox=""
       srcDoc={debounced}
       className="w-full h-full border-0 bg-white"
       title="HTML Preview"

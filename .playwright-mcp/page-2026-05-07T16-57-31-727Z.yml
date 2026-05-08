@@ -1,0 +1,212 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e5]
+      - generic [ref=e7]:
+        - button "File" [ref=e9] [cursor=pointer]
+        - button "Edit" [ref=e11] [cursor=pointer]
+        - button "Selection" [ref=e13] [cursor=pointer]
+        - button "View" [ref=e15] [cursor=pointer]
+        - button "Go" [ref=e17] [cursor=pointer]
+        - button "Run" [ref=e19] [cursor=pointer]
+        - button "Terminal" [ref=e21] [cursor=pointer]
+        - button "Help" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - button "Go Back" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+        - button "Go Forward" [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+      - button "portfolio Ctrl+P" [ref=e32] [cursor=pointer]:
+        - img [ref=e33]
+        - generic: portfolio
+        - generic [ref=e36]: Ctrl+P
+      - generic [ref=e37]:
+        - button "Toggle Primary Sidebar (Ctrl+B)" [ref=e38] [cursor=pointer]:
+          - img [ref=e39]
+        - 'button "Toggle Panel (Ctrl+`)" [ref=e42] [cursor=pointer]':
+          - img [ref=e43]
+        - button "Toggle Copilot Panel (Ctrl+Shift+A)" [ref=e46] [cursor=pointer]:
+          - img [ref=e47]
+        - button "Customize Layout" [ref=e50] [cursor=pointer]:
+          - img [ref=e51]
+      - generic [ref=e56]:
+        - button "Minimize" [ref=e57] [cursor=pointer]:
+          - img [ref=e58]
+        - button "Maximize" [ref=e60] [cursor=pointer]:
+          - img [ref=e61]
+        - button "Close" [ref=e63] [cursor=pointer]:
+          - img [ref=e64]
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - button "Explorer" [ref=e70] [cursor=pointer]:
+            - img [ref=e72]
+          - button "Search" [ref=e76] [cursor=pointer]:
+            - img [ref=e77]
+          - button "Source Control" [ref=e80] [cursor=pointer]:
+            - img [ref=e81]
+          - button "Dwijesh's Copilot" [ref=e86] [cursor=pointer]:
+            - img [ref=e87]
+        - generic [ref=e91]:
+          - link "GitHub" [ref=e92] [cursor=pointer]:
+            - /url: https://github.com/DwijeshD
+            - img [ref=e93]
+          - button "Settings" [ref=e95] [cursor=pointer]:
+            - img [ref=e96]
+      - generic [ref=e99]:
+        - generic [ref=e100]: Explorer
+        - generic [ref=e101]:
+          - button "▾ Portfolio" [ref=e102] [cursor=pointer]:
+            - generic [ref=e103]: ▾
+            - generic [ref=e104]: Portfolio
+          - generic [ref=e105]:
+            - button "New File" [ref=e106] [cursor=pointer]:
+              - img [ref=e107]
+            - button "New Folder" [ref=e110] [cursor=pointer]:
+              - img [ref=e111]
+        - list [ref=e113]:
+          - listitem [ref=e274] [cursor=pointer]:
+            - img [ref=e277]
+            - generic [ref=e284]: home.tsx
+          - listitem [ref=e285] [cursor=pointer]:
+            - img [ref=e287]:
+              - generic [ref=e289]: </>
+            - generic [ref=e290]: about.html
+          - listitem [ref=e291] [cursor=pointer]:
+            - img [ref=e293]:
+              - generic [ref=e295]: JS
+            - generic [ref=e296]: projects.js
+          - listitem [ref=e297] [cursor=pointer]:
+            - img [ref=e299]:
+              - generic [ref=e301]: "{}"
+            - generic [ref=e302]: skills.json
+          - listitem [ref=e303] [cursor=pointer]:
+            - img [ref=e305]:
+              - generic [ref=e307]: TS
+            - generic [ref=e308]: experience.ts
+          - listitem [ref=e309] [cursor=pointer]:
+            - img [ref=e311]
+            - generic [ref=e319]: contact.css
+          - listitem [ref=e320] [cursor=pointer]:
+            - img [ref=e322]:
+              - generic [ref=e324]: MD
+            - generic [ref=e326]: README.md
+          - listitem [ref=e327] [cursor=pointer]:
+            - img [ref=e329]:
+              - generic [ref=e331]: PDF
+            - generic [ref=e332]: Dwijesh_Dookraz_Resume.pdf
+        - generic [ref=e333]:
+          - button "Dwijesh's Copilot" [ref=e335] [cursor=pointer]:
+            - img [ref=e336]
+            - generic [ref=e338]: Dwijesh's Copilot
+          - generic [ref=e339]:
+            - generic [ref=e340]:
+              - img [ref=e341]
+              - text: main
+            - generic [ref=e343]:
+              - img [ref=e344]
+              - text: "1"
+            - generic [ref=e346]:
+              - img [ref=e347]
+              - text: "3"
+      - generic [ref=e189]:
+        - generic [ref=e191] [cursor=pointer]:
+          - generic [ref=e192]: ⚛
+          - generic [ref=e193]: home.tsx
+          - button "✕" [ref=e194]
+        - generic [ref=e195]:
+          - generic [ref=e196]: portfolio
+          - generic [ref=e197]: ›
+          - generic [ref=e198]: src
+          - generic [ref=e199]: ›
+          - generic [ref=e200]: home.tsx
+        - generic [ref=e203]:
+          - generic [ref=e204]:
+            - button "code" [active] [ref=e205] [cursor=pointer]
+            - button "split" [ref=e206] [cursor=pointer]
+            - button "preview" [ref=e207] [cursor=pointer]
+          - code [ref=e353]:
+            - generic [ref=e354]:
+              - textbox "Editor content"
+              - textbox [ref=e355]
+              - generic [ref=e357]:
+                - generic [ref=e360]: "1"
+                - generic [ref=e362]: "2"
+                - generic [ref=e364]: "3"
+                - generic [ref=e366]: "4"
+                - generic [ref=e367]:
+                  - generic [ref=e368] [cursor=pointer]: 
+                  - generic [ref=e369]: "5"
+                - generic [ref=e371]: "6"
+                - generic [ref=e373]: "7"
+                - generic [ref=e375]: "8"
+                - generic [ref=e377]: "9"
+                - generic [ref=e379]: "10"
+                - generic [ref=e381]: "11"
+                - generic [ref=e383]: "12"
+                - generic [ref=e385]: "13"
+                - generic [ref=e386]:
+                  - generic [ref=e387] [cursor=pointer]: 
+                  - generic [ref=e388]: "14"
+                - generic [ref=e389]:
+                  - generic [ref=e390] [cursor=pointer]: 
+                  - generic [ref=e391]: "15"
+                - generic [ref=e392]:
+                  - generic [ref=e393] [cursor=pointer]: 
+                  - generic [ref=e394]: "16"
+                - generic [ref=e396]: "17"
+                - generic [ref=e398]: "18"
+                - generic [ref=e400]: "19"
+                - generic [ref=e401]:
+                  - generic [ref=e402] [cursor=pointer]: 
+                  - generic [ref=e403]: "20"
+                - generic [ref=e405]: "21"
+                - generic [ref=e407]: "22"
+                - generic [ref=e409]: "23"
+                - generic [ref=e411]: "24"
+                - generic [ref=e413]: "25"
+                - generic [ref=e415]: "26"
+                - generic [ref=e417]: "27"
+              - generic [ref=e504]:
+                - generic [ref=e506]: "'use client'"
+                - generic [ref=e509]: "import { useState, useEffect } from 'react'"
+                - generic [ref=e512]: "const PERSON = {"
+                - generic [ref=e514]: "name: 'Dwijesh Dookraz',"
+                - generic [ref=e516]: "headline: 'Software Engineer — Backend, AI Systems, Applied ML',"
+                - generic [ref=e518]: "tagline: 'I build production-grade backend systems, AI pipelines, and automation tools.',"
+                - generic [ref=e520]: "github: 'https://github.com/DwijeshD',"
+                - generic [ref=e522]: "linkedin: 'https://linkedin.com/in/dwijesh-dookraz',"
+                - generic [ref=e524]: "email: 'dwijeshdookraz1@gmail.com',"
+                - generic [ref=e526]: "}"
+                - generic [ref=e529]: "export default function Home() {"
+                - generic [ref=e531]: return (
+                - generic [ref=e533]: <main className="flex flex-col items-center justify-center h-full gap-6 px-8">
+                - generic [ref=e535]: "<h1 className=\"text-7xl font-black tracking-tight\">{PERSON.name}</h1>"
+                - generic [ref=e537]: "<p className=\"text-xl text-blue-400\">{PERSON.headline}</p>"
+                - generic [ref=e539]: "<p className=\"max-w-xl text-center opacity-60\">{PERSON.tagline}</p>"
+                - generic [ref=e541]: <div className="flex gap-3 mt-4">
+                - generic [ref=e543]: "<a href={PERSON.github} target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>"
+                - generic [ref=e545]: "<a href={PERSON.linkedin} target=\"_blank\" rel=\"noopener noreferrer\">LinkedIn</a>"
+                - generic [ref=e547]: "<a href={`mailto:${PERSON.email}`}>Email</a>"
+                - generic [ref=e549]: </div>
+                - generic [ref=e551]: </main>
+                - generic [ref=e553]: )
+                - generic [ref=e555]: "}"
+    - generic [ref=e261]:
+      - generic [ref=e262]:
+        - generic [ref=e263]:
+          - img [ref=e264]
+          - text: main
+        - generic [ref=e266]: 0 errors, 0 warnings
+      - generic [ref=e267]:
+        - button "AI Assistant" [ref=e268] [cursor=pointer]
+        - generic [ref=e269]: Ln 1, Col 1
+        - generic [ref=e270]: UTF-8
+        - generic [ref=e271]: TSX
+        - generic [ref=e272]: Available
+  - button "Open Next.js Dev Tools" [ref=e561] [cursor=pointer]:
+    - img [ref=e562]
+  - alert [ref=e565]
+  - generic [ref=e566]:
+    - alert
+    - alert

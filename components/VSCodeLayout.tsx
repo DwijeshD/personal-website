@@ -96,6 +96,26 @@ export default function VSCodeLayout() {
     setCopilotOpen((v) => !v)
   }
 
+  // Warm up edge functions + OpenRouter connection on mount.
+  // Chat uses SSE — abort via signal immediately after headers to avoid ECONNRESET.
+  // ai-action is non-streaming — let it complete (it's fast and primes the model).
+  useEffect(() => {
+    const ctrl = new AbortController()
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'hi' }] }),
+      signal: ctrl.signal,
+    }).catch(() => {})
+    ctrl.abort()
+
+    fetch('/api/ai-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'hi' }),
+    }).catch(() => {})
+  }, [])
+
   // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -129,24 +149,37 @@ export default function VSCodeLayout() {
     else document.exitFullscreen().catch(() => {})
   }
 
+  // Map AI-supplied filenames back to built-in tab IDs
+  const BUILTIN_PATH_TO_ID: Record<string, string> = Object.fromEntries(
+    Object.entries(BREADCRUMB).map(([id, path]) => [path, id])
+  )
+
   function executeAiAction(action: AiFileAction) {
     const { path, content = '' } = action
-    const id = 'file:' + path
+    const builtinId = BUILTIN_PATH_TO_ID[path]
+    const id = builtinId ?? ('file:' + path)
     switch (action.action) {
       case 'create_file':
-        setCustomFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
+        if (!builtinId)
+          setCustomFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
         setFileContents(prev => ({ ...prev, [id]: content }))
         navigate(id)
         break
       case 'update_file':
+        if (!builtinId)
+          setCustomFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
         setFileContents(prev => ({ ...prev, [id]: content }))
         navigate(id)
         break
       case 'delete_file':
-        setCustomFiles(prev => prev.filter(f => f.id !== id))
-        setCustomFolders(prev => prev.map(folder => ({
-          ...folder, files: folder.files.filter(f => f.id !== id),
-        })))
+        if (builtinId) {
+          setHiddenBuiltins(prev => prev.includes(builtinId) ? prev : [...prev, builtinId])
+        } else {
+          setCustomFiles(prev => prev.filter(f => f.id !== id))
+          setCustomFolders(prev => prev.map(folder => ({
+            ...folder, files: folder.files.filter(f => f.id !== id),
+          })))
+        }
         closeTab(id)
         setFileContents(prev => { const n = { ...prev }; delete n[id]; return n })
         setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
@@ -281,6 +314,8 @@ export default function VSCodeLayout() {
           customFolders={customFolders}
           onCustomFilesChange={setCustomFiles}
           onCustomFoldersChange={setCustomFolders}
+          fileContents={fileContents}
+          defaultContents={DEFAULT_CONTENT}
         />
 
         {/* Editor column */}
@@ -326,7 +361,15 @@ export default function VSCodeLayout() {
                     ? activeTab.slice(5)
                     : (BREADCRUMB[activeTab] ?? activeTab)
 
-                  const previewNode = isBuiltin ? (() => {
+                  // html/md files have a live renderer — drop hardcoded panel once edited
+                  // so HTMLRenderer/MarkdownRenderer reflects live changes.
+                  // All other types (tsx/js/json/css) have no live renderer, so always
+                  // keep the hardcoded panel as a reference preview in split/preview mode.
+                  const ext = filename.split('.').pop()?.toLowerCase() ?? ''
+                  const hasNativeRenderer = ['html', 'htm', 'md', 'markdown'].includes(ext)
+                  const hasEdits = !!fileContents[activeTab]
+                  const showPanel = isBuiltin && (!hasEdits || !hasNativeRenderer)
+                  const previewNode = showPanel ? (() => {
                     switch (activeTab) {
                       case 'home':       return <HomePanel onNavigate={navigate} />
                       case 'about':      return <AboutPanel />
@@ -406,6 +449,8 @@ export default function VSCodeLayout() {
         open={palOpen}
         onClose={() => setPalOpen(false)}
         onNavigate={(id) => { navigate(id); setPalOpen(false) }}
+        customFiles={customFiles}
+        customFolders={customFolders}
       />
 
       <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
