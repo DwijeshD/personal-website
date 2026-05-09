@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { TABS } from '@/lib/data'
 import type { SidePanel } from './ActivityBar'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
 
@@ -14,14 +13,12 @@ interface Props {
   onSearchChange: (q: string) => void
   onToggleCopilot: () => void
   copilotOpen: boolean
-  hiddenBuiltins: string[]
-  onHideBuiltin: (id: string) => void
   onFileDeleted: (id: string) => void
-  // Lifted file-system state
-  customFiles:          CustomFile[]
-  customFolders:        CustomFolder[]
-  onCustomFilesChange:  (files: CustomFile[]) => void
-  onCustomFoldersChange:(folders: CustomFolder[]) => void
+  // Unified file-system state (all files — initial + user-created)
+  workspaceFiles:          CustomFile[]
+  workspaceFolders:        CustomFolder[]
+  onWorkspaceFilesChange:  (files: CustomFile[]) => void
+  onWorkspaceFoldersChange:(folders: CustomFolder[]) => void
   // Content for Find in Files
   fileContents:    Record<string, string>
   defaultContents: Record<string, string>
@@ -112,18 +109,6 @@ const FolderIcon = ({ open }: { open: boolean }) => (
   </svg>
 )
 
-// Map known tab IDs → icons
-const ICON_MAP: Record<string, React.ReactNode> = {
-  home:       <ReactIcon />,
-  about:      <HtmlIcon />,
-  projects:   <JsIcon />,
-  skills:     <JsonIcon />,
-  experience: <TsIcon />,
-  contact:    <CssIcon />,
-  readme:     <MdIcon />,
-  resume:     <PdfIcon />,
-}
-
 function iconForFile(name: string): React.ReactNode {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
   switch (ext) {
@@ -171,7 +156,6 @@ function GitStatus() {
 interface CtxTarget {
   x: number; y: number
   id: string; name: string
-  isBuiltin: boolean
   folderId?: string
 }
 
@@ -184,18 +168,16 @@ export default function Sidebar({
   onSearchChange,
   onToggleCopilot,
   copilotOpen,
-  hiddenBuiltins,
-  onHideBuiltin,
   onFileDeleted,
-  customFiles,
-  customFolders,
-  onCustomFilesChange,
-  onCustomFoldersChange,
+  workspaceFiles,
+  workspaceFolders,
+  onWorkspaceFilesChange,
+  onWorkspaceFoldersChange,
   fileContents,
   defaultContents,
 }: Props) {
-  const setCustomFiles   = onCustomFilesChange
-  const setCustomFolders = onCustomFoldersChange
+  const setWorkspaceFiles   = onWorkspaceFilesChange
+  const setWorkspaceFolders = onWorkspaceFoldersChange
 
   const [portfolioOpen, setPortfolioOpen] = useState(true)
   const [newMode, setNewMode]             = useState<'file' | 'folder' | null>(null)
@@ -234,10 +216,10 @@ export default function Sidebar({
     if (!name) { cancelNew(); return }
     if (newMode === 'file') {
       const id = 'file:' + name
-      setCustomFiles([...customFiles, { id, name }])
+      setWorkspaceFiles([...workspaceFiles, { id, name }])
       onNavigate(id)
     } else if (newMode === 'folder') {
-      setCustomFolders([...customFolders, { id: 'folder:' + name, name, open: true, files: [] }])
+      setWorkspaceFolders([...workspaceFolders, { id: 'folder:' + name, name, open: true, files: [] }])
     }
     cancelNew()
   }
@@ -254,7 +236,7 @@ export default function Sidebar({
   }
 
   function startNewInFolder(folderId: string) {
-    setCustomFolders(customFolders.map(f => f.id === folderId ? { ...f, open: true } : f))
+    setWorkspaceFolders(workspaceFolders.map(f => f.id === folderId ? { ...f, open: true } : f))
     setNewInFolder(folderId)
     setNewInFolderName('')
     setTimeout(() => folderInputRef.current?.focus(), 0)
@@ -264,7 +246,7 @@ export default function Sidebar({
     const name = newInFolderName.trim()
     if (!name) { cancelFolderFile(); return }
     const fileId = 'file:' + name
-    setCustomFolders(customFolders.map(f =>
+    setWorkspaceFolders(workspaceFolders.map(f =>
       f.id === folderId ? { ...f, files: [...f.files, { id: fileId, name }] } : f
     ))
     onNavigate(fileId)
@@ -278,24 +260,22 @@ export default function Sidebar({
 
   // ── Context menu actions ────────────────────────────────────────────────
 
-  function openCtx(e: React.MouseEvent, id: string, name: string, isBuiltin: boolean, folderId?: string) {
+  function openCtx(e: React.MouseEvent, id: string, name: string, folderId?: string) {
     e.preventDefault()
     e.stopPropagation()
-    setCtx({ x: e.clientX, y: e.clientY, id, name, isBuiltin, folderId })
+    setCtx({ x: e.clientX, y: e.clientY, id, name, folderId })
   }
 
   function handleDelete() {
     if (!ctx) return
-    const { id, isBuiltin, folderId } = ctx
+    const { id, folderId } = ctx
     setCtx(null)
-    if (isBuiltin) {
-      onHideBuiltin(id)
-    } else if (folderId) {
-      setCustomFolders(customFolders.map(f =>
-        f.id === folderId ? { ...f, files: f.files.filter(fi => fi.id !== id) } : f
+    if (folderId) {
+      setWorkspaceFolders(workspaceFolders.map((f: CustomFolder) =>
+        f.id === folderId ? { ...f, files: f.files.filter((fi: CustomFile) => fi.id !== id) } : f
       ))
     } else {
-      setCustomFiles(customFiles.filter(f => f.id !== id))
+      setWorkspaceFiles(workspaceFiles.filter((f: CustomFile) => f.id !== id))
     }
     onFileDeleted(id)
   }
@@ -313,8 +293,8 @@ export default function Sidebar({
     const name = renameVal.trim()
     if (name) {
       setNameOverrides(prev => ({ ...prev, [id]: name }))
-      setCustomFiles(customFiles.map(f => f.id === id ? { ...f, name } : f))
-      setCustomFolders(customFolders.map(folder => ({
+      setWorkspaceFiles(workspaceFiles.map(f => f.id === id ? { ...f, name } : f))
+      setWorkspaceFolders(workspaceFolders.map(folder => ({
         ...folder,
         files: folder.files.map(f => f.id === id ? { ...f, name } : f),
       })))
@@ -336,7 +316,7 @@ export default function Sidebar({
       ? base.slice(0, dotIdx) + '_copy' + base.slice(dotIdx)
       : base + '_copy'
     const newId = 'file:' + newName
-    setCustomFiles([...customFiles, { id: newId, name: newName }])
+    setWorkspaceFiles([...workspaceFiles, { id: newId, name: newName }])
     onNavigate(newId)
     setCtx(null)
   }
@@ -375,13 +355,12 @@ export default function Sidebar({
   )
 
   const FileRow = ({ id, name, icon, depth = 0, folderId }: { id: string; name: string; icon: React.ReactNode; depth?: number; folderId?: string }) => {
-    const isBuiltin    = TABS.some(t => t.id === id)
     const displayName  = nameOverrides[id] ?? name
     const isRenaming   = renamingId === id
     return (
       <li
         onClick={() => !isRenaming && onNavigate(id)}
-        onContextMenu={(e) => openCtx(e, id, displayName, isBuiltin, folderId)}
+        onContextMenu={(e) => openCtx(e, id, displayName, folderId)}
         className={`
           flex items-center gap-2 pr-3 py-[4px] cursor-pointer transition-colors relative
           ${activeTab === id ? 'bg-vsc-selection text-vsc-text' : 'text-[#cccccc] hover:bg-vsc-hover'}
@@ -465,29 +444,18 @@ export default function Sidebar({
           <ul className="flex-1 overflow-y-auto panel-scroll py-0.5">
             {portfolioOpen && (
               <>
-                {/* Static portfolio files */}
-                {TABS.filter(tab => !hiddenBuiltins.includes(tab.id)).map((tab) => (
-                  <FileRow
-                    key={tab.id}
-                    id={tab.id}
-                    name={tab.label}
-                    icon={ICON_MAP[tab.id]}
-                    depth={1}
-                  />
-                ))}
-
-                {/* Custom folders */}
-                {customFolders.map((folder) => (
+                {/* Folders */}
+                {workspaceFolders.map((folder) => (
                   <li key={folder.id}>
                     <div
                       className="group flex items-center gap-2 pr-2 py-[4px] cursor-pointer text-[#cccccc] hover:bg-vsc-hover transition-colors"
                       style={{ paddingLeft: '20px' }}
-                      onContextMenu={(e) => openCtx(e, folder.id, folder.name, false)}
+                      onContextMenu={(e) => openCtx(e, folder.id, folder.name)}
                     >
                       <button
                         className="flex items-center gap-2 flex-1 min-w-0"
-                        onClick={() => setCustomFolders(
-                          customFolders.map(f => f.id === folder.id ? { ...f, open: !f.open } : f)
+                        onClick={() => setWorkspaceFolders(
+                          workspaceFolders.map(f => f.id === folder.id ? { ...f, open: !f.open } : f)
                         )}
                       >
                         <span className="text-vsc-muted text-[9px] w-3 text-center shrink-0">{folder.open ? '▾' : '▸'}</span>
@@ -534,8 +502,8 @@ export default function Sidebar({
                   </li>
                 ))}
 
-                {/* Custom files */}
-                {customFiles.map((f) => (
+                {/* All files */}
+                {workspaceFiles.map((f: CustomFile) => (
                   <FileRow
                     key={f.id}
                     id={f.id}
@@ -591,26 +559,22 @@ export default function Sidebar({
             {searchQuery && (() => {
               const q = searchQuery.toLowerCase()
               const allSearchable = [
-                ...TABS.filter(t => !hiddenBuiltins.includes(t.id)).map(t => ({
-                  id: t.id, label: t.label, path: t.label,
-                  content: fileContents[t.id] ?? defaultContents[t.id] ?? '',
-                })),
-                ...customFiles.map(f => ({
+                ...workspaceFiles.map((f: CustomFile) => ({
                   id: f.id, label: f.name, path: f.name,
-                  content: fileContents[f.id] ?? '',
+                  content: fileContents[f.id] ?? defaultContents[f.name] ?? '',
                 })),
-                ...customFolders.flatMap(folder =>
-                  folder.files.map(f => ({
+                ...workspaceFolders.flatMap((folder: CustomFolder) =>
+                  folder.files.map((f: CustomFile) => ({
                     id: f.id, label: f.name, path: `${folder.name}/${f.name}`,
                     content: fileContents[f.id] ?? '',
                   }))
                 ),
               ]
-              const results = allSearchable.flatMap(file => {
+              const results = allSearchable.flatMap((file: { id: string; label: string; path: string; content: string }) => {
                 const lines = file.content.split('\n')
                 const hits = lines
-                  .map((line, i) => ({ line, lineNum: i + 1 }))
-                  .filter(({ line }) => line.toLowerCase().includes(q))
+                  .map((line: string, i: number) => ({ line, lineNum: i + 1 }))
+                  .filter(({ line }: { line: string; lineNum: number }) => line.toLowerCase().includes(q))
                   .slice(0, 3)
                 const nameMatch = file.path.toLowerCase().includes(q)
                 return (hits.length > 0 || nameMatch) ? [{ ...file, hits }] : []
@@ -620,13 +584,13 @@ export default function Sidebar({
                   {results.length === 0 && (
                     <li className="px-2 py-2 text-sm text-vsc-muted">No results</li>
                   )}
-                  {results.map(file => (
+                  {results.map((file: { id: string; label: string; path: string; hits: { line: string; lineNum: number }[] }) => (
                     <li key={file.id}>
                       <div
                         onClick={() => { onNavigate(file.id); onSearchChange('') }}
                         className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-vsc-hover transition-colors"
                       >
-                        <span className="shrink-0">{ICON_MAP[file.id] ?? iconForFile(file.label)}</span>
+                        <span className="shrink-0">{iconForFile(file.label)}</span>
                         <span className="text-sm text-vsc-text font-medium truncate flex-1">{file.path}</span>
                         {file.hits.length > 0 && (
                           <span className="text-[10px] text-vsc-muted shrink-0">{file.hits.length}</span>
@@ -666,7 +630,7 @@ export default function Sidebar({
           <CtxBtn label="New File"   onClick={() => { setCtx(null); setPortfolioOpen(true); startNew('file')   }} />
           <CtxBtn label="New Folder" onClick={() => { setCtx(null); setPortfolioOpen(true); startNew('folder') }} />
           <CtxSep />
-          <CtxBtn label="Copy"      shortcut="Ctrl+C" onClick={handleCopy}     disabled={ctx.isBuiltin} />
+          <CtxBtn label="Copy"      shortcut="Ctrl+C" onClick={handleCopy} />
           <CtxBtn label="Paste"     shortcut="Ctrl+V" onClick={handlePaste}    disabled={!clipboard} />
           <CtxBtn label="Copy Path"                   onClick={handleCopyPath} />
           <CtxSep />

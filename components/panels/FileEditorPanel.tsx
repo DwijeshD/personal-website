@@ -8,6 +8,7 @@ import type * as MonacoTypes from 'monaco-editor'
 const MonacoEditor     = dynamic(() => import('@monaco-editor/react'),              { ssr: false, loading: () => <EditorSkeleton /> })
 const MarkdownRenderer = dynamic(() => import('../renderers/MarkdownRenderer'),      { ssr: false })
 const HTMLRenderer     = dynamic(() => import('../renderers/HTMLRenderer'),          { ssr: false })
+const LiveCodeRenderer = dynamic(() => import('../renderers/LiveCodeRenderer'),      { ssr: false })
 
 export type ViewMode = 'code' | 'split' | 'preview'
 
@@ -17,29 +18,15 @@ interface Props {
   onChange:     (v: string) => void
   mode:         ViewMode
   onModeChange: (m: ViewMode) => void
-  /** Optional custom preview renderer — used for built-in panels */
+  /** Optional custom preview renderer — used for built-in panels (preview mode only) */
   previewNode?: React.ReactNode
 }
 
-type FileType = 'markdown' | 'html' | 'json' | 'other'
-
-function fileType(filename: string): FileType {
+function liveRenderer(filename: string, content: string): React.ReactNode {
   const ext = filename.split('.').pop()?.toLowerCase() ?? ''
-  if (ext === 'md' || ext === 'markdown') return 'markdown'
-  if (ext === 'html' || ext === 'htm')    return 'html'
-  if (ext === 'json')                     return 'json'
-  return 'other'
-}
-
-function supportsPreview(t: FileType, hasPreviewNode: boolean) {
-  return hasPreviewNode || t === 'markdown' || t === 'html'
-}
-
-function createRenderer(type: FileType, content: string, previewNode?: React.ReactNode) {
-  if (previewNode)         return previewNode
-  if (type === 'markdown') return <MarkdownRenderer content={content} />
-  if (type === 'html')     return <HTMLRenderer content={content} />
-  return null
+  if (ext === 'md' || ext === 'markdown') return <MarkdownRenderer content={content} />
+  if (ext === 'html' || ext === 'htm')    return <HTMLRenderer content={content} />
+  return <LiveCodeRenderer filename={filename} content={content} />
 }
 
 // Shown while Monaco bundle loads
@@ -125,60 +112,51 @@ function CodePane({ filename, content, onChange }: { filename: string; content: 
 }
 
 export default function FileEditorPanel({ filename, content, onChange, mode, onModeChange, previewNode }: Props) {
-  const type     = fileType(filename)
-  const previews = supportsPreview(type, !!previewNode)
-  const safeMode = previews ? mode : 'code'
-
-  // Split: use live renderer for html/markdown (updates as user types).
-  //        Fall back to previewNode for other types (tsx/js/json — no live renderer).
-  // Preview: always prefer the rich hardcoded panel if provided.
-  const nativeRenderer  = createRenderer(type, content)
-  const splitRenderer   = nativeRenderer ?? previewNode ?? null
-  const previewRenderer = createRenderer(type, content, previewNode)
+  // All file types support preview — split uses live renderer, preview uses static panel if available
+  const splitPane   = liveRenderer(filename, content)
+  const previewPane = previewNode ?? liveRenderer(filename, content)
 
   return (
     <div className="panel-fade-in h-full flex flex-col overflow-hidden">
-      {/* Mode toggle — only for previewable file types */}
-      {previews && (
-        <div className="flex items-center justify-end gap-1 px-3 py-1 shrink-0 border-b border-vsc-border/20 bg-vsc-bg">
-          {(['code', 'split', 'preview'] as ViewMode[]).map(m => (
-            <button
-              key={m}
-              onClick={() => onModeChange(m)}
-              className={`px-2.5 py-0.5 text-[11px] rounded transition-colors capitalize ${
-                safeMode === m
-                  ? 'bg-vsc-accent text-white'
-                  : 'text-vsc-muted hover:text-vsc-text hover:bg-vsc-hover'
-              }`}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Mode toggle — always visible */}
+      <div className="flex items-center justify-end gap-1 px-3 py-1 shrink-0 border-b border-vsc-border/20 bg-vsc-bg">
+        {(['code', 'split', 'preview'] as ViewMode[]).map(m => (
+          <button
+            key={m}
+            onClick={() => onModeChange(m)}
+            className={`px-2.5 py-0.5 text-[11px] rounded transition-colors capitalize ${
+              mode === m
+                ? 'bg-vsc-accent text-white'
+                : 'text-vsc-muted hover:text-vsc-text hover:bg-vsc-hover'
+            }`}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden flex">
-        {safeMode === 'code' && (
+        {mode === 'code' && (
           <div className="flex-1 overflow-hidden">
             <CodePane filename={filename} content={content} onChange={onChange} />
           </div>
         )}
 
-        {safeMode === 'split' && (
+        {mode === 'split' && (
           <>
             <div className="flex-1 overflow-hidden border-r border-vsc-border/40">
               <CodePane filename={filename} content={content} onChange={onChange} />
             </div>
             <div className="flex-1 overflow-hidden bg-vsc-bg">
-              {splitRenderer}
+              {splitPane}
             </div>
           </>
         )}
 
-        {safeMode === 'preview' && (
+        {mode === 'preview' && (
           <div className="flex-1 overflow-hidden">
-            {previewRenderer}
+            {previewPane}
           </div>
         )}
       </div>

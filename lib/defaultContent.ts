@@ -1,197 +1,427 @@
 export const DEFAULT_CONTENT: Record<string, string> = {
-  home: `'use client'
 
-import { useState, useEffect } from 'react'
-
-const PERSON = {
-  name:     'Dwijesh Dookraz',
-  headline: 'Software Engineer — Backend, AI Systems, Applied ML',
-  tagline:  'I build production-grade backend systems, AI pipelines, and automation tools.',
-  github:   'https://github.com/DwijeshD',
-  linkedin: 'https://linkedin.com/in/dwijesh-dookraz',
-  email:    'dwijeshdookraz1@gmail.com',
-}
-
-export default function Home() {
-  return (
-    <main className="flex flex-col items-center justify-center h-full gap-6 px-8">
-      <h1 className="text-7xl font-black tracking-tight">{PERSON.name}</h1>
-      <p className="text-xl text-blue-400">{PERSON.headline}</p>
-      <p className="max-w-xl text-center opacity-60">{PERSON.tagline}</p>
-      <div className="flex gap-3 mt-4">
-        <a href={PERSON.github}   target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href={PERSON.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
-        <a href={\`mailto:\${PERSON.email}\`}>Email</a>
-      </div>
-    </main>
-  )
-}`,
-
-  about: `<!DOCTYPE html>
+  'home.html': `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>About — Dwijesh Dookraz</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 720px;
-      margin: 40px auto;
-      padding: 0 24px;
-      background: #1e1e1e;
-      color: #d4d4d4;
-      line-height: 1.7;
-    }
-    h1 { color: #9cdcfe; font-size: 2em; margin-bottom: 0; }
-    h2 { color: #dcdcaa; border-bottom: 1px solid #454545; padding-bottom: 8px; margin-top: 2em; }
-    blockquote {
-      border-left: 3px solid #007acc;
-      margin: 1.5em 0;
-      padding: 0.5em 1em;
-      color: #858585;
-      font-style: italic;
-    }
-    .tag {
-      display: inline-block;
-      padding: 2px 10px;
-      background: #007acc22;
-      border: 1px solid #007acc55;
-      border-radius: 3px;
-      font-size: 0.85em;
-      margin: 2px;
-      color: #9cdcfe;
-    }
-    .grade { color: #4ec9b0; font-weight: 600; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dwijesh Dookraz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Consolas, 'Courier New', monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 48px;
+  }
+  .page { max-width: 720px; width: 100%; }
+  .eyebrow {
+    font-size: 11px;
+    color: #6a9955;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .name {
+    font-size: clamp(48px, 9vw, 88px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -.02em;
+    margin-bottom: 4px;
+  }
+  .n1 {
+    background: linear-gradient(135deg, #fff 0%, #9cdcfe 40%, #569cd6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .n2 {
+    background: linear-gradient(135deg, #569cd6 0%, #ce9178 60%, #dcdcaa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .code-line { font-size: 13px; color: #6c6c6c; margin: 20px 0 24px; }
+  .kw { color: #569cd6; }
+  .var { color: #9cdcfe; }
+  .str { color: #ce9178; }
+  .cursor { color: #aeafad; animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid;
+  }
+  .pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .7;
+    flex-shrink: 0;
+  }
+  .pa { color: #f59e0b; background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.3); }
+  .pp { color: #a855f7; background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.3); }
+  .pb { color: #3b82f6; background: rgba(59,130,246,.1); border-color: rgba(59,130,246,.3); }
+  .pk { color: #ec4899; background: rgba(236,72,153,.1); border-color: rgba(236,72,153,.3); }
+  .tagline {
+    font-size: 13px;
+    color: rgba(212,212,212,.65);
+    line-height: 1.8;
+    max-width: 480px;
+    margin-bottom: 32px;
+  }
+  .ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; }
+  a.bp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #0e639c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font: 600 13px Consolas, monospace;
+    text-decoration: none;
+    transition: background .15s;
+  }
+  a.bp:hover { background: #1177bb; }
+  a.bs {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    color: #d4d4d4;
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    font: 13px Consolas, monospace;
+    text-decoration: none;
+    transition: border-color .15s, background .15s;
+  }
+  a.bs:hover { border-color: #0e639c; background: rgba(14,99,156,.1); }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 32px; }
+  .stat {
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+    transition: border-color .15s;
+  }
+  .stat:hover { border-color: rgba(14,99,156,.5); }
+  .sv { font-size: 20px; font-weight: 700; color: #0e639c; }
+  .sl { font-size: 10px; color: #6c6c6c; text-transform: uppercase; letter-spacing: .1em; margin-top: 2px; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; }
+  a.lnk {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #6c6c6c;
+    text-decoration: none;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  a.lnk:hover { color: #d4d4d4; border-color: rgba(14,99,156,.5); background: rgba(14,99,156,.05); }
+</style>
 </head>
 <body>
-  <h1>Dwijesh Dookraz</h1>
-  <p style="color:#858585">Software Engineer — Backend · AI Systems · Applied ML</p>
-
-  <blockquote>
-    I build production-grade backend systems, AI pipelines, and automation tools
-    that operate on real data, real users, and real constraints.
-  </blockquote>
-
-  <h2>About</h2>
-  <p>
-    Computer Science graduate (<span class="grade">First Class Honours</span>) from the
-    University of Southampton. Focused on backend engineering and applied machine learning.
-    I work on systems where theory meets reality — APIs, webhooks, OAuth flows, distributed
-    data handling, and ML models deployed on imperfect data.
-  </p>
-  <p>
-    I've built calendar-integrated systems, AI-driven automation pipelines, and deep learning
-    models for physiological signal estimation. I care about correctness, scalability, and
-    building systems that don't break under real-world conditions.
-  </p>
-
-  <h2>Education</h2>
-  <p>
-    <strong>University of Southampton</strong> — BSc Computer Science,
-    <span class="grade"> First Class Honours</span> (2021–2024)
-  </p>
-  <p>Dissertation: <em>ML-Based Heart Rate Measurement Using rPPG</em> —
-    <span class="grade">82%</span>
-  </p>
-
-  <h2>Interests</h2>
-  <ul>
-    <li>AI systems and automation</li>
-    <li>Backend architecture and distributed systems</li>
-    <li>Applied machine learning on real-world data</li>
-    <li>Startups and building scalable products</li>
-  </ul>
+<div class="page">
+  <div class="eyebrow">// Hello, World! &#128075;</div>
+  <div class="name">
+    <div class="n1">DWIJESH</div>
+    <div class="n2">DOOKRAZ</div>
+  </div>
+  <div class="code-line">
+    <span class="kw">const </span><span class="var">role </span>= <span class="str">"Backend Engineer"</span><span class="cursor">|</span>
+  </div>
+  <div class="pills">
+    <span class="pill pa">Backend Engineer</span>
+    <span class="pill pp">AI Systems Builder</span>
+    <span class="pill pb">Applied ML</span>
+    <span class="pill pk">Nusmark</span>
+  </div>
+  <p class="tagline">I build production-grade backend systems, AI pipelines, and automation tools that operate on real data, real users, and real constraints.</p>
+  <div class="ctas">
+    <a class="bp" href="#">&#8960;/&#8960; View Projects</a>
+    <a class="bs" href="#">About Me</a>
+    <a class="bs" href="#">&#9993; Contact</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="sv">BSc CS</div><div class="sl">First Class Honours</div></div>
+    <div class="stat"><div class="sv">5+</div><div class="sl">Projects Shipped</div></div>
+    <div class="stat"><div class="sv">&#8734;</div><div class="sl">Curiosity</div></div>
+    <div class="stat"><div class="sv">&#8593;</div><div class="sl">Always Learning</div></div>
+  </div>
+  <div class="links">
+    <a class="lnk" href="https://github.com/DwijeshD" target="_blank">GitHub</a>
+    <a class="lnk" href="https://linkedin.com/in/dwijesh-dookraz" target="_blank">LinkedIn</a>
+    <a class="lnk" href="mailto:dwijeshdookraz1@gmail.com" target="_blank">Email</a>
+  </div>
+</div>
 </body>
 </html>`,
 
-  projects: `// projects.js
-// All projects by Dwijesh Dookraz
+  'app.tsx': `const { useState, useEffect } = React
 
-const projects = [
-  {
-    id: 'calendar',
-    name: 'AI Calendar Integration System',
-    subtitle: 'Nusmark',
-    description:
-      'Full backend system syncing Google & Outlook calendars. Handles event creation, ' +
-      'updates, and deletion via webhooks. Solves duplication and consistency issues using ' +
-      'transactional logic. Designed for real-world usage, not demo.',
-    tags: ['Python', 'FastAPI', 'OAuth2', 'Webhooks', 'Firestore'],
-    highlight: true,
-  },
-  {
-    id: 'rppg',
-    name: 'rPPG Heart Rate Prediction',
-    subtitle: 'Dissertation — 82%',
-    description:
-      'Deep learning model (OptimisedDeepPhys) for heart rate estimation from video. ' +
-      'Combined UBFC dataset with self-collected dataset for diverse skin tones. ' +
-      'Full pipeline: preprocessing, training, evaluation, inference.',
-    tags: ['PyTorch', 'Deep Learning', 'Signal Processing', 'Python'],
-    highlight: true,
-  },
-  {
-    id: 'ml-pipelines',
-    name: 'Machine Learning Pipelines',
-    subtitle: 'Various',
-    description:
-      'Training pipelines with PyTorch and Optuna hyperparameter tuning. ' +
-      'Subject-aware k-fold validation. Memory-efficient chunked datasets.',
-    tags: ['PyTorch', 'Optuna', 'Python', 'k-Fold CV'],
-    highlight: false,
-  },
-  {
-    id: 'recommender',
-    name: 'Recommender System',
-    subtitle: 'Matrix Factorization',
-    description:
-      'Large-scale recommender using MovieLens dataset. Optimized via SGD. ' +
-      'Focus on minimizing validation MAE.',
-    tags: ['Python', 'Matrix Factorization', 'SGD'],
-    highlight: false,
-  },
-  {
-    id: 'gene',
-    name: 'Gene Expression Analysis',
-    subtitle: 'Computational Biology',
-    description:
-      'End-to-end ML pipeline on GSE1000 dataset. Feature selection, clustering, ' +
-      'PCA, differential expression, GO enrichment analysis.',
-    tags: ['Python', 'scikit-learn', 'PCA', 'k-means'],
-    highlight: false,
-  },
+type Skill = { name: string; pct: number; color: string }
+
+const SKILLS: Skill[] = [
+  { name: 'Python',            pct: 90, color: '#3776ab' },
+  { name: 'TypeScript',        pct: 82, color: '#3178c6' },
+  { name: 'FastAPI / Flask',   pct: 85, color: '#009688' },
+  { name: 'PyTorch',           pct: 78, color: '#ee4c2c' },
+  { name: 'OAuth2 + Webhooks', pct: 88, color: '#f59e0b' },
+  { name: 'Docker',            pct: 70, color: '#2496ed' },
 ]
 
-export default projects`,
+function Bar({ name, pct, color, delay }: Skill & { delay: number }) {
+  const [w, setW] = useState(0)
 
-  skills: `{
-  "languages": [
-    "Python",
-    "Java",
-    "JavaScript",
-    "TypeScript",
-    "Haskell",
-    "C"
-  ],
-  "backend": [
-    "Flask",
-    "FastAPI",
-    "REST API Design"
-  ],
-  "systems": [
-    "Webhooks",
-    "OAuth2",
-    "Event-Driven Architecture"
-  ],
-  "databases": [
-    "Firestore",
-    "NoSQL Patterns"
-  ],
-  "cloud": [
-    "Azure Functions",
-    "Serverless Architecture"
-  ],
+  useEffect(() => {
+    const t = setTimeout(() => setW(pct), delay)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        fontSize: 13, fontFamily: 'Consolas,monospace',
+        color: '#d4d4d4', marginBottom: 8,
+      }}>
+        <span>{name}</span>
+        <span style={{ color: '#6c6c6c' }}>{pct}%</span>
+      </div>
+      <div style={{ height: 5, background: '#2d2d2d', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%',
+          width: w + '%',
+          background: color,
+          borderRadius: 3,
+          transition: 'width 0.9s cubic-bezier(0.4,0,0.2,1)',
+        }} />
+      </div>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <div style={{ background: '#1e1e1e', minHeight: '100vh', padding: '48px', color: '#d4d4d4' }}>
+      <div style={{ maxWidth: 560 }}>
+        <div style={{
+          fontSize: 11, color: '#6a9955', letterSpacing: '.15em',
+          textTransform: 'uppercase', marginBottom: 16, fontFamily: 'Consolas,monospace',
+        }}>
+          {'// app.tsx — skills visualization'}
+        </div>
+        <h1 style={{
+          fontSize: 28, fontWeight: 900, color: '#9cdcfe',
+          letterSpacing: '-.01em', marginBottom: 6, fontFamily: 'Consolas,monospace',
+        }}>
+          Technical Skills
+        </h1>
+        <p style={{ fontSize: 13, color: '#6c6c6c', marginBottom: 36, fontFamily: 'Consolas,monospace', lineHeight: 1.6 }}>
+          Backend · AI/ML · Infrastructure — proficiency by area.
+        </p>
+        {SKILLS.map((s, i) => (
+          <Bar key={s.name} {...s} delay={i * 120} />
+        ))}
+        <div style={{
+          marginTop: 28, padding: '12px 16px',
+          background: '#252526', border: '1px solid #3c3c3c',
+          borderRadius: 8, fontSize: 12, color: '#6a9955', fontFamily: 'Consolas,monospace',
+        }}>
+          {'// Edit this file — preview updates as you type'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App />)`,
+
+  'styles.css': `/* VS Code Dark — Design System
+   Edit this file to see the preview update live. */
+
+:root {
+  --bg:      #1e1e1e;
+  --surface: #252526;
+  --border:  #3c3c3c;
+  --accent:  #0e639c;
+  --accent2: #1177bb;
+  --text:    #d4d4d4;
+  --muted:   #6c6c6c;
+  --green:   #6a9955;
+  --teal:    #4ec9b0;
+  --blue:    #9cdcfe;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* ── Header ─────────────────────── */
+.header {
+  padding: 20px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--blue);
+  letter-spacing: -.01em;
+}
+
+.subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Layout ─────────────────────── */
+.container {
+  padding: 32px;
+  max-width: 800px;
+}
+
+section { margin-bottom: 40px; }
+
+h2 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--green);
+  margin-bottom: 16px;
+}
+
+h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+
+/* ── Cards ──────────────────────── */
+.flex { display: flex; gap: 12px; }
+
+.card {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  transition: border-color .15s, transform .15s;
+}
+
+.card:hover {
+  border-color: rgba(14, 99, 156, .5);
+  transform: translateY(-1px);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  color: #dcdcaa;
+  background: rgba(220, 220, 170, .1);
+  border: 1px solid rgba(220, 220, 170, .25);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-bottom: 10px;
+}
+
+.content {
+  font-size: 12px;
+  color: rgba(212, 212, 212, .6);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+/* ── Lists ──────────────────────── */
+ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+li {
+  padding-left: 18px;
+  position: relative;
+  font-size: 13px;
+  color: rgba(212, 212, 212, .75);
+}
+
+li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #569cd6;
+}
+
+/* ── Interactive ─────────────────── */
+a { color: var(--teal); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button {
+  padding: 7px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font: 12px Consolas, monospace;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+button:hover { background: var(--accent2); }
+
+input[type="text"] {
+  padding: 8px 12px;
+  background: #2d2d2d;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: 13px Consolas, monospace;
+  outline: none;
+  width: 100%;
+  transition: border-color .15s;
+}
+
+input[type="text"]:focus { border-color: var(--accent); }
+input[type="text"]::placeholder { color: var(--muted); }
+
+.item { margin-top: 12px; }
+
+strong { color: var(--text); font-weight: 600; }`,
+
+  'skills.json': `{
+  "languages": ["Python", "Java", "JavaScript", "TypeScript", "Haskell", "C"],
+  "backend": ["Flask", "FastAPI", "REST API Design"],
+  "systems": ["Webhooks", "OAuth2", "Event-Driven Architecture"],
+  "databases": ["Firestore", "NoSQL Patterns"],
+  "cloud": ["Azure Functions", "Serverless Architecture"],
   "aiml": [
     "PyTorch",
     "Deep Learning",
@@ -206,92 +436,41 @@ export default projects`,
     "MAE Evaluation",
     "k-Fold Cross-Validation"
   ],
-  "tools": [
-    "Git",
-    "Docker",
-    "API Integrations",
-    "Automation Systems"
-  ]
+  "tools": ["Git", "Docker", "API Integrations", "Automation Systems"]
 }`,
 
-  experience: `// experience.ts
+  'server.ts': `// server.ts — Nusmark Calendar Platform
 
-interface Role {
-  company: string
-  role:    string
-  period:  string
-  bullets: string[]
+interface Endpoint {
+  method: string
+  path: string
+  description: string
 }
 
-const experience: Role[] = [
-  {
-    company: 'Nusmark',
-    role:    'Backend Engineer',
-    period:  '2024 — Present',
-    bullets: [
-      'Built backend systems for an AI-powered event platform integrating Google and Outlook calendars',
-      'Developed APIs using Python (Flask/FastAPI) with Firestore as persistence layer',
-      'Implemented OAuth2 and webhook pipelines for real-time calendar event syncing',
-      'Designed transactional logic to ensure data consistency and prevent duplicate entries',
-      'Engineered notification systems for WhatsApp and mobile push delivery',
-      'Handled third-party API constraints, sync tokens, and event lifecycle management',
-    ],
-  },
+const API_VERSION: string = 'v1'
+const BASE_URL: string = 'https://api.nusmark.com'
+
+const endpoints: Endpoint[] = [
+  { method: 'POST',   path: '/auth/google',           description: 'Initiate Google OAuth2 flow'          },
+  { method: 'POST',   path: '/auth/outlook',          description: 'Initiate Microsoft OAuth2 flow'       },
+  { method: 'GET',    path: '/calendar/events',       description: 'List synced calendar events'          },
+  { method: 'POST',   path: '/calendar/sync',         description: 'Trigger manual sync'                  },
+  { method: 'DELETE', path: '/calendar/events/:id',   description: 'Remove a calendar event'              },
+  { method: 'POST',   path: '/webhooks/google',       description: 'Handle Google push notification'      },
+  { method: 'POST',   path: '/webhooks/outlook',      description: 'Handle Microsoft change notification' },
+  { method: 'GET',    path: '/health',                description: 'Service health check'                 },
 ]
 
-export default experience`,
+console.log(BASE_URL + '/api/' + API_VERSION)
+console.log('─────────────────────────────────────────────────────────────')
+console.log('')
+endpoints.forEach(({ method, path, description }) => {
+  console.log('  ' + method.padEnd(8) + path.padEnd(28) + description)
+})
+console.log('')
+console.warn('Stack: Python · FastAPI · Firestore · OAuth2 · Webhooks · Azure')`,
 
-  contact: `/* contact.css */
-/* How to reach Dwijesh Dookraz */
-
-/* Note: no recruiters offering "exciting opportunities" */
-
-:root {
-  --bg:      #1e1e1e;
-  --surface: #252526;
-  --border:  #454545;
-  --accent:  #007acc;
-  --text:    #d4d4d4;
-  --muted:   #858585;
-}
-
-.contact-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, sans-serif;
-  gap: 12px;
-}
-
-.contact-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  min-width: 320px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  text-decoration: none;
-  transition: border-color 0.15s, background 0.15s;
-  background: var(--surface);
-}
-
-.contact-link:hover {
-  border-color: var(--accent);
-  background: #094771;
-}
-
-/* Available links:                                   */
-/* GitHub:   https://github.com/DwijeshD             */
-/* LinkedIn: https://linkedin.com/in/dwijesh-dookraz */
-/* Email:    dwijeshdookraz1@gmail.com                */`,
-
-  readme: `# Dwijesh Dookraz
+  'README.md': `# Dwijesh Dookraz
 
 **Software Engineer — Backend, AI Systems, Applied Machine Learning**
 
@@ -304,32 +483,22 @@ Focused on backend engineering and applied machine learning. I work on systems w
 reality — APIs, webhooks, OAuth flows, distributed data handling, and ML models deployed on
 imperfect data.
 
-## Getting Started
-
-\`\`\`bash
-# Install dependencies
-npm install
-
-# Run dev server
-npm run dev
-\`\`\`
-
 ## Stack
 
 - **Next.js 15** · App Router · Edge Runtime
 - **React 19** · TypeScript · Tailwind CSS
 - **OpenRouter** · llama-3.3-70b · SSE streaming
-- **Monaco Editor** · Syntax highlighting · Type checking
+- **Monaco Editor** · Syntax highlighting · Live preview
 
 ## Projects
 
-| Project | Stack | Grade |
-|---------|-------|-------|
+| Project | Stack | Status |
+|---------|-------|--------|
 | AI Calendar Integration | Python, FastAPI, OAuth2, Webhooks | Production |
 | rPPG Heart Rate Prediction | PyTorch, Deep Learning | 82% |
-| ML Pipelines | PyTorch, Optuna, k-Fold CV | — |
-| Recommender System | Matrix Factorization, SGD | — |
-| Gene Expression Analysis | scikit-learn, PCA | — |
+| ML Pipelines | PyTorch, Optuna, k-Fold CV | Research |
+| Recommender System | Matrix Factorization, SGD | Complete |
+| Gene Expression Analysis | scikit-learn, PCA | Complete |
 
 ## Contact
 

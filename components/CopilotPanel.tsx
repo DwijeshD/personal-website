@@ -153,6 +153,45 @@ const SUGGESTED = [
   { label: 'Open to work?',          query: 'Is Dwijesh open to new roles? What kind of work is he looking for?' },
 ]
 
+// All queries worth pre-fetching (suggested + quick prompts, deduplicated)
+const PREFETCH_QUERIES = [
+  ...SUGGESTED.map(s => s.query),
+  "What is Dwijesh's full tech stack and the systems he's built?",
+  "What are Dwijesh's main projects and what makes them technically interesting?",
+  "What kind of work is Dwijesh looking for and how can I contact him?",
+].filter((q, i, a) => a.indexOf(q) === i)
+
+async function fetchFullResponse(query: string): Promise<string> {
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [{ role: 'user', content: query }] }),
+  })
+  if (!res.ok) throw new Error('prefetch failed')
+
+  const reader  = res.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = '', accumulated = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
+      const data = line.slice(6).trim()
+      if (data === '[DONE]') break
+      try {
+        const delta = JSON.parse(data).choices?.[0]?.delta?.content
+        if (delta) accumulated += delta
+      } catch { /* skip */ }
+    }
+  }
+  return accumulated
+}
+
 export default function CopilotPanel({ onThinkingChange, onClose, onPendingAction, workspaceFiles = [] }: Props) {
   const [messages, setMessages]           = useState<Message[]>([])
   const [input, setInput]                 = useState('')
@@ -161,9 +200,28 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const [lastEditMsg, setLastEditMsg]     = useState<string | null>(null)
   const [failedIdx, setFailedIdx]         = useState<number | null>(null)
   const [thinkExpanded, setThinkExpanded] = useState<Record<number, boolean>>({})
-  const bottomRef  = useRef<HTMLDivElement>(null)
-  const inputRef   = useRef<HTMLTextAreaElement>(null)
-  const rawAccum   = useRef('')
+  const bottomRef      = useRef<HTMLDivElement>(null)
+  const inputRef       = useRef<HTMLTextAreaElement>(null)
+  const rawAccum       = useRef('')
+  const prefetchCache  = useRef<Map<string, string>>(new Map())
+
+  // Pre-fetch suggested answers on mount so first click is instant
+  useEffect(() => {
+    let cancelled = false
+    const controllers: AbortController[] = []
+
+    // Stagger requests to avoid hammering the API
+    PREFETCH_QUERIES.forEach((query, i) => {
+      setTimeout(() => {
+        if (cancelled || prefetchCache.current.has(query)) return
+        fetchFullResponse(query)
+          .then(text => { if (!cancelled && text) prefetchCache.current.set(query, text) })
+          .catch(() => { /* prefetch failures are silent */ })
+      }, i * 600)
+    })
+
+    return () => { cancelled = true; controllers.forEach(c => c.abort()) }
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -183,6 +241,21 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     setInput('')
     setStreaming(true)
     rawAccum.current = ''
+
+    // Serve from prefetch cache for zero-latency first responses
+    const cached = prefetchCache.current.get(content)
+    if (cached) {
+      prefetchCache.current.delete(content)
+      const { thinking, content: parsed } = parseThinkBlocks(cached)
+      setMessages(prev => {
+        const c = [...prev]
+        c[c.length - 1] = { role: 'assistant', content: parsed, thinking }
+        return c
+      })
+      setStreaming(false)
+      inputRef.current?.focus()
+      return
+    }
 
     try {
       const res = await fetch('/api/chat', {

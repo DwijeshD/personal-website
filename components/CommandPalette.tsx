@@ -1,15 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { TABS } from '@/lib/data'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
 
 interface Props {
   open: boolean
   onClose: () => void
   onNavigate: (id: string) => void
-  customFiles: CustomFile[]
-  customFolders: CustomFolder[]
+  workspaceFiles: CustomFile[]
+  workspaceFolders: CustomFolder[]
 }
 
 function iconForExt(name: string): { icon: string; iconClass: string } {
@@ -27,7 +26,7 @@ function iconForExt(name: string): { icon: string; iconClass: string } {
   }
 }
 
-export default function CommandPalette({ open, onClose, onNavigate, customFiles, customFolders }: Props) {
+export default function CommandPalette({ open, onClose, onNavigate, workspaceFiles, workspaceFolders }: Props) {
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -39,13 +38,12 @@ export default function CommandPalette({ open, onClose, onNavigate, customFiles,
   }, [open])
 
   const allFiles = [
-    ...TABS.map(t => ({ id: t.id, label: t.label, icon: t.icon, iconClass: t.iconClass, path: 'portfolio/src' })),
-    ...customFolders.flatMap(folder => folder.files.map(f => ({
-      id: f.id, label: f.name, path: `portfolio/src/${folder.name}`, ...iconForExt(f.name),
-    }))),
-    ...customFiles.map(f => ({
+    ...workspaceFiles.map(f => ({
       id: f.id, label: f.name, path: 'portfolio/src', ...iconForExt(f.name),
     })),
+    ...workspaceFolders.flatMap(folder => folder.files.map(f => ({
+      id: f.id, label: f.name, path: `portfolio/src/${folder.name}`, ...iconForExt(f.name),
+    }))),
   ]
 
   const filtered = allFiles.filter(

@@ -1,7 +1,5 @@
 'use client'
 
-import { TABS } from '@/lib/data'
-
 interface Props {
   activeTab: string
   aiThinking: boolean
@@ -10,8 +8,8 @@ interface Props {
 }
 
 export default function StatusBar({ activeTab, aiThinking, onToggleAI, zoom }: Props) {
-  const tab = TABS.find((t) => t.id === activeTab)
-  const lang = tab?.label.split('.').pop()?.toUpperCase() ?? 'TSX'
+  const filename = activeTab.startsWith('file:') ? activeTab.slice(5) : activeTab
+  const lang = filename.split('.').pop()?.toUpperCase() ?? 'TSX'
 
   return (
     <div className="h-[22px] bg-vsc-statusbar flex items-center px-3 shrink-0 text-white text-[11px] select-none">
