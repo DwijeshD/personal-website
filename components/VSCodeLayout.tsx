@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import TitleBar from './TitleBar'
 import ActivityBar from './ActivityBar'
 import Sidebar from './Sidebar'
@@ -11,13 +11,6 @@ import BottomPanel from './BottomPanel'
 import CopilotPanel from './CopilotPanel'
 import AboutModal from './modals/AboutModal'
 import KeyboardShortcutsModal from './modals/KeyboardShortcutsModal'
-import HomePanel from './panels/HomePanel'
-import AboutPanel from './panels/AboutPanel'
-import ProjectsPanel from './panels/ProjectsPanel'
-import SkillsPanel from './panels/SkillsPanel'
-import ExperiencePanel from './panels/ExperiencePanel'
-import ContactPanel from './panels/ContactPanel'
-import ReadmePanel from './panels/ReadmePanel'
 import ResumePanel from './panels/ResumePanel'
 import FileEditorPanel, { type ViewMode } from './panels/FileEditorPanel'
 import SourceControlPopup from './SourceControlPopup'
@@ -29,22 +22,23 @@ import type { TerminalHandle } from './TerminalTab'
 import type { SidePanel } from './ActivityBar'
 import type { CustomFile, CustomFolder, AiFileAction } from '@/lib/fileSystem'
 
-const BREADCRUMB: Record<string, string> = {
-  home:       'home.tsx',
-  about:      'about.html',
-  projects:   'projects.js',
-  skills:     'skills.json',
-  experience: 'experience.ts',
-  contact:    'contact.css',
-  readme:     'README.md',
-  resume:     'Dwijesh_Dookraz_Resume.pdf',
-}
-
 const ZOOM_LEVELS = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5]
 
+// All IDs are 'file:<filename>' — derive filename by slicing prefix
+function idToFilename(id: string): string {
+  return id.startsWith('file:') ? id.slice(5) : id
+}
+
+// Default view mode: files with rich live previews open in split
+function defaultMode(filename: string): ViewMode {
+  const ext = filename.split('.').pop()?.toLowerCase() ?? ''
+  const splitExts = new Set(['html', 'htm', 'md', 'tsx', 'jsx', 'css', 'scss'])
+  return splitExts.has(ext) ? 'split' : 'code'
+}
+
 export default function VSCodeLayout() {
-  const [openTabs, setOpenTabs]           = useState<string[]>(['home'])
-  const [activeTab, setActiveTab]         = useState('home')
+  const [openTabs, setOpenTabs]           = useState<string[]>(['file:home.html'])
+  const [activeTab, setActiveTab]         = useState('file:home.html')
   const [sidePanel, setSidePanel]         = useState<SidePanel>('explorer')
   const [terminalOpen, setTerminalOpen]   = useState(false)
   const [copilotOpen, setCopilotOpen]     = useState(false)
@@ -62,9 +56,8 @@ export default function VSCodeLayout() {
   const [selectedTheme, setSelectedTheme]         = useState('default')
   const [fileContents, setFileContents]           = useState<Record<string, string>>({})
   const [fileModes, setFileModes]                 = useState<Record<string, ViewMode>>({})
-  const [hiddenBuiltins, setHiddenBuiltins]       = useState<string[]>([])
-  const [customFiles, setCustomFiles]             = useState<CustomFile[]>([])
-  const [customFolders, setCustomFolders]         = useState<CustomFolder[]>([])
+  const [workspaceFiles, setWorkspaceFiles]       = useState<CustomFile[]>(() => TABS.map(t => ({ id: t.id, name: t.label })))
+  const [workspaceFolders, setWorkspaceFolders]   = useState<CustomFolder[]>([])
   const [pendingAiAction, setPendingAiAction]     = useState<AiFileAction | null>(null)
 
   const terminalRef = useRef<TerminalHandle | null>(null)
@@ -123,7 +116,7 @@ export default function VSCodeLayout() {
       if (ctrl && e.key === 'p')                              { e.preventDefault(); setPalOpen(true) }
       if (ctrl && e.key === 'w')                              { e.preventDefault(); if (activeTab) closeTab(activeTab) }
       if (ctrl && e.shiftKey && e.key === 'W')                { e.preventDefault(); setOpenTabs([]) }
-      if (ctrl && e.key === 't')                              { e.preventDefault(); navigate('home') }
+      if (ctrl && e.key === 't')                              { e.preventDefault(); navigate('file:home.html') }
       if (ctrl && e.key === 'b')                              { e.preventDefault(); setSidePanel((p) => p ? null : 'explorer') }
       if (ctrl && e.key === '`')                              { e.preventDefault(); toggleTerminal() }
       if (ctrl && e.shiftKey && e.key.toLowerCase() === 'a') { e.preventDefault(); toggleCopilot() }
@@ -149,44 +142,28 @@ export default function VSCodeLayout() {
     else document.exitFullscreen().catch(() => {})
   }
 
-  // Map AI-supplied filenames back to built-in tab IDs
-  const BUILTIN_PATH_TO_ID: Record<string, string> = Object.fromEntries(
-    Object.entries(BREADCRUMB).map(([id, path]) => [path, id])
-  )
-
   function executeAiAction(action: AiFileAction) {
     const { path, content = '' } = action
-    const builtinId = BUILTIN_PATH_TO_ID[path]
-    const id = builtinId ?? ('file:' + path)
+    const id = 'file:' + path
     switch (action.action) {
       case 'create_file':
-        if (!builtinId)
-          setCustomFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
-        setFileContents(prev => ({ ...prev, [id]: content }))
-        navigate(id)
-        break
       case 'update_file':
-        if (!builtinId)
-          setCustomFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
+        setWorkspaceFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
         setFileContents(prev => ({ ...prev, [id]: content }))
         navigate(id)
         break
       case 'delete_file':
-        if (builtinId) {
-          setHiddenBuiltins(prev => prev.includes(builtinId) ? prev : [...prev, builtinId])
-        } else {
-          setCustomFiles(prev => prev.filter(f => f.id !== id))
-          setCustomFolders(prev => prev.map(folder => ({
-            ...folder, files: folder.files.filter(f => f.id !== id),
-          })))
-        }
+        setWorkspaceFiles(prev => prev.filter(f => f.id !== id))
+        setWorkspaceFolders(prev => prev.map(folder => ({
+          ...folder, files: folder.files.filter(f => f.id !== id),
+        })))
         closeTab(id)
         setFileContents(prev => { const n = { ...prev }; delete n[id]; return n })
         setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
         break
       case 'create_folder': {
         const folderId = 'folder:' + path
-        setCustomFolders(prev =>
+        setWorkspaceFolders(prev =>
           prev.some(f => f.id === folderId) ? prev : [...prev, { id: folderId, name: path, open: true, files: [] }]
         )
         break
@@ -211,9 +188,7 @@ export default function VSCodeLayout() {
     window.addEventListener('mouseup', onUp)
   }
 
-  const activeFile = activeTab.startsWith('file:')
-    ? activeTab.slice(5)
-    : (BREADCRUMB[activeTab] ?? 'untitled')
+  const activeFile = idToFilename(activeTab)
 
   return (
     <div
@@ -227,7 +202,7 @@ export default function VSCodeLayout() {
     >
       <TitleBar
         onCommandPalette={() => setPalOpen(true)}
-        onNewTab={() => navigate('home')}
+        onNewTab={() => navigate('file:home.html')}
         onOpenFile={() => setPalOpen(true)}
         onCloseTab={() => activeTab && closeTab(activeTab)}
         onCloseAllTabs={() => setOpenTabs([])}
@@ -303,17 +278,15 @@ export default function VSCodeLayout() {
           onSearchChange={setSearchQuery}
           onToggleCopilot={toggleCopilot}
           copilotOpen={copilotOpen}
-          hiddenBuiltins={hiddenBuiltins}
-          onHideBuiltin={(id) => setHiddenBuiltins(prev => [...prev, id])}
+          workspaceFiles={workspaceFiles}
+          workspaceFolders={workspaceFolders}
+          onWorkspaceFilesChange={setWorkspaceFiles}
+          onWorkspaceFoldersChange={setWorkspaceFolders}
           onFileDeleted={(id) => {
             closeTab(id)
             setFileContents(prev => { const n = { ...prev }; delete n[id]; return n })
             setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
           }}
-          customFiles={customFiles}
-          customFolders={customFolders}
-          onCustomFilesChange={setCustomFiles}
-          onCustomFoldersChange={setCustomFolders}
           fileContents={fileContents}
           defaultContents={DEFAULT_CONTENT}
         />
@@ -344,53 +317,23 @@ export default function VSCodeLayout() {
               <div className="flex items-center justify-center h-full text-vsc-muted flex-col gap-3">
                 <div className="text-4xl opacity-20">📄</div>
                 <div className="text-sm">No file open</div>
-                <button onClick={() => navigate('home')} className="text-xs text-vsc-accent hover:underline">
-                  Open home.tsx
+                <button onClick={() => navigate('file:home.html')} className="text-xs text-vsc-accent hover:underline">
+                  Open home.html
                 </button>
               </div>
             ) : (
               <div className="h-full overflow-hidden">
-                {activeTab === 'resume' && <ResumePanel />}
-
-                {activeTab !== 'resume' && openTabs.includes(activeTab) && (() => {
-                  const isBuiltin = TABS.some(t => t.id === activeTab)
-                  const isCustom  = activeTab.startsWith('file:')
-                  if (!isBuiltin && !isCustom) return null
-
-                  const filename = isCustom
-                    ? activeTab.slice(5)
-                    : (BREADCRUMB[activeTab] ?? activeTab)
-
-                  // html/md files have a live renderer — drop hardcoded panel once edited
-                  // so HTMLRenderer/MarkdownRenderer reflects live changes.
-                  // All other types (tsx/js/json/css) have no live renderer, so always
-                  // keep the hardcoded panel as a reference preview in split/preview mode.
-                  const ext = filename.split('.').pop()?.toLowerCase() ?? ''
-                  const hasNativeRenderer = ['html', 'htm', 'md', 'markdown'].includes(ext)
-                  const hasEdits = !!fileContents[activeTab]
-                  const showPanel = isBuiltin && (!hasEdits || !hasNativeRenderer)
-                  const previewNode = showPanel ? (() => {
-                    switch (activeTab) {
-                      case 'home':       return <HomePanel onNavigate={navigate} />
-                      case 'about':      return <AboutPanel />
-                      case 'projects':   return <ProjectsPanel />
-                      case 'skills':     return <SkillsPanel />
-                      case 'experience': return <ExperiencePanel />
-                      case 'contact':    return <ContactPanel />
-                      case 'readme':     return <ReadmePanel />
-                      default:           return undefined
-                    }
-                  })() : undefined
-
+                {openTabs.includes(activeTab) && (() => {
+                  const filename = idToFilename(activeTab)
+                  if (filename === 'Dwijesh_Dookraz_Resume.pdf') return <ResumePanel />
                   return (
                     <FileEditorPanel
                       key={activeTab}
                       filename={filename}
-                      content={fileContents[activeTab] ?? (isBuiltin ? DEFAULT_CONTENT[activeTab] ?? '' : '')}
+                      content={fileContents[activeTab] ?? DEFAULT_CONTENT[filename] ?? ''}
                       onChange={(v) => setFileContents(prev => ({ ...prev, [activeTab]: v }))}
-                      mode={fileModes[activeTab] ?? (isBuiltin ? 'preview' : 'code')}
+                      mode={fileModes[activeTab] ?? defaultMode(filename)}
                       onModeChange={(m) => setFileModes(prev => ({ ...prev, [activeTab]: m }))}
-                      previewNode={previewNode}
                     />
                   )
                 })()}
@@ -421,9 +364,8 @@ export default function VSCodeLayout() {
             onClose={() => setCopilotOpen(false)}
             onPendingAction={setPendingAiAction}
             workspaceFiles={[
-              ...TABS.filter(t => !hiddenBuiltins.includes(t.id)).map(t => BREADCRUMB[t.id] ?? t.id),
-              ...customFolders.flatMap(f => f.files.map(fi => `${f.name}/${fi.name}`)),
-              ...customFiles.map(f => f.name),
+              ...workspaceFiles.map(f => f.name),
+              ...workspaceFolders.flatMap(f => f.files.map(fi => `${f.name}/${fi.name}`)),
             ]}
           />
         )}
@@ -449,8 +391,8 @@ export default function VSCodeLayout() {
         open={palOpen}
         onClose={() => setPalOpen(false)}
         onNavigate={(id) => { navigate(id); setPalOpen(false) }}
-        customFiles={customFiles}
-        customFolders={customFolders}
+        workspaceFiles={workspaceFiles}
+        workspaceFolders={workspaceFolders}
       />
 
       <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />

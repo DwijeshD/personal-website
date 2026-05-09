@@ -111,14 +111,13 @@ export const EDUCATION = {
 }
 
 export const TABS = [
-  { id: 'home',       label: 'home.tsx',                   icon: '⚛',  iconClass: 'text-[#61dafb]' },
-  { id: 'about',      label: 'about.html',                 icon: '<>', iconClass: 'text-[#e34c26]' },
-  { id: 'projects',   label: 'projects.js',                icon: 'JS', iconClass: 'text-[#f1c40f]' },
-  { id: 'skills',     label: 'skills.json',                icon: '{}', iconClass: 'text-[#f1c40f]' },
-  { id: 'experience', label: 'experience.ts',              icon: 'TS', iconClass: 'text-[#3178c6]' },
-  { id: 'contact',    label: 'contact.css',                icon: '#',  iconClass: 'text-[#519aba]' },
-  { id: 'readme',     label: 'README.md',                  icon: 'M↓', iconClass: 'text-[#519aba]' },
-  { id: 'resume',     label: 'Dwijesh_Dookraz_Resume.pdf', icon: 'PDF', iconClass: 'text-[#e44d26]' },
+  { id: 'file:home.html',                       label: 'home.html',                  icon: '<>', iconClass: 'text-[#e34c26]' },
+  { id: 'file:app.tsx',                         label: 'app.tsx',                    icon: '⚛',  iconClass: 'text-[#61dafb]' },
+  { id: 'file:styles.css',                      label: 'styles.css',                 icon: '#',  iconClass: 'text-[#519aba]' },
+  { id: 'file:skills.json',                     label: 'skills.json',                icon: '{}', iconClass: 'text-[#f1c40f]' },
+  { id: 'file:server.ts',                       label: 'server.ts',                  icon: 'TS', iconClass: 'text-[#3178c6]' },
+  { id: 'file:README.md',                       label: 'README.md',                  icon: 'M↓', iconClass: 'text-[#519aba]' },
+  { id: 'file:Dwijesh_Dookraz_Resume.pdf',      label: 'Dwijesh_Dookraz_Resume.pdf', icon: 'PDF', iconClass: 'text-[#e44d26]' },
 ]
 
 // Base system prompt — context is injected per-request by contextBuilder

@@ -4,18 +4,14 @@ import { buildContext } from '@/lib/contextBuilder'
 
 export const runtime = 'edge'
 
-const MAX_MESSAGES   = 20
+const MAX_MESSAGES = 20
 const MAX_MSG_LENGTH = 2000
 const MAX_BODY_BYTES = 50_000
-const MODEL_TIMEOUT  = 20_000
+const MODEL_TIMEOUT = 20_000
 
 // Ordered by quality — skips 429s automatically until one works
 const CHAT_MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'qwen/qwen3-coder:free',
-  'nousresearch/hermes-3-llama-3.1-405b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'openai/gpt-oss-20b:free',
+  'openrouter/free'
 ]
 
 interface Message {
@@ -56,16 +52,16 @@ export async function POST(req: NextRequest) {
     return err('Invalid JSON body', 400)
   }
 
-  if (!Array.isArray(messages))       return err('messages must be an array', 400)
-  if (messages.length === 0)          return err('messages must not be empty', 400)
+  if (!Array.isArray(messages)) return err('messages must be an array', 400)
+  if (messages.length === 0) return err('messages must not be empty', 400)
   if (messages.length > MAX_MESSAGES) return err(`Too many messages (max ${MAX_MESSAGES})`, 400)
 
   for (const m of messages) {
-    if (typeof m !== 'object' || m === null)         return err('Each message must be an object', 400)
+    if (typeof m !== 'object' || m === null) return err('Each message must be an object', 400)
     if (m.role !== 'user' && m.role !== 'assistant') return err('Message role must be user or assistant', 400)
-    if (typeof m.content !== 'string')               return err('Message content must be a string', 400)
-    if (m.content.length === 0)                      return err('Message content must not be empty', 400)
-    if (m.content.length > MAX_MSG_LENGTH)           return err(`Message too long (max ${MAX_MSG_LENGTH} chars)`, 400)
+    if (typeof m.content !== 'string') return err('Message content must be a string', 400)
+    if (m.content.length === 0) return err('Message content must not be empty', 400)
+    if (m.content.length > MAX_MSG_LENGTH) return err(`Message too long (max ${MAX_MSG_LENGTH} chars)`, 400)
   }
 
   const apiKey = process.env.OPENROUTER_API_KEY
@@ -79,16 +75,16 @@ export async function POST(req: NextRequest) {
       { role: 'system', content: `${AI_SYSTEM_PROMPT}\n\n${context}` },
       ...(messages as Message[]),
     ],
-    max_tokens:  300,
+    max_tokens: 300,
     temperature: 0.3,
-    stream:      true,
+    stream: true,
   })
 
   const headers = {
     'Authorization': `Bearer ${apiKey}`,
-    'Content-Type':  'application/json',
-    'HTTP-Referer':  'https://dwijesh.dev',
-    'X-Title':       'Dwijesh Portfolio',
+    'Content-Type': 'application/json',
+    'HTTP-Referer': 'https://dwijesh.dev',
+    'X-Title': 'Dwijesh Portfolio',
   }
 
   // Try each model in order; skip on 429 or timeout
@@ -116,9 +112,9 @@ export async function POST(req: NextRequest) {
 
     return new NextResponse(response.body, {
       headers: {
-        'Content-Type':            'text/event-stream',
-        'Cache-Control':           'no-cache, no-store',
-        'X-Content-Type-Options':  'nosniff',
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     })
   }

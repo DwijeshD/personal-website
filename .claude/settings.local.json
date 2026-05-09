@@ -46,7 +46,12 @@
       "Bash(awk '{print $5}')",
       "Bash(xargs -r taskkill //F //PID)",
       "Read(//c/Users/dwije/OneDome/Desktop/Projects/PortfolioWebsite/lib/**)",
-      "mcp__plugin_playwright_playwright__browser_snapshot"
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "Bash(findstr \":3000 \\\\|:3004 \\\\|:3001 \\\\|:3002 \\\\|:3003 \")",
+      "Bash(findstr LISTENING)",
+      "Bash(taskkill /F /PID 18424)",
+      "PowerShell(Stop-Process -Id 18424 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)"
     ],
     "additionalDirectories": [
       "c:\\Users\\dwije\\.claude\\projects\\c--Users-dwije-OneDrive-Desktop-Projects-PortfolioWebsite",
