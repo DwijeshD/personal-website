@@ -1,12 +1,14 @@
 {
-  "name": "portfolio",
-  "version": "0.1.0",
+  "name": "dwijesh-portfolio",
+  "version": "1.0.0",
+  "description": "Personal portfolio built as a VS Code clone — Monaco editor, file tree, AI copilot, source control panel.",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

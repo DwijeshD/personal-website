@@ -1,5 +1,28 @@
+# Dependencies
 node_modules
+
+# Next.js build output
 .next
+out
+
+# Environment variables
 .env
 .env.local
 .env*.local
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Playwright testing artifacts
+.playwright-mcp/
+
+# Local Claude Code settings (personal overrides)
+.claude/settings.local.json
+
+# Debug / temp screenshots
+/*.png
+/*.jpg
+
+# Misc
+.DS_Store
+*.pem
