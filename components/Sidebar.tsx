@@ -24,103 +24,67 @@ interface Props {
   defaultContents: Record<string, string>
 }
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
+// ─── Icons (file-icons extension — font-based) ────────────────────────────────
 
-const ReactIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <circle cx="16" cy="16" r="16" fill="#20232a"/>
-    <g fill="none" stroke="#61dafb" strokeWidth="1.4">
-      <ellipse cx="16" cy="16" rx="11" ry="4.2"/>
-      <ellipse cx="16" cy="16" rx="11" ry="4.2" transform="rotate(60 16 16)"/>
-      <ellipse cx="16" cy="16" rx="11" ry="4.2" transform="rotate(120 16 16)"/>
-    </g>
-    <circle cx="16" cy="16" r="2.2" fill="#61dafb"/>
-  </svg>
-)
+function FI({ font, char, color, size = 15 }: { font: string; char: string; color: string; size?: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        fontFamily: font,
+        color,
+        fontSize: size,
+        lineHeight: 1,
+        width: 16,
+        height: 16,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        userSelect: 'none',
+      }}
+    >
+      {char}
+    </span>
+  )
+}
 
-const HtmlIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <rect width="32" height="32" rx="3" fill="#e34c26"/>
-    <text x="4" y="23" fontSize="13" fontWeight="900" fill="#fff" fontFamily="monospace">&lt;/&gt;</text>
-  </svg>
-)
+const DEV = 'fi-devopicons'
+const FA  = 'fi-fontawesome'
+const FIC = 'fi-file-icons'
+const OCT = 'fi-octicons'
+const MF  = 'fi-mfixx'
 
-const JsIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <rect width="32" height="32" rx="3" fill="#f7df1e"/>
-    <text x="3" y="24" fontSize="14" fontWeight="900" fill="#222" fontFamily="monospace">JS</text>
-  </svg>
-)
-
-const JsonIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <rect width="32" height="32" rx="3" fill="#f5a623"/>
-    <text x="2" y="24" fontSize="16" fontWeight="900" fill="#fff" fontFamily="monospace">{'{}'}</text>
-  </svg>
-)
-
-const TsIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <rect width="32" height="32" rx="3" fill="#3178c6"/>
-    <text x="2" y="24" fontSize="14" fontWeight="900" fill="#fff" fontFamily="monospace">TS</text>
-  </svg>
-)
-
-const CssIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <rect width="32" height="32" rx="3" fill="#264de4"/>
-    <path d="M8 4l1.6 18L16 24l6.4-2L24 4H8z" fill="#2965f1"/>
-    <path d="M16 22.3l5.2-1.4 1.4-15.4H16v16.8z" fill="#ebebeb"/>
-    <path d="M16 7.5H11.3l.3 3.5H16V7.5z" fill="#fff"/>
-    <path d="M16 17.2l-.1.1-2.6-.7-.2-2H10.5l.4 4.4 5.1 1.4v-3.2z" fill="#fff"/>
-    <path d="M16 10.9v3.4h2.4l-.2 2.6-2.2.6v3.2l5.1-1.4.9-10.4H16z" fill="#ebebeb"/>
-    <path d="M16 7.5v3.5h4.8l-.3-3.5H16z" fill="#ebebeb"/>
-  </svg>
-)
-
-const MdIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <rect width="32" height="32" rx="3" fill="#519aba"/>
-    <text x="4" y="13" fontSize="8" fontWeight="700" fill="#fff" fontFamily="monospace">MD</text>
-    <path d="M5 20v-7l3.5 4.5 3.5-4.5v7M13 20v-7l4 6M17 13v7M20 13v7" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
-
-const PdfIcon = () => (
-  <svg viewBox="0 0 32 32" width="18" height="18">
-    <rect width="32" height="32" rx="3" fill="#e44d26"/>
-    <text x="2" y="23" fontSize="11" fontWeight="900" fill="#fff" fontFamily="monospace">PDF</text>
-  </svg>
-)
-
-const FileIcon = () => (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#858585" strokeWidth="1.5">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14 2 14 8 20 8"/>
-  </svg>
-)
+const JsIcon     = () => <FI font={MF}  char={String.fromCodePoint(0xf129)} color='#f4bf75' />
+const TsIcon     = () => <FI font={FIC} char={String.fromCodePoint(0x02a6)} color='#6a9fb5' />
+const TsxIcon    = () => <FI font={FIC} char={String.fromCodePoint(0xe9e7)} color='#9dc0ce' />
+const ReactIcon  = () => <FI font={FIC} char={String.fromCodePoint(0xe9e6)} color='#6a9fb5' />
+const CssIcon    = () => <FI font={FA}  char={String.fromCodePoint(0xf13c)} color='#6a9fb5' />
+const ScssIcon   = () => <FI font={DEV} char={String.fromCodePoint(0xe64b)} color='#ff4ddb' />
+const HtmlIcon   = () => <FI font={FA}  char={String.fromCodePoint(0xf13b)} color='#d28445' />
+const JsonIcon   = () => <FI font={FIC} char={String.fromCodePoint(0xe958)} color='#75b5aa' />
+const MdIcon     = () => <FI font={OCT} char={String.fromCodePoint(0xf0c9)} color='#6a9fb5' />
+const PdfIcon    = () => <FI font={FA}  char={String.fromCodePoint(0xf1c1)} color='#ac4142' />
+const FileIcon   = () => <FI font={OCT} char={String.fromCodePoint(0xf011)} color='#6e6e6e' />
 
 const FolderIcon = ({ open }: { open: boolean }) => (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill={open ? '#dcb67a' : '#c09553'}>
-    {open
-      ? <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-      : <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-    }
-  </svg>
+  <FI font={OCT} char={String.fromCodePoint(open ? 0xf017 : 0xf016)} color='#dcb67a' size={17} />
 )
 
 function iconForFile(name: string): React.ReactNode {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
   switch (ext) {
-    case 'tsx': case 'jsx': return <ReactIcon />
-    case 'ts':              return <TsIcon />
-    case 'js':              return <JsIcon />
+    case 'tsx':              return <TsxIcon />
+    case 'jsx':              return <ReactIcon />
+    case 'ts':               return <TsIcon />
+    case 'js':               return <JsIcon />
     case 'html': case 'htm': return <HtmlIcon />
-    case 'css': case 'scss': return <CssIcon />
-    case 'json':            return <JsonIcon />
-    case 'md':              return <MdIcon />
-    case 'pdf':             return <PdfIcon />
-    default:                return <FileIcon />
+    case 'css':              return <CssIcon />
+    case 'scss':             return <ScssIcon />
+    case 'json':             return <JsonIcon />
+    case 'md':               return <MdIcon />
+    case 'pdf':              return <PdfIcon />
+    default:                 return <FileIcon />
   }
 }
 
@@ -368,7 +332,7 @@ export default function Sidebar({
         style={{ paddingLeft: `${20 + depth * 12}px` }}
       >
         {activeTab === id && <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-vsc-accent" />}
-        <span className="shrink-0">{icon}</span>
+        <span className="shrink-0 flex items-center">{icon}</span>
         {isRenaming ? (
           <input
             ref={renameRef}
@@ -459,7 +423,7 @@ export default function Sidebar({
                         )}
                       >
                         <span className="text-vsc-muted text-[9px] w-3 text-center shrink-0">{folder.open ? '▾' : '▸'}</span>
-                        <FolderIcon open={folder.open} />
+                        <span className="flex items-center shrink-0"><FolderIcon open={folder.open} /></span>
                         <span className="truncate text-[13px]">{folder.name}</span>
                       </button>
                       <button
