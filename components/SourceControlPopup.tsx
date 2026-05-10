@@ -18,6 +18,8 @@ export default function SourceControlPopup({ onClose }: Props) {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
+      const btn = document.getElementById('source-control-activity-btn')
+      if (btn && btn.contains(e.target as Node)) return  // button's own click will toggle
       if (ref.current && !ref.current.contains(e.target as Node)) {
         onClose()
       }

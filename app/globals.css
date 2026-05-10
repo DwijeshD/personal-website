@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
 
+/* file-icons extension fonts (local assets) */
+@font-face { font-family: 'fi-devopicons';  src: url('/fonts/devopicons.woff2')  format('woff2'); font-display: block; }
+@font-face { font-family: 'fi-fontawesome'; src: url('/fonts/fontawesome.woff2') format('woff2'); font-display: block; }
+@font-face { font-family: 'fi-file-icons';  src: url('/fonts/file-icons.woff2')  format('woff2'); font-display: block; }
+@font-face { font-family: 'fi-octicons';    src: url('/fonts/octicons.woff2')    format('woff2'); font-display: block; }
+@font-face { font-family: 'fi-mfixx';       src: url('/fonts/mfixx.woff2')       format('woff2'); font-display: block; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

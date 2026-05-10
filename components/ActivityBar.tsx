@@ -103,7 +103,7 @@ export default function ActivityBar({
       <div className="flex flex-col flex-1">
         {navBtn('explorer', ExplorerIcon,     'Explorer')}
         {navBtn('search',   SearchIcon,       'Search')}
-        {actionBtn(sourceControlOpen, SourceControlIcon, 'Source Control', onSourceControl)}
+        {actionBtn(sourceControlOpen, SourceControlIcon, 'Source Control', onSourceControl, 'source-control-activity-btn')}
         {actionBtn(aiOpen,            CopilotIcon,       "Dwijesh's Copilot", onToggleAI)}
       </div>
 

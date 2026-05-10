@@ -1,3 +1,5 @@
+'use client'
+
 import { PERSON } from '@/lib/data'
 
 export default function ResumePanel() {
