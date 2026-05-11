@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAiAction } from '@/lib/fileSystem'
+import { isVpnOrProxy } from '@/lib/rateLimit'
 
 export const runtime = 'edge'
 
@@ -21,14 +22,12 @@ function checkRateLimit(ip: string): boolean {
 // Ordered by quality. If a model is rate-limited (429) or returns bad JSON,
 // the next one is tried automatically.
 const MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'qwen/qwen3-coder:free',
-  'nousresearch/hermes-3-llama-3.1-405b:free',
+  'openrouter/free',
+  'openai/gpt-oss-120b:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
-  'openai/gpt-oss-20b:free',
 ]
 
-const MODEL_TIMEOUT_MS = 25_000
+const MODEL_TIMEOUT_MS = 12_000
 
 // ── System prompt ────────────────────────────────────────────────────────────
 const SYSTEM = `You are an AI coding assistant inside a browser-based VSCode-style IDE.
@@ -93,6 +92,14 @@ function normalizeAction(raw: unknown): unknown {
     return { action: 'create_file', path: f.path ?? f.filename ?? f.name, content: f.content }
   }
 
+  // Handle {"some/path.ext": "content"} — model returned filename-keyed object
+  if (!obj.action && !obj.path) {
+    const keys = Object.keys(obj)
+    if (keys.length === 1 && typeof obj[keys[0]] === 'string') {
+      return { action: 'update_file', path: keys[0], content: obj[keys[0]] }
+    }
+  }
+
   return obj
 }
 
@@ -112,6 +119,8 @@ async function callModel(model: string, userContent: string): Promise<{ ok: bool
         max_tokens:  2048,
         temperature: 0.15,
         stream:      false,
+        thinking: { type: 'disabled' },
+        max_tokens_for_reasoning: 0,
       }),
     })
 
@@ -159,6 +168,10 @@ export async function POST(req: NextRequest) {
   // Use proxy-injected headers (non-spoofable): x-real-ip set by Vercel, cf-connecting-ip by Cloudflare
   // Explicitly avoid x-forwarded-for which is fully attacker-controlled
   const ip = req.headers.get('x-real-ip') ?? req.headers.get('cf-connecting-ip') ?? 'unknown'
+
+  const vpn = await isVpnOrProxy(ip)
+  if (vpn) return err('Access denied.', 403)
+
   if (!checkRateLimit(ip)) return err('Rate limit exceeded. Try again in a minute.', 429)
 
   if (!(req.headers.get('content-type') ?? '').includes('application/json'))
@@ -167,13 +180,13 @@ export async function POST(req: NextRequest) {
   // Read raw bytes first — Content-Length is attacker-controlled and can be missing
   let raw: ArrayBuffer
   try { raw = await req.arrayBuffer() } catch { return err('Failed to read body', 400) }
-  if (raw.byteLength > 8_000) return err('Request body too large', 400)
+  if (raw.byteLength > 60_000) return err('Request body too large', 400)
 
-  let body: { message?: unknown; files?: unknown }
+  let body: { message?: unknown; files?: unknown; fileContents?: unknown }
   try { body = JSON.parse(new TextDecoder().decode(raw)) }
   catch { return err('Invalid JSON body', 400) }
 
-  const { message, files } = body
+  const { message, files, fileContents } = body
   if (typeof message !== 'string' || !message.trim()) return err('message must be a non-empty string', 400)
   if (message.length > 1_000) return err('message too long (max 1000 chars)', 400)
 
@@ -184,12 +197,31 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Files with content attached — used for update_file edits
+  const withContent: Array<{ path: string; content: string }> = []
+  if (Array.isArray(fileContents)) {
+    for (const f of (fileContents as unknown[]).slice(0, 5)) {
+      if (f && typeof f === 'object') {
+        const { path, content } = f as Record<string, unknown>
+        if (typeof path === 'string' && typeof content === 'string' && content.length > 0)
+          withContent.push({ path, content: content.slice(0, 8_000) })
+      }
+    }
+  }
+
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) return err('AI assistant not configured', 503)
 
-  const userContent = fileList.length > 0
-    ? `EXISTING FILES IN WORKSPACE:\n${fileList.map(f => `  - ${f}`).join('\n')}\n\nREQUEST: ${message.trim()}`
-    : message.trim()
+  let userContent = `EXISTING FILES IN WORKSPACE:\n${fileList.map(f => `  - ${f}`).join('\n') || '  (none)'}`
+
+  if (withContent.length > 0) {
+    userContent += '\n\nFILE CONTENTS (use these as the base for any edits):\n'
+    for (const f of withContent) {
+      userContent += `\n--- ${f.path} ---\n${f.content}\n`
+    }
+  }
+
+  userContent += `\n\nREQUEST: ${message.trim()}`
 
   // Try each model in order until one returns valid JSON
   for (const model of MODELS) {
