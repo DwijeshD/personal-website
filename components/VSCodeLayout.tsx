@@ -367,6 +367,7 @@ export default function VSCodeLayout() {
               ...workspaceFiles.map(f => f.name),
               ...workspaceFolders.flatMap(f => f.files.map(fi => `${f.name}/${fi.name}`)),
             ]}
+            fileContents={fileContents}
           />
         )}
       </div>

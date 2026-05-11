@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AI_SYSTEM_PROMPT } from '@/lib/data'
 import { buildContext } from '@/lib/contextBuilder'
+import { checkRateLimit, isVpnOrProxy } from '@/lib/rateLimit'
 
 export const runtime = 'edge'
 
-const MAX_MESSAGES = 20
+const MAX_MESSAGES   = 20
 const MAX_MSG_LENGTH = 2000
 const MAX_BODY_BYTES = 50_000
-const MODEL_TIMEOUT = 20_000
+const MODEL_TIMEOUT  = 45_000
 
 // Ordered by quality — skips 429s automatically until one works
 const CHAT_MODELS = [
-  'openrouter/free'
+  'openrouter/free',
 ]
 
 interface Message {
@@ -36,6 +37,17 @@ function allowedOrigin(req: NextRequest): boolean {
 
 export async function POST(req: NextRequest) {
   if (!allowedOrigin(req)) return err('Forbidden', 403)
+
+  const ip = req.headers.get('x-real-ip') ?? req.headers.get('cf-connecting-ip') ?? 'unknown'
+
+  const vpn = await isVpnOrProxy(ip)
+  if (vpn) return err('Access denied.', 403)
+
+  const limit = checkRateLimit(ip)
+  if (!limit.allowed) {
+    const resetIn = Math.ceil((limit.resetAt - Date.now()) / 1000 / 60 / 60)
+    return err(`Daily message limit reached. Resets in ~${resetIn}h.`, 429)
+  }
 
   if (!(req.headers.get('content-type') ?? '').includes('application/json'))
     return err('Content-Type must be application/json', 400)
@@ -75,9 +87,11 @@ export async function POST(req: NextRequest) {
       { role: 'system', content: `${AI_SYSTEM_PROMPT}\n\n${context}` },
       ...(messages as Message[]),
     ],
-    max_tokens: 300,
+    max_tokens: 600,
     temperature: 0.3,
     stream: true,
+    thinking: { type: 'disabled' },
+    max_tokens_for_reasoning: 0,
   })
 
   const headers = {
