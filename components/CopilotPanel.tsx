@@ -11,6 +11,20 @@ interface Message {
   thinking?: string
 }
 
+const THINKING_WORDS = [
+  'Thinking', 'Reasoning', 'Cogitating', 'Computing',
+  'Pondering', 'Deliberating', 'Ruminating', 'Considering',
+]
+
+function ThinkingIndicator() {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % THINKING_WORDS.length), 1500)
+    return () => clearInterval(t)
+  }, [])
+  return <span className="text-vsc-muted/50 text-xs italic">{THINKING_WORDS[idx]}&hellip;</span>
+}
+
 function parseThinkBlocks(raw: string): { thinking: string; content: string } {
   let thinking = ''
   let content = ''
@@ -218,6 +232,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const [lastEditMsg, setLastEditMsg]     = useState<string | null>(null)
   const [failedIdx, setFailedIdx]         = useState<number | null>(null)
   const [thinkExpanded, setThinkExpanded] = useState<Record<number, boolean>>({})
+  const [msgsLeft, setMsgsLeft]           = useState<number | null>(null)
   const bottomRef      = useRef<HTMLDivElement>(null)
   const inputRef       = useRef<HTMLTextAreaElement>(null)
   const rawAccum       = useRef('')
@@ -289,6 +304,9 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         })
         return
       }
+
+      const remaining = res.headers.get('X-RateLimit-Remaining')
+      if (remaining !== null) setMsgsLeft(Number(remaining))
 
       const reader  = res.body!.getReader()
       const decoder = new TextDecoder()
@@ -538,7 +556,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                     {m.role === 'assistant'
                       ? (m.content
                           ? renderMd(m.content)
-                          : (busy && i === messages.length - 1 ? <span className="cursor-blink">▋</span> : null))
+                          : (busy && i === messages.length - 1 ? <ThinkingIndicator /> : null))
                       : m.content}
                   </div>
                   {failedIdx === i && lastEditMsg && !busy && (
@@ -617,7 +635,9 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
           >
             Help — What can you do?
           </button>
-          <span className="text-[10px] text-vsc-muted/40 font-mono">Claude</span>
+          <span className={`text-[10px] font-mono ${msgsLeft !== null && msgsLeft <= 5 ? 'text-yellow-500/70' : 'text-vsc-muted/40'}`}>
+            {msgsLeft !== null ? `${msgsLeft}/25 left` : '25/25 left'}
+          </span>
         </div>
       </div>
     </div>

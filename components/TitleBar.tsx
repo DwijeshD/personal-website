@@ -167,9 +167,7 @@ export default function TitleBar({
     >
       {/* VS Code icon */}
       <div className="w-[46px] h-full flex items-center justify-center shrink-0">
-        <svg width="16" height="16" viewBox="0 0 100 100">
-          <path fill="#007acc" d="M74.7 3.9L37.5 38.1 15.6 21.7 5 27.8v44.4l10.6 6.1 21.9-16.4 37.2 34.2 16.3-7.9V11.8L74.7 3.9zm.4 73.8L49 55.5l26.1-23.3v45.5zm-55.7-5.5V27.8l22 17.7-22 26.7z"/>
-        </svg>
+        <img src="/vscode-icon.png" width={16} height={16} alt="VS Code" />
       </div>
 
       {/* Menu bar */}

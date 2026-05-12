@@ -129,6 +129,8 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-store',
         'X-Content-Type-Options': 'nosniff',
+        'X-RateLimit-Remaining': String(limit.remaining),
+        'Access-Control-Expose-Headers': 'X-RateLimit-Remaining',
       },
     })
   }
