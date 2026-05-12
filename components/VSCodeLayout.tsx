@@ -267,6 +267,7 @@ export default function VSCodeLayout() {
           aiOpen={copilotOpen}
           onSettings={() => setSettingsOpen((v) => !v)}
           settingsOpen={settingsOpen}
+          isDark={selectedTheme !== 'light'}
         />
 
         <Sidebar

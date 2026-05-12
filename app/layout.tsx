@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Dwijesh Dookraz — Portfolio',
   description:
     'Backend engineer and applied ML practitioner. Building production-grade systems, AI pipelines, and automation tools.',
+  icons: { icon: '/vscode-icon.png' },
   openGraph: {
     title: 'Dwijesh Dookraz — Portfolio',
     description: 'Backend engineer · AI Systems · Applied ML',

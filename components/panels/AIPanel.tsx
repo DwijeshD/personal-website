@@ -2,6 +2,20 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+const THINKING_WORDS = [
+  'Thinking', 'Reasoning', 'Cogitating', 'Computing',
+  'Pondering', 'Deliberating', 'Ruminating', 'Considering',
+]
+
+function ThinkingIndicator() {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % THINKING_WORDS.length), 1500)
+    return () => clearInterval(t)
+  }, [])
+  return <span className="text-vsc-muted/50 text-xs italic">{THINKING_WORDS[idx]}&hellip;</span>
+}
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
@@ -178,7 +192,7 @@ export default function AIPanel({ onThinkingChange, onClose, hideHeader }: Props
                 `}
               >
                 {m.content || (streaming && i === messages.length - 1
-                  ? <span className="cursor-blink">▋</span>
+                  ? <ThinkingIndicator />
                   : null
                 )}
               </div>
