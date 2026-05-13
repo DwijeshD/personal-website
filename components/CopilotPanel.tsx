@@ -224,6 +224,10 @@ async function fetchFullResponse(query: string): Promise<string> {
   return accumulated
 }
 
+const BUG_KEYWORDS = /\b(bug|broken|error|issue|problem|crash|wrong|not work|doesn't work|doesn't load|fail|glitch|weird|strange|incorrect|missing|stuck)\b/i
+
+type IssueState = { status: 'idle' } | { status: 'form'; title: string; desc: string } | { status: 'submitting' } | { status: 'done'; number: number } | { status: 'error'; msg: string }
+
 export default function CopilotPanel({ onThinkingChange, onClose, onPendingAction, workspaceFiles = [], fileContents = {} }: Props) {
   const [messages, setMessages]           = useState<Message[]>([])
   const [input, setInput]                 = useState('')
@@ -233,6 +237,8 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const [failedIdx, setFailedIdx]         = useState<number | null>(null)
   const [thinkExpanded, setThinkExpanded] = useState<Record<number, boolean>>({})
   const [msgsLeft, setMsgsLeft]           = useState<number | null>(null)
+  const [issueState, setIssueState]       = useState<IssueState>({ status: 'idle' })
+  const [pendingBugMsg, setPendingBugMsg] = useState<string | null>(null)
   const bottomRef      = useRef<HTMLDivElement>(null)
   const inputRef       = useRef<HTMLTextAreaElement>(null)
   const rawAccum       = useRef('')
@@ -264,12 +270,40 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     onThinkingChange(streaming || actionLoading)
   }, [streaming, actionLoading, onThinkingChange])
 
+  const BUG_PREFILL = 'I encountered a bug with the website: '
+  const bugReportRe = /^I encountered a bug with the website:\s*(.+)/i
+
   async function sendChat(text?: string) {
     const content = (text ?? input).trim()
     if (!content || streaming) return
 
+    // Auto-submit bug report if structured format detected
+    let aiContext = content
+    const bugMatch = content.match(bugReportRe)
+    if (bugMatch) {
+      const desc = bugMatch[1].trim()
+      try {
+        const r = await fetch('/api/report-issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: desc.slice(0, 100), description: desc }),
+        })
+        const data = await r.json()
+        aiContext = r.ok
+          ? `${content}\n\n[SYSTEM: Bug automatically logged as GitHub Issue #${data.number}. Confirm this to the user and tell them it has been logged.]`
+          : `${content}\n\n[SYSTEM: Bug logging failed — ${data.error}. Apologise and tell the user to try again.]`
+      } catch {
+        aiContext = `${content}\n\n[SYSTEM: Bug logging failed — network error.]`
+      }
+      setPendingBugMsg(null) // suppress widget — handled automatically
+    }
+
     const userMsg: Message = { role: 'user', content }
     const history = [...messages, userMsg]
+    // Send aiContext (with injected system note) to API, show original content in UI
+    const historyForApi = aiContext !== content
+      ? [...messages, { role: 'user' as const, content: aiContext }]
+      : history
     setMessages([...history, { role: 'assistant', content: '', thinking: '' }])
     setInput('')
     setStreaming(true)
@@ -294,7 +328,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: historyForApi }),
       })
 
       if (!res.ok) {
@@ -345,6 +379,10 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     } finally {
       setStreaming(false)
       inputRef.current?.focus()
+      if (BUG_KEYWORDS.test(content)) {
+        setPendingBugMsg(content)
+        setIssueState({ status: 'idle' })
+      }
     }
   }
 
@@ -518,6 +556,16 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                 </svg>
                 <span className="text-[10px] text-vsc-muted group-hover:text-vsc-text transition-colors">Research</span>
               </button>
+              <button
+                onClick={() => { setInput(BUG_PREFILL); setTimeout(() => inputRef.current?.focus(), 0) }}
+                title="Report a bug"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-vsc-border/50 hover:border-[#f14c4c]/40 hover:bg-vsc-hover transition-colors group"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-vsc-muted group-hover:text-[#f14c4c] transition-colors">
+                  <path d="M9 2h6l1 4H8L9 2z"/><path d="M5 8h14l-1 13H6L5 8z"/><line x1="12" y1="12" x2="12" y2="17"/>
+                </svg>
+                <span className="text-[10px] text-vsc-muted group-hover:text-[#f14c4c] transition-colors">Bug</span>
+              </button>
             </div>
 
             <div className="text-[11px] text-vsc-muted/50 italic">Type / to use commands</div>
@@ -573,6 +621,81 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                 </div>
               </div>
             ))}
+            {/* ── Bug report widget ── */}
+            {pendingBugMsg && !busy && (
+              <div className="mx-1 mb-2 rounded-md border border-[#f14c4c]/30 bg-[#1e1e1e] overflow-hidden text-[11px]">
+                {issueState.status === 'idle' && (
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-vsc-muted/70">Detected an issue — log it to GitHub?</span>
+                    <div className="flex gap-2 ml-3 shrink-0">
+                      <button
+                        onClick={() => setIssueState({ status: 'form', title: pendingBugMsg.slice(0, 80), desc: '' })}
+                        className="px-2 py-0.5 rounded bg-[#f14c4c]/20 text-[#f14c4c] hover:bg-[#f14c4c]/30 transition-colors"
+                      >Log issue</button>
+                      <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors">✕</button>
+                    </div>
+                  </div>
+                )}
+                {issueState.status === 'form' && (
+                  <div className="p-3 space-y-2">
+                    <input
+                      className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px]"
+                      placeholder="Issue title"
+                      maxLength={100}
+                      value={issueState.title}
+                      onChange={e => setIssueState({ ...issueState, title: e.target.value })}
+                    />
+                    <textarea
+                      className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px] resize-none"
+                      placeholder="Describe the issue (optional)"
+                      maxLength={2000}
+                      rows={3}
+                      value={issueState.desc}
+                      onChange={e => setIssueState({ ...issueState, desc: e.target.value })}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors px-2 py-0.5">Cancel</button>
+                      <button
+                        disabled={!issueState.title.trim()}
+                        onClick={async () => {
+                          const { title, desc } = issueState as { status: 'form'; title: string; desc: string }
+                          setIssueState({ status: 'submitting' })
+                          try {
+                            const r = await fetch('/api/report-issue', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ title, description: desc }),
+                            })
+                            const data = await r.json()
+                            if (!r.ok) setIssueState({ status: 'error', msg: data.error ?? 'Failed.' })
+                            else setIssueState({ status: 'done', number: data.number })
+                          } catch {
+                            setIssueState({ status: 'error', msg: 'Network error.' })
+                          }
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#f14c4c]/20 text-[#f14c4c] hover:bg-[#f14c4c]/30 transition-colors disabled:opacity-40"
+                      >Submit</button>
+                    </div>
+                  </div>
+                )}
+                {issueState.status === 'submitting' && (
+                  <div className="px-3 py-2 text-vsc-muted/60 italic">Logging issue…</div>
+                )}
+                {issueState.status === 'done' && (
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-[#89d185]">✓ Issue #{issueState.number} logged</span>
+                    <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors">✕</button>
+                  </div>
+                )}
+                {issueState.status === 'error' && (
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-[#f14c4c]">{issueState.msg}</span>
+                    <button onClick={() => setIssueState({ status: 'form', title: pendingBugMsg.slice(0, 80), desc: '' })} className="text-vsc-muted/50 hover:text-vsc-muted ml-2 transition-colors">Retry</button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div ref={bottomRef} />
           </div>
         )}

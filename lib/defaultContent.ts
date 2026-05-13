@@ -508,4 +508,97 @@ imperfect data.
 
 > Currently open to backend / ML engineer roles.
 `,
+
+  'link-test.html': `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link Test</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Consolas, monospace; background: #1e1e1e; color: #d4d4d4; padding: 40px; }
+  h1 { font-size: 18px; color: #9cdcfe; margin-bottom: 8px; }
+  .subtitle { font-size: 11px; color: #6a9955; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 32px; }
+  section { margin-bottom: 32px; }
+  h2 { font-size: 12px; color: #569cd6; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #3c3c3c; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  a.btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 4px; font-size: 13px;
+    text-decoration: none; cursor: pointer; border: 1px solid;
+  }
+  .primary   { background: #0e639c; color: #fff; border-color: #0e639c; }
+  .secondary { background: transparent; color: #d4d4d4; border-color: #3c3c3c; }
+  .danger    { background: transparent; color: #f44747; border-color: #f44747; }
+  .result {
+    margin-top: 12px; padding: 10px 14px; background: #252526;
+    border: 1px solid #3c3c3c; border-radius: 4px;
+    font-size: 12px; color: #6a9955; min-height: 36px;
+  }
+  #anchor-target { margin-top: 40px; padding: 20px; background: #252526; border: 1px solid #569cd6; border-radius: 4px; color: #9cdcfe; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>// Link Behavior Test</h1>
+<p class="subtitle">iframe sandbox click handler verification</p>
+
+<section>
+  <h2>1 — href="#" (should do nothing)</h2>
+  <div class="row">
+    <a class="btn primary" href="#">Primary CTA</a>
+    <a class="btn secondary" href="#">About Me</a>
+    <a class="btn secondary" href="#">Contact</a>
+  </div>
+  <div class="result" id="r1">Click any button above — page must not navigate.</div>
+</section>
+
+<section>
+  <h2>2 — External links target="_blank" (should open new tab)</h2>
+  <div class="row">
+    <a class="btn secondary" href="https://github.com/DwijeshD" target="_blank">GitHub</a>
+    <a class="btn secondary" href="https://linkedin.com/in/dwijesh-dookraz" target="_blank">LinkedIn</a>
+    <a class="btn secondary" href="https://anthropic.com" target="_blank">Anthropic</a>
+  </div>
+  <div class="result" id="r2">Click — should open external site in new tab without navigating this preview.</div>
+</section>
+
+<section>
+  <h2>3 — mailto (should open email client)</h2>
+  <div class="row">
+    <a class="btn secondary" href="mailto:dwijeshdookraz1@gmail.com">Email Me</a>
+  </div>
+  <div class="result" id="r3">Click — should trigger system email client, preview stays.</div>
+</section>
+
+<section>
+  <h2>4 — Anchor scroll (should scroll within page)</h2>
+  <div class="row">
+    <a class="btn danger" href="#anchor-target">Scroll to anchor ↓</a>
+  </div>
+</section>
+
+<div id="anchor-target">✓ Anchor target — you scrolled here without navigating away.</div>
+
+<script>
+  document.querySelectorAll('a[href="#"]').forEach(function(a) {
+    a.addEventListener('click', function() {
+      document.getElementById('r1').textContent = '✓ PASS — href="#" blocked, page stayed.';
+      document.getElementById('r1').style.color = '#4ec9b0';
+    });
+  });
+  document.querySelectorAll('a[href^="http"]').forEach(function(a) {
+    a.addEventListener('click', function() {
+      document.getElementById('r2').textContent = '✓ PASS — external link clicked, check for new tab.';
+      document.getElementById('r2').style.color = '#4ec9b0';
+    });
+  });
+  document.querySelector('a[href^="mailto"]').addEventListener('click', function() {
+    document.getElementById('r3').textContent = '✓ PASS — mailto triggered.';
+    document.getElementById('r3').style.color = '#4ec9b0';
+  });
+</script>
+</body>
+</html>
+`,
 }
