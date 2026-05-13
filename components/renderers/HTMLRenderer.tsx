@@ -6,8 +6,27 @@ const LINK_INTERCEPTOR = `<script>
 document.addEventListener('click', function(e) {
   var a = e.target.closest('a');
   if (!a) return;
-  var href = a.getAttribute('href');
-  if (!href || href === '#') { e.preventDefault(); }
+  var href = a.getAttribute('href') || '';
+
+  // plain anchor or empty — block navigation
+  if (!href || href === '#') { e.preventDefault(); return; }
+
+  // in-page anchor scroll — prevent iframe navigation, scroll manually
+  if (href.charAt(0) === '#') {
+    e.preventDefault();
+    var el = document.querySelector(href);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  // mailto — sandbox blocks direct navigation; use window.open via allow-popups
+  if (href.indexOf('mailto:') === 0) {
+    e.preventDefault();
+    window.open(href, '_blank');
+    return;
+  }
+
+  // external http(s) — let native target="_blank" handle (allow-popups-to-escape-sandbox)
 });
 </script>`
 
