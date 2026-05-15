@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
+import { iconSrcForFile } from '@/lib/fileIcons'
 
 interface Props {
   open: boolean
@@ -9,21 +10,6 @@ interface Props {
   onNavigate: (id: string) => void
   workspaceFiles: CustomFile[]
   workspaceFolders: CustomFolder[]
-}
-
-function iconForExt(name: string): { icon: string; iconClass: string } {
-  const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  switch (ext) {
-    case 'tsx': case 'jsx': return { icon: '⚛',  iconClass: 'text-[#61dafb]' }
-    case 'ts':              return { icon: 'TS',  iconClass: 'text-[#3178c6]' }
-    case 'js':              return { icon: 'JS',  iconClass: 'text-[#f1c40f]' }
-    case 'html': case 'htm': return { icon: '<>', iconClass: 'text-[#e34c26]' }
-    case 'css': case 'scss': return { icon: '#',  iconClass: 'text-[#519aba]' }
-    case 'json':            return { icon: '{}', iconClass: 'text-[#f1c40f]' }
-    case 'md':              return { icon: 'M↓', iconClass: 'text-[#519aba]' }
-    case 'pdf':             return { icon: 'PDF', iconClass: 'text-[#e44d26]' }
-    default:                return { icon: '📄',  iconClass: 'text-vsc-muted' }
-  }
 }
 
 export default function CommandPalette({ open, onClose, onNavigate, workspaceFiles, workspaceFolders }: Props) {
@@ -39,10 +25,10 @@ export default function CommandPalette({ open, onClose, onNavigate, workspaceFil
 
   const allFiles = [
     ...workspaceFiles.map(f => ({
-      id: f.id, label: f.name, path: 'portfolio/src', ...iconForExt(f.name),
+      id: f.id, label: f.name, path: 'portfolio/src', iconSrc: iconSrcForFile(f.name),
     })),
     ...workspaceFolders.flatMap(folder => folder.files.map(f => ({
-      id: f.id, label: f.name, path: `portfolio/src/${folder.name}`, ...iconForExt(f.name),
+      id: f.id, label: f.name, path: `portfolio/src/${folder.name}`, iconSrc: iconSrcForFile(f.name),
     }))),
   ]
 
@@ -91,7 +77,7 @@ export default function CommandPalette({ open, onClose, onNavigate, workspaceFil
               onClick={() => { onNavigate(tab.id); onClose() }}
               className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-vsc-selection transition-colors"
             >
-              <span className={`text-sm font-mono ${tab.iconClass}`}>{tab.icon}</span>
+              <img src={tab.iconSrc} width={16} height={16} alt="" aria-hidden />
               <span className="text-sm text-vsc-text">{tab.label}</span>
               <span className="ml-auto text-xs text-vsc-muted">{tab.path}</span>
             </li>

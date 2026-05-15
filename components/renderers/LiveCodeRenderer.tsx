@@ -105,15 +105,126 @@ try {
 </body></html>`
 }
 
+const KEYWORDS: Record<string, string[]> = {
+  py:   ['def','class','if','elif','else','for','while','return','import','from','as','with','try','except','finally','pass','break','continue','and','or','not','in','is','lambda','yield','async','await','None','True','False','raise','global','nonlocal','del','assert'],
+  c:    ['int','char','float','double','void','if','else','for','while','do','return','struct','typedef','enum','union','switch','case','break','continue','static','const','extern','include','define','sizeof','NULL','true','false'],
+  rs:   ['fn','let','mut','const','if','else','for','while','loop','return','struct','enum','impl','trait','use','mod','pub','crate','self','super','match','break','continue','move','ref','in','where','type','async','await','dyn','Box','Vec','Option','Result','Some','None','Ok','Err'],
+  go:   ['func','var','const','if','else','for','range','return','struct','interface','type','package','import','go','chan','select','case','break','continue','defer','map','make','new','nil','true','false','len','cap','append','error'],
+}
+
+function syntaxDoc(lang: string, content: string): string {
+  const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const kws = KEYWORDS[lang] ?? []
+  const kwPattern = kws.length ? new RegExp(`\\b(${kws.join('|')})\\b`, 'g') : null
+
+  let highlighted = escaped
+    .replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g, '<span style="color:#6a9955">$1</span>')
+    .replace(/(#[^\n]*)/g, lang === 'py' ? '<span style="color:#6a9955">$1</span>' : '$1')
+    .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, '<span style="color:#ce9178">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g, '<span style="color:#b5cea8">$1</span>')
+  if (kwPattern) {
+    highlighted = highlighted.replace(kwPattern, '<span style="color:#569cd6;font-weight:600">$1</span>')
+  }
+
+  const labels: Record<string, string> = { py: 'Python', c: 'C', rs: 'Rust', go: 'Go' }
+  const label = labels[lang] ?? lang.toUpperCase()
+
+  return `<!DOCTYPE html><html><head><style>${DARK_BASE}
+pre{margin:0;padding:16px;overflow:auto;white-space:pre-wrap;line-height:1.7;tab-size:4;}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;background:#252526;border:1px solid #3c3c3c;border-radius:4px;font-size:11px;color:#858585;margin:10px 14px 0;}
+</style></head><body>
+<div class="badge">${label} — syntax highlight</div>
+<pre>${highlighted}</pre>
+</body></html>`
+}
+
+function sqlDoc(content: string): string {
+  const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const highlighted = escaped
+    .replace(/\b(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|ON|GROUP BY|ORDER BY|HAVING|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|INDEX|DROP|ALTER|ADD|COLUMN|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|NOT NULL|DEFAULT|AS|AND|OR|NOT|IN|LIKE|IS|NULL|BETWEEN|EXISTS|DISTINCT|LIMIT|OFFSET|UNION|ALL|CASE|WHEN|THEN|ELSE|END|WITH|RETURNING)\b/gi,
+      '<span style="color:#569cd6;font-weight:600">$1</span>')
+    .replace(/('(?:[^'\\]|\\.)*')/g, '<span style="color:#ce9178">$1</span>')
+    .replace(/(--[^\n]*)/g, '<span style="color:#6a9955">$1</span>')
+    .replace(/\b(\d+)\b/g, '<span style="color:#b5cea8">$1</span>')
+  return `<!DOCTYPE html><html><head><style>${DARK_BASE}
+pre{margin:0;padding:16px;overflow:auto;white-space:pre-wrap;line-height:1.7;}
+.badge{display:inline-block;padding:2px 8px;background:#252526;border:1px solid #3c3c3c;border-radius:4px;font-size:11px;color:#858585;margin:10px 14px 0;}
+</style></head><body>
+<div class="badge">SQL — read-only</div>
+<pre>${highlighted}</pre>
+</body></html>`
+}
+
+function shellDoc(content: string): string {
+  const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const highlighted = escaped
+    .replace(/^(#[^\n]*)/gm, '<span style="color:#6a9955">$1</span>')
+    .replace(/\b(if|then|else|elif|fi|for|while|do|done|case|esac|in|function|return|export|local|readonly|echo|cd|ls|mkdir|rm|cp|mv|cat|grep|sed|awk|curl|chmod|chown|source|set|unset)\b/g,
+      '<span style="color:#569cd6">$1</span>')
+    .replace(/("(?:[^"\\]|\\.)*")/g, '<span style="color:#ce9178">$1</span>')
+    .replace(/('(?:[^'\\]|\\.)*')/g, '<span style="color:#ce9178">$1</span>')
+    .replace(/(\$\w+|\$\{[^}]+\})/g, '<span style="color:#9cdcfe">$1</span>')
+    .replace(/(^\$\s)/gm, '<span style="color:#858585">$1</span>')
+  return `<!DOCTYPE html><html><head><style>${DARK_BASE}
+pre{margin:0;padding:16px;overflow:auto;white-space:pre-wrap;line-height:1.7;}
+.badge{display:inline-block;padding:2px 8px;background:#252526;border:1px solid #3c3c3c;border-radius:4px;font-size:11px;color:#858585;margin:10px 14px 0;}
+</style></head><body>
+<div class="badge">Shell — read-only</div>
+<pre>${highlighted}</pre>
+</body></html>`
+}
+
+function yamlDoc(content: string): string {
+  const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const highlighted = escaped
+    .replace(/^(\s*#[^\n]*)/gm, '<span style="color:#6a9955">$1</span>')
+    .replace(/^(\s*[\w-]+)\s*:/gm, '<span style="color:#9cdcfe">$1</span>:')
+    .replace(/:\s*("(?:[^"\\]|\\.)*")/g, ': <span style="color:#ce9178">$1</span>')
+    .replace(/:\s*('(?:[^'\\]|\\.)*')/g, ': <span style="color:#ce9178">$1</span>')
+    .replace(/:\s*(true|false|null|~)\b/g, ': <span style="color:#569cd6">$1</span>')
+    .replace(/:\s*(-?\d+\.?\d*)\b/g, ': <span style="color:#b5cea8">$1</span>')
+    .replace(/^(\s*-)\s/gm, '<span style="color:#858585">$1</span> ')
+  return `<!DOCTYPE html><html><head><style>${DARK_BASE}
+pre{margin:0;padding:16px;overflow:auto;white-space:pre-wrap;line-height:1.7;}
+.badge{display:inline-block;padding:2px 8px;background:#252526;border:1px solid #3c3c3c;border-radius:4px;font-size:11px;color:#858585;margin:10px 14px 0;}
+</style></head><body>
+<div class="badge">YAML — read-only</div>
+<pre>${highlighted}</pre>
+</body></html>`
+}
+
+function xmlDoc(content: string): string {
+  const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const highlighted = escaped
+    .replace(/(&lt;\/?)([\w:-]+)/g, '$1<span style="color:#4ec9b0">$2</span>')
+    .replace(/([\w:-]+)(=)("(?:[^"\\]|\\.)*")/g,
+      '<span style="color:#9cdcfe">$1</span>$2<span style="color:#ce9178">$3</span>')
+    .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span style="color:#6a9955">$1</span>')
+    .replace(/(&lt;\?[\s\S]*?\?&gt;)/g, '<span style="color:#858585">$1</span>')
+  return `<!DOCTYPE html><html><head><style>${DARK_BASE}
+pre{margin:0;padding:16px;overflow:auto;white-space:pre-wrap;line-height:1.7;}
+.badge{display:inline-block;padding:2px 8px;background:#252526;border:1px solid #3c3c3c;border-radius:4px;font-size:11px;color:#858585;margin:10px 14px 0;}
+</style></head><body>
+<div class="badge">XML — read-only</div>
+<pre>${highlighted}</pre>
+</body></html>`
+}
+
 // ── Main renderer ──────────────────────────────────────────────────────────────
 
 function buildDoc(ext: string, content: string): { html: string; isScript: boolean } {
   switch (ext) {
-    case 'json':              return { html: jsonDoc(content), isScript: false }
-    case 'css': case 'scss': return { html: cssDoc(content), isScript: false }
-    case 'tsx': case 'jsx':  return { html: reactDoc(content), isScript: true }
-    case 'ts':               return { html: jsDoc(stripTs(content)), isScript: true }
-    default:                 return { html: jsDoc(content), isScript: true }
+    case 'json':                    return { html: jsonDoc(content),          isScript: false }
+    case 'css': case 'scss':        return { html: cssDoc(content),           isScript: false }
+    case 'tsx': case 'jsx':         return { html: reactDoc(content),         isScript: true  }
+    case 'ts':                      return { html: jsDoc(stripTs(content)),   isScript: true  }
+    case 'sql':                     return { html: sqlDoc(content),           isScript: false }
+    case 'sh': case 'bash':         return { html: shellDoc(content),         isScript: false }
+    case 'yaml': case 'yml':        return { html: yamlDoc(content),          isScript: false }
+    case 'xml':                     return { html: xmlDoc(content),           isScript: false }
+    case 'py': case 'c': case 'rs': case 'go':
+                                    return { html: syntaxDoc(ext, content),   isScript: false }
+    default:                        return { html: jsDoc(content),            isScript: true  }
   }
 }
 

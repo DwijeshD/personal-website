@@ -1,13 +1,14 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import TitleBar from './TitleBar'
 import ActivityBar from './ActivityBar'
 import Sidebar from './Sidebar'
 import TabBar from './TabBar'
 import StatusBar from './StatusBar'
 import CommandPalette from './CommandPalette'
-import BottomPanel from './BottomPanel'
+import BottomPanel, { type BottomTab } from './BottomPanel'
+import { computeDiagnostics } from '@/lib/diagnostics'
 import CopilotPanel from './CopilotPanel'
 import AboutModal from './modals/AboutModal'
 import KeyboardShortcutsModal from './modals/KeyboardShortcutsModal'
@@ -60,6 +61,13 @@ export default function VSCodeLayout() {
   const [workspaceFolders, setWorkspaceFolders]   = useState<CustomFolder[]>([])
   const [pendingAiAction, setPendingAiAction]     = useState<AiFileAction | null>(null)
 
+  const [bottomTab, setBottomTab] = useState<BottomTab>('TERMINAL')
+
+  const diagnostics = useMemo(
+    () => computeDiagnostics(fileContents, workspaceFiles, DEFAULT_CONTENT),
+    [fileContents, workspaceFiles],
+  )
+
   const terminalRef = useRef<TerminalHandle | null>(null)
   const zoom = ZOOM_LEVELS[zoomIdx]
 
@@ -108,6 +116,7 @@ export default function VSCodeLayout() {
       body: JSON.stringify({ message: 'hi' }),
     }).catch(() => {})
   }, [])
+
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -352,6 +361,9 @@ export default function VSCodeLayout() {
                   onNavigate={navigate}
                   onLastCommandChange={setLastCommand}
                   terminalRef={terminalRef}
+                  diagnostics={diagnostics}
+                  activeTab={bottomTab}
+                  onTabChange={setBottomTab}
                 />
               </div>
             </>
@@ -387,6 +399,12 @@ export default function VSCodeLayout() {
         aiThinking={aiThinking}
         onToggleAI={toggleCopilot}
         zoom={zoom}
+        errorCount={diagnostics.filter((d) => d.severity === 'error').length}
+        warningCount={diagnostics.filter((d) => d.severity === 'warning').length}
+        onShowProblems={() => {
+          setTerminalOpen(true)
+          setBottomTab('PROBLEMS')
+        }}
       />
 
       <CommandPalette

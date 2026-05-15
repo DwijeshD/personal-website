@@ -3,12 +3,12 @@
 import { useEffect, useRef } from 'react'
 
 const THEMES = [
-  { id: 'default',     name: 'Dwijesh Dark',  color: '#569cd6', emoji: '💙' },
-  { id: 'rose-pine',   name: 'Rosé Pine',     color: '#eb6f92', emoji: '🌸' },
-  { id: 'tokyo-night', name: 'Tokyo Night',   color: '#7aa2f7', emoji: '🌃' },
-  { id: 'catppuccin',  name: 'Catppuccin',    color: '#cba6f7', emoji: '🐱' },
-  { id: 'nord',        name: 'Nord',          color: '#88c0d0', emoji: '❄️' },
-  { id: 'gruvbox',     name: 'Gruvbox',       color: '#d79921', emoji: '🔥' },
+  { id: 'default',     name: 'Dwijesh Dark',  palette: ['#569cd6', '#4ec9b0', '#ce9178'] },
+  { id: 'rose-pine',   name: 'Rosé Pine',     palette: ['#eb6f92', '#c4a7e7', '#f6c177'] },
+  { id: 'tokyo-night', name: 'Tokyo Night',   palette: ['#7aa2f7', '#bb9af7', '#9ece6a'] },
+  { id: 'catppuccin',  name: 'Catppuccin',    palette: ['#cba6f7', '#f38ba8', '#a6e3a1'] },
+  { id: 'nord',        name: 'Nord',          palette: ['#88c0d0', '#81a1c1', '#a3be8c'] },
+  { id: 'gruvbox',     name: 'Gruvbox',       palette: ['#d79921', '#cc241d', '#689d6a'] },
 ]
 
 const SHORTCUTS = [
@@ -83,7 +83,7 @@ export default function SettingsPopup({
       ),
     },
     {
-      label: 'Copilot Chat',
+      label: 'AI Assistant',
       shortcut: '',
       onClick: action(onToggleCopilot),
       icon: (
@@ -164,11 +164,11 @@ export default function SettingsPopup({
                 onMouseEnter={(e) => !active && ((e.currentTarget as HTMLElement).style.background = 'var(--vsc-hover, #2a2d2e)')}
                 onMouseLeave={(e) => !active && ((e.currentTarget as HTMLElement).style.background = '')}
               >
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ background: t.color }}
-                />
-                <span className="text-base leading-none">{t.emoji}</span>
+                <span className="flex shrink-0 rounded overflow-hidden" style={{ width: 28, height: 12 }}>
+                  {t.palette.map((c, i) => (
+                    <span key={i} style={{ background: c, flex: 1 }} />
+                  ))}
+                </span>
                 <span className="flex-1 text-xs">{t.name}</span>
                 {active && (
                   <span className="text-vsc-accent text-xs">✓</span>
@@ -251,9 +251,9 @@ export default function SettingsPopup({
       <div className="h-px mx-4" style={{ background: 'var(--vsc-border, #454545)' }} />
 
       {/* Footer */}
-      <div className="px-4 py-3 text-[10px] text-vsc-muted space-y-0.5">
-        <div>Portfolio v1.0 · React + Next.js + Tailwind</div>
-        <div>Made with 💜 by Dwijesh Dookraz</div>
+      <div className="px-4 py-3 flex items-center justify-between text-[10px] text-vsc-muted/60">
+        <span>Next.js · Tailwind · TypeScript</span>
+        <span>© 2025 Dwijesh Dookraz</span>
       </div>
     </div>
   )
