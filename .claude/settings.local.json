@@ -99,7 +99,9 @@
       "Bash(node -e \"const d=[];process.stdin.on\\('data',c=>d.push\\(c\\)\\);process.stdin.on\\('end',\\(\\)=>console.log\\(JSON.stringify\\(JSON.parse\\(d.join\\(''\\)\\),null,2\\)\\)\\)\")",
       "Bash(curl -s -X POST http://localhost:3000/api/report-issue -H \"Content-Type: application/json\" -d '{\"title\":\"Test issue from portfolio chat\",\"description\":\"This is a test bug report to verify the GitHub Issues integration is working correctly.\"}')",
       "Bash(findstr \":3000\")",
-      "Bash(curl -s -X POST http://localhost:3000/api/report-issue -H \"Content-Type: application/json\" -d '{\"title\":\"Test issue from portfolio chat\",\"description\":\"Verifying GitHub Issues integration works.\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/report-issue -H \"Content-Type: application/json\" -d '{\"title\":\"Test issue from portfolio chat\",\"description\":\"Verifying GitHub Issues integration works.\"}')",
+      "Bash(xargs wc *)",
+      "Bash(curl -s -I \"https://api.github.com/repos/DwijeshD/personalwebsite/commits?per_page=1\")"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

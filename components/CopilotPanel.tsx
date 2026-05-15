@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
 import type { AiFileAction } from '@/lib/fileSystem'
 import { DEFAULT_CONTENT } from '@/lib/defaultContent'
 
@@ -145,8 +144,14 @@ function attachedFiles(
   fileContents: Record<string, string>,
 ): Array<{ path: string; content: string }> {
   const lower = message.toLowerCase()
+  const mentions = [...message.matchAll(/@([\w.\-]+)/g)].map(m => m[1].toLowerCase())
   return names
-    .filter(n => lower.includes(n.toLowerCase()))
+    .filter(n => {
+      const nLower = n.toLowerCase()
+      const baseName = nLower.split('.')[0]
+      return mentions.some(m => nLower.startsWith(m) || baseName === m)
+        || lower.includes(nLower)
+    })
     .map(n => ({ path: n, content: resolveFileContent(n, fileContents) }))
     .filter(f => f.content.length > 0)
     .slice(0, 5)
@@ -224,9 +229,100 @@ async function fetchFullResponse(query: string): Promise<string> {
   return accumulated
 }
 
+// Re-trigger the CSS animation on the same DOM node without remounting.
+// Key-based remounting causes a visible flash; this approach doesn't.
+function StreamingBubble({
+  content,
+  isStreaming,
+  busy,
+}: {
+  content: string
+  isStreaming: boolean
+  busy: boolean
+}) {
+  const divRef  = useRef<HTMLDivElement>(null)
+  const prevLen = useRef(0)
+  const FADE_WINDOW = 10  // re-trigger animation every N new chars
+
+  useEffect(() => {
+    if (!isStreaming || !divRef.current || !content) return
+    const crossed = Math.floor(content.length / FADE_WINDOW) !== Math.floor(prevLen.current / FADE_WINDOW)
+    if (crossed) {
+      const el = divRef.current
+      el.style.animation = 'none'
+      void el.offsetWidth              // force reflow to restart animation
+      el.style.animation = 'streamReveal 220ms ease-out forwards'
+    }
+    prevLen.current = content.length
+  })
+
+  return (
+    <div ref={divRef}>
+      {content
+        ? renderMd(content)
+        : (busy ? <ThinkingIndicator /> : null)}
+    </div>
+  )
+}
+
 const BUG_KEYWORDS = /\b(bug|broken|error|issue|problem|crash|wrong|not work|doesn't work|doesn't load|fail|glitch|weird|strange|incorrect|missing|stuck)\b/i
 
 type IssueState = { status: 'idle' } | { status: 'form'; title: string; desc: string } | { status: 'submitting' } | { status: 'done'; number: number } | { status: 'error'; msg: string }
+
+interface LogEntry {
+  ts: number
+  level: 'info' | 'warn' | 'error'
+  tag: string
+  msg: string
+}
+
+function LogsView({ logs, onClear }: { logs: LogEntry[]; onClear: () => void }) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { bottomRef.current?.scrollIntoView() }, [logs.length])
+
+  if (logs.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-vsc-muted text-[11px] gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-40">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span className="opacity-50">No logs — send a message to start</span>
+      </div>
+    )
+  }
+
+  const startTs = logs[0].ts
+
+  return (
+    <div className="h-full overflow-y-auto panel-scroll font-mono text-[11px]">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-vsc-border/30 sticky top-0 bg-[#181818]">
+        <span className="text-vsc-muted/50">{logs.length} entries</span>
+        <button onClick={onClear} className="text-vsc-muted/40 hover:text-vsc-muted transition-colors text-[10px]">Clear</button>
+      </div>
+      <div className="p-3 space-y-0.5">
+        {logs.map((l, i) => (
+          <div key={i} className="flex gap-2 leading-5 items-baseline">
+            <span className="text-vsc-muted/40 shrink-0 tabular-nums">
+              +{((l.ts - startTs) / 1000).toFixed(2)}s
+            </span>
+            <span className={`shrink-0 font-semibold min-w-[80px] ${
+              l.level === 'error' ? 'text-red-400' :
+              l.level === 'warn'  ? 'text-yellow-400' :
+              'text-[#4ec9b0]/70'
+            }`}>
+              [{l.tag}]
+            </span>
+            <span className="text-vsc-text/75 break-all">{l.msg}</span>
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+    </div>
+  )
+}
 
 export default function CopilotPanel({ onThinkingChange, onClose, onPendingAction, workspaceFiles = [], fileContents = {} }: Props) {
   const [messages, setMessages]           = useState<Message[]>([])
@@ -239,10 +335,43 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const [msgsLeft, setMsgsLeft]           = useState<number | null>(null)
   const [issueState, setIssueState]       = useState<IssueState>({ status: 'idle' })
   const [pendingBugMsg, setPendingBugMsg] = useState<string | null>(null)
+  const [logs, setLogs]                   = useState<LogEntry[]>([])
+  const [activeView, setActiveView]       = useState<'chat' | 'logs'>('chat')
   const bottomRef      = useRef<HTMLDivElement>(null)
   const inputRef       = useRef<HTMLTextAreaElement>(null)
   const rawAccum       = useRef('')
+  const displayIdx     = useRef(0)
+  const networkDone    = useRef(false)
   const prefetchCache  = useRef<Map<string, string>>(new Map())
+
+  // Drain accumulated text at a fixed rate for smooth, uniform display
+  const CHARS_PER_TICK = 2   // characters revealed per tick
+  const TICK_MS        = 45  // tick interval → ~44 chars/sec
+
+  useEffect(() => {
+    if (!streaming) return
+    const id = setInterval(() => {
+      const total = rawAccum.current.length
+      if (displayIdx.current < total) {
+        displayIdx.current = Math.min(displayIdx.current + CHARS_PER_TICK, total)
+        const slice = rawAccum.current.slice(0, displayIdx.current)
+        const { thinking, content } = parseThinkBlocks(slice)
+        setMessages(m => {
+          const c = [...m]
+          if (c.length === 0) return c
+          c[c.length - 1] = { role: 'assistant', content, thinking }
+          return c
+        })
+      } else if (networkDone.current) {
+        setStreaming(false)
+      }
+    }, TICK_MS)
+    return () => clearInterval(id)
+  }, [streaming])
+
+  function pushLog(level: LogEntry['level'], tag: string, msg: string) {
+    setLogs(prev => [...prev, { ts: Date.now(), level, tag, msg }])
+  }
 
   // Pre-fetch suggested answers on mount so first click is instant
   useEffect(() => {
@@ -295,56 +424,72 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       } catch {
         aiContext = `${content}\n\n[SYSTEM: Bug logging failed — network error.]`
       }
-      setPendingBugMsg(null) // suppress widget — handled automatically
+      setPendingBugMsg(null)
     }
 
     const userMsg: Message = { role: 'user', content }
     const history = [...messages, userMsg]
-    // Send aiContext (with injected system note) to API, show original content in UI
     const historyForApi = aiContext !== content
       ? [...messages, { role: 'user' as const, content: aiContext }]
       : history
     setMessages([...history, { role: 'assistant', content: '', thinking: '' }])
     setInput('')
-    setStreaming(true)
     rawAccum.current = ''
+    displayIdx.current = 0
+    networkDone.current = false
+    setStreaming(true)
 
-    // Serve from prefetch cache for zero-latency first responses
+    pushLog('info', 'REQUEST', `msg #${history.length} — "${content.slice(0, 80)}${content.length > 80 ? '…' : ''}"`)
+
     const cached = prefetchCache.current.get(content)
     if (cached) {
       prefetchCache.current.delete(content)
-      const { thinking, content: parsed } = parseThinkBlocks(cached)
-      setMessages(prev => {
-        const c = [...prev]
-        c[c.length - 1] = { role: 'assistant', content: parsed, thinking }
-        return c
-      })
-      setStreaming(false)
+      rawAccum.current = cached
+      networkDone.current = true
+      pushLog('info', 'CACHE', `served from prefetch — ${cached.length} chars buffered`)
       inputRef.current?.focus()
-      return
+      return  // display interval handles rendering + setStreaming(false)
     }
 
+    const fileCtx = attachedFiles(content, workspaceFiles, fileContents)
+    if (fileCtx.length > 0) pushLog('info', 'FILES', `attaching ${fileCtx.length} file(s): ${fileCtx.map(f => f.path).join(', ')}`)
+
+    const requestSentAt = Date.now()
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: historyForApi }),
+        body: JSON.stringify({
+          messages: historyForApi,
+          ...(fileCtx.length > 0        ? { fileContext: fileCtx }            : {}),
+          ...(workspaceFiles.length > 0 ? { workspaceFiles }                  : {}),
+        }),
       })
-
-      if (!res.ok) {
-        const err = await res.json()
-        setMessages((m) => {
-          const c = [...m]; c[c.length - 1] = { role: 'assistant', content: `Error: ${err.error ?? 'Unknown error'}` }; return c
-        })
-        return
-      }
 
       const remaining = res.headers.get('X-RateLimit-Remaining')
       if (remaining !== null) setMsgsLeft(Number(remaining))
 
+      pushLog(
+        res.ok ? 'info' : 'error',
+        'HTTP',
+        `${res.status} ${res.statusText || (res.ok ? 'OK' : 'ERR')}${remaining !== null ? ` — ${remaining} msgs left` : ''}`,
+      )
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: 'Unknown error' }))
+        pushLog('error', 'API', errData.error ?? `HTTP ${res.status}`)
+        setMessages((m) => {
+          const c = [...m]; c[c.length - 1] = { role: 'assistant', content: `Error: ${errData.error ?? 'Unknown error'}` }; return c
+        })
+        return
+      }
+
       const reader  = res.body!.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
+      let firstTokenAt: number | null = null
+      let totalChars = 0
+      let finishReason: string | null = null
 
       while (true) {
         const { done, value } = await reader.read()
@@ -355,29 +500,45 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const data = line.slice(6).trim()
-          if (data === '[DONE]') break
+          if (data === '[DONE]') { pushLog('info', 'STREAM', '[DONE] received'); break }
           try {
-            const delta = JSON.parse(data).choices?.[0]?.delta?.content
+            const parsed = JSON.parse(data)
+            const choice = parsed.choices?.[0]
+            const delta  = choice?.delta?.content
+            const reason = choice?.finish_reason
+            if (reason) finishReason = reason
             if (delta) {
-              rawAccum.current += delta
-              const { thinking, content } = parseThinkBlocks(rawAccum.current)
-              flushSync(() => {
-                setMessages((m) => {
-                  const c = [...m]
-                  c[c.length - 1] = { role: 'assistant', content, thinking }
-                  return c
-                })
-              })
+              if (!firstTokenAt) {
+                firstTokenAt = Date.now()
+                pushLog('info', 'STREAM', `first token — latency ${firstTokenAt - requestSentAt}ms`)
+              }
+              totalChars += delta.length
+              rawAccum.current += delta  // buffer only — display interval renders at fixed rate
             }
-          } catch { /* skip */ }
+          } catch { /* skip malformed SSE */ }
         }
       }
-    } catch {
+
+      networkDone.current = true  // signal display interval to stop after draining
+
+      pushLog(
+        totalChars === 0 ? 'warn' : 'info',
+        'STREAM',
+        `ended — ${totalChars} chars buffered, finish_reason: ${finishReason ?? 'not provided'}`,
+      )
+      if (totalChars === 0) {
+        setStreaming(false)  // nothing to display — stop immediately
+        pushLog('warn', 'EMPTY', 'stream closed with no content — model may have hit context limit or been filtered')
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      pushLog('error', 'ERROR', msg)
+      networkDone.current = true
       setMessages((m) => {
         const c = [...m]; c[c.length - 1] = { role: 'assistant', content: 'Connection error.' }; return c
       })
+      setStreaming(false)  // error — stop immediately, skip smooth display
     } finally {
-      setStreaming(false)
       inputRef.current?.focus()
       if (BUG_KEYWORDS.test(content)) {
         setPendingBugMsg(content)
@@ -393,6 +554,8 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     setFailedIdx(null)
     setLastEditMsg(content)
     setActionLoading(true)
+
+    pushLog('info', 'ACTION', `intent detected — "${content.slice(0, 80)}${content.length > 80 ? '…' : ''}"`)
 
     setMessages(prev => [
       ...prev,
@@ -411,9 +574,12 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         }),
       })
 
+      pushLog(res.ok ? 'info' : 'error', 'HTTP', `${res.status} ${res.ok ? 'OK' : 'ERR'} (ai-action)`)
+
       const data = await res.json()
 
       if (!res.ok) {
+        pushLog('error', 'ACTION', data.error ?? `HTTP ${res.status}`)
         setMessages(prev => {
           const c = [...prev]
           const idx = c.length - 1
@@ -425,6 +591,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       }
 
       const action: AiFileAction = data.action
+      pushLog('info', 'ACTION', `${action.action} → ${action.path}`)
       const verb: Record<string, string> = {
         create_file: 'create', update_file: 'update',
         delete_file: 'delete', create_folder: 'create folder',
@@ -439,7 +606,9 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       })
       setFailedIdx(null)
       onPendingAction(action)
-    } catch {
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      pushLog('error', 'ERROR', msg)
       setMessages(prev => {
         const c = [...prev]
         const idx = c.length - 1
@@ -463,17 +632,48 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const busy    = streaming || actionLoading
   const isEmpty = messages.length === 0
 
+  // @mention autocomplete
+  const atMatch      = input.match(/@([\w.\-]*)$/)
+  const mentionQuery = atMatch ? atMatch[1].toLowerCase() : null
+  const mentionFiles = mentionQuery !== null
+    ? workspaceFiles.filter(f => !mentionQuery || f.toLowerCase().includes(mentionQuery)).slice(0, 6)
+    : []
+
+  function insertMention(fileName: string) {
+    const updated = input.replace(/@([\w.\-]*)$/, `@${fileName} `)
+    setInput(updated)
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.style.height = 'auto'
+        inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + 'px'
+        inputRef.current.focus()
+      }
+    }, 0)
+  }
+
   return (
     <div className="flex flex-col h-full w-[340px] bg-[#181818] border-l border-vsc-border shrink-0 font-sans">
 
       {/* ── Tab bar ── */}
       <div className="flex items-center border-b border-vsc-border/60 shrink-0 select-none">
-        <button className="relative px-4 py-2 text-[11px] font-semibold text-vsc-text tracking-widest uppercase">
+        <button
+          onClick={() => setActiveView('chat')}
+          className={`relative px-4 py-2 text-[11px] font-semibold tracking-widest uppercase transition-colors ${activeView === 'chat' ? 'text-vsc-text' : 'text-vsc-muted hover:text-vsc-text'}`}
+        >
           Chat
-          <span className="absolute bottom-0 left-2 right-2 h-[1px] bg-vsc-text" />
+          {activeView === 'chat' && <span className="absolute bottom-0 left-2 right-2 h-[1px] bg-vsc-text" />}
         </button>
-        <button className="px-4 py-2 text-[11px] font-semibold text-vsc-muted tracking-widest uppercase hover:text-vsc-text transition-colors">
-          Copilot Edits
+        <button
+          onClick={() => setActiveView('logs')}
+          className={`relative px-4 py-2 text-[11px] font-semibold tracking-widest uppercase transition-colors flex items-center gap-1.5 ${activeView === 'logs' ? 'text-vsc-text' : 'text-vsc-muted hover:text-vsc-text'}`}
+        >
+          Logs
+          {logs.length > 0 && (
+            <span className={`text-[10px] font-mono ${logs.some(l => l.level === 'error') ? 'text-red-400' : logs.some(l => l.level === 'warn') ? 'text-yellow-400' : 'text-vsc-muted/60'}`}>
+              {logs.length}
+            </span>
+          )}
+          {activeView === 'logs' && <span className="absolute bottom-0 left-2 right-2 h-[1px] bg-vsc-text" />}
         </button>
         <div className="flex items-center gap-0.5 ml-auto pr-1">
           {messages.length > 0 && (
@@ -499,8 +699,15 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         </div>
       </div>
 
+      {/* ── Logs view ── */}
+      {activeView === 'logs' && (
+        <div className="flex-1 overflow-hidden">
+          <LogsView logs={logs} onClear={() => setLogs([])} />
+        </div>
+      )}
+
       {/* ── Chat / Empty state ── */}
-      <div className="flex-1 overflow-y-auto panel-scroll">
+      <div className={`flex-1 overflow-y-auto panel-scroll ${activeView !== 'chat' ? 'hidden' : ''}`}>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full gap-5 px-6">
             {/* Logo */}
@@ -602,9 +809,11 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                       : 'bg-[#252526] border border-vsc-border/60 text-vsc-text/90'
                   }`}>
                     {m.role === 'assistant'
-                      ? (m.content
-                          ? renderMd(m.content)
-                          : (busy && i === messages.length - 1 ? <ThinkingIndicator /> : null))
+                      ? <StreamingBubble
+                          content={m.content}
+                          isStreaming={streaming && i === messages.length - 1}
+                          busy={busy && i === messages.length - 1}
+                        />
                       : m.content}
                   </div>
                   {failedIdx === i && lastEditMsg && !busy && (
@@ -702,8 +911,23 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       </div>
 
       {/* ── Bottom input area ── */}
-      <div className="shrink-0 border-t border-vsc-border/60">
-        <div className="px-3 pt-2.5 pb-1.5">
+      <div className={`shrink-0 border-t border-vsc-border/60 ${activeView !== 'chat' ? 'hidden' : ''}`}>
+        <div className="px-3 pt-2.5 pb-1.5 relative">
+          {/* @mention autocomplete dropdown */}
+          {mentionFiles.length > 0 && (
+            <div className="absolute bottom-full left-3 right-3 mb-1 bg-[#252526] border border-vsc-border rounded-md shadow-lg overflow-hidden z-10">
+              {mentionFiles.map(f => (
+                <button
+                  key={f}
+                  onMouseDown={(e) => { e.preventDefault(); insertMention(f) }}
+                  className="w-full text-left px-3 py-1.5 text-[11px] text-vsc-text hover:bg-vsc-hover transition-colors flex items-center gap-2"
+                >
+                  <span className="text-vsc-muted/50">@</span>
+                  <span className="font-mono">{f}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex items-end gap-2 bg-[#2a2a2a] border border-vsc-border/50 rounded-md px-3 py-2.5 focus-within:border-vsc-accent/50 transition-colors">
             {/* Attach icon */}
             <button className="shrink-0 text-vsc-muted/50 hover:text-vsc-muted transition-colors pb-0.5" title="Attach context">
@@ -724,7 +948,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
               }}
               disabled={busy}
-              placeholder="Ask Copilot"
+              placeholder="Ask anything — type @ to reference a file"
               className="flex-1 bg-transparent text-[12px] text-vsc-text outline-none resize-none placeholder:text-vsc-muted/40 disabled:opacity-50 leading-5 font-sans"
               style={{ minHeight: '20px', maxHeight: '120px' }}
             />
@@ -752,11 +976,11 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         {/* Footer: quick action + model badge */}
         <div className="flex items-center justify-between px-3 pb-2.5 pt-0.5">
           <button
-            onClick={() => sendChat("What can you tell me about Dwijesh? Give me an overview.")}
+            onClick={() => sendChat("What can you help me with?")}
             disabled={busy}
             className="text-[11px] text-vsc-muted/60 hover:text-vsc-muted transition-colors disabled:opacity-40 underline-offset-2 hover:underline"
           >
-            Help — What can you do?
+            Ask anything — or type @ to reference a file
           </button>
           <span className={`text-[10px] font-mono ${msgsLeft !== null && msgsLeft <= 5 ? 'text-yellow-500/70' : 'text-vsc-muted/40'}`}>
             {msgsLeft !== null ? `${msgsLeft}/25 left` : '25/25 left'}

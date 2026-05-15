@@ -5,9 +5,12 @@ interface Props {
   aiThinking: boolean
   onToggleAI: () => void
   zoom: number
+  errorCount: number
+  warningCount: number
+  onShowProblems: () => void
 }
 
-export default function StatusBar({ activeTab, aiThinking, onToggleAI, zoom }: Props) {
+export default function StatusBar({ activeTab, aiThinking, onToggleAI, zoom, errorCount, warningCount, onShowProblems }: Props) {
   const filename = activeTab.startsWith('file:') ? activeTab.slice(5) : activeTab
   const lang = filename.split('.').pop()?.toUpperCase() ?? 'TSX'
 
@@ -21,7 +24,24 @@ export default function StatusBar({ activeTab, aiThinking, onToggleAI, zoom }: P
           </svg>
           main
         </span>
-        <span>0 errors, 0 warnings</span>
+        <button
+          onClick={onShowProblems}
+          className="flex items-center gap-2 hover:bg-white/20 px-1.5 py-0.5 rounded transition-colors"
+          title="Show Problems panel"
+        >
+          <span className="flex items-center gap-1">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" className={errorCount > 0 ? 'text-red-400' : 'text-white/60'}>
+              <path d="M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7 7-3.1 7-7-3.1-7-7-7zm3 9.5L9.5 12 8 10.5 6.5 12 5 10.5 6.5 9 5 7.5 6.5 6 8 7.5 9.5 6l1.5 1.5L9.5 9 11 10.5z"/>
+            </svg>
+            {errorCount}
+          </span>
+          <span className="flex items-center gap-1">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" className={warningCount > 0 ? 'text-yellow-400' : 'text-white/60'}>
+              <path d="M7.56 1h.88l6.54 12.26-.44.74H1.44L1 13.26 7.56 1zM8 2.28L2.28 13H13.72L8 2.28zM8.625 12v-1h-1.25v1h1.25zm-1.25-2V6h1.25v4h-1.25z"/>
+            </svg>
+            {warningCount}
+          </span>
+        </button>
       </div>
 
       {/* Right */}

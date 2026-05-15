@@ -20,6 +20,11 @@ interface Message {
   content: string
 }
 
+interface FileContext {
+  path: string
+  content: string
+}
+
 function err(msg: string, status: number) {
   return NextResponse.json({ error: msg }, { status })
 }
@@ -58,8 +63,13 @@ export async function POST(req: NextRequest) {
   if (raw.byteLength > MAX_BODY_BYTES) return err('Request body too large', 400)
 
   let messages: unknown
+  let fileContext: FileContext[] | undefined
+  let workspaceFiles: string[] | undefined
   try {
-    messages = JSON.parse(new TextDecoder().decode(raw))?.messages
+    const parsed = JSON.parse(new TextDecoder().decode(raw))
+    messages      = parsed?.messages
+    fileContext   = Array.isArray(parsed?.fileContext)  ? parsed.fileContext  : undefined
+    workspaceFiles = Array.isArray(parsed?.workspaceFiles) ? parsed.workspaceFiles : undefined
   } catch {
     return err('Invalid JSON body', 400)
   }
@@ -82,13 +92,29 @@ export async function POST(req: NextRequest) {
   const lastUserMsg = [...(messages as Message[])].reverse().find(m => m.role === 'user')
   const context = buildContext(lastUserMsg?.content ?? '')
 
+  let systemContent = `${AI_SYSTEM_PROMPT}\n\n${context}`
+
+  if (workspaceFiles && workspaceFiles.length > 0) {
+    const names = workspaceFiles.filter(f => typeof f === 'string').slice(0, 30).join('\n')
+    systemContent += `\n\n=== WORKSPACE FILES ===\nThe following files exist in the workspace:\n${names}`
+  }
+
+  if (fileContext && fileContext.length > 0) {
+    const blocks = fileContext
+      .filter(f => typeof f.path === 'string' && typeof f.content === 'string')
+      .map(f => `File: ${f.path}\n\`\`\`\n${f.content.slice(0, 4000)}\n\`\`\``)
+      .join('\n\n')
+    systemContent += `\n\n=== FILE CONTEXT ===\n${blocks}`
+  }
+
+  const hasFiles = fileContext && fileContext.length > 0
   const body = JSON.stringify({
     messages: [
-      { role: 'system', content: `${AI_SYSTEM_PROMPT}\n\n${context}` },
+      { role: 'system', content: systemContent },
       ...(messages as Message[]),
     ],
-    max_tokens: 600,
-    temperature: 0.3,
+    max_tokens: hasFiles ? 1200 : 800,
+    temperature: 0.4,
     stream: true,
     thinking: { type: 'disabled' },
     max_tokens_for_reasoning: 0,

@@ -12,6 +12,7 @@ export interface TerminalHandle {
   clear: () => void
   runCommand: (cmd: string) => void
   getLastCommand: () => string | null
+  pushLines: (lines: TerminalLine[]) => void
 }
 
 interface Props {
@@ -168,6 +169,7 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
     clear: () => setLines([]),
     runCommand: (cmd: string) => execute(cmd),
     getLastCommand: () => history[0] ?? null,
+    pushLines: (newLines: TerminalLine[]) => setLines((prev) => [...prev, ...newLines]),
   }))
 
   function execute(cmd: string) {

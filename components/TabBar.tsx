@@ -1,6 +1,7 @@
 'use client'
 
 import { TABS } from '@/lib/data'
+import { iconSrcForFile } from '@/lib/fileIcons'
 
 interface Props {
   openTabs: string[]
@@ -11,25 +12,12 @@ interface Props {
 
 function tabMeta(id: string) {
   const known = TABS.find(t => t.id === id)
-  if (known) return known
+  if (known) return { ...known, iconSrc: iconSrcForFile(known.label) }
   if (id.startsWith('file:')) {
     const name = id.slice(5)
-    const ext = name.split('.').pop()?.toLowerCase() ?? ''
-    const iconMap: Record<string, { icon: string; iconClass: string }> = {
-      tsx: { icon: '⚛',  iconClass: 'text-[#61dafb]' },
-      jsx: { icon: '⚛',  iconClass: 'text-[#61dafb]' },
-      ts:  { icon: 'TS', iconClass: 'text-[#3178c6]' },
-      js:  { icon: 'JS', iconClass: 'text-[#f1c40f]' },
-      html:{ icon: '<>', iconClass: 'text-[#e34c26]' },
-      css: { icon: '#',  iconClass: 'text-[#519aba]' },
-      json:{ icon: '{}', iconClass: 'text-[#f1c40f]' },
-      md:  { icon: 'M↓', iconClass: 'text-[#519aba]' },
-      pdf: { icon: 'PDF',iconClass: 'text-[#e44d26]' },
-    }
-    const { icon, iconClass } = iconMap[ext] ?? { icon: '·', iconClass: 'text-vsc-muted' }
-    return { id, label: name, icon, iconClass }
+    return { id, label: name, icon: '·', iconClass: 'text-vsc-muted', iconSrc: iconSrcForFile(name) }
   }
-  return { id, label: id, icon: '·', iconClass: 'text-vsc-muted' }
+  return { id, label: id, icon: '·', iconClass: 'text-vsc-muted', iconSrc: null }
 }
 
 export default function TabBar({ openTabs, activeTab, onSelect, onClose }: Props) {
@@ -50,7 +38,10 @@ export default function TabBar({ openTabs, activeTab, onSelect, onClose }: Props
                 : 'bg-vsc-tab-inactive text-vsc-muted hover:bg-vsc-hover hover:text-vsc-text border-t-2 border-t-transparent'}
             `}
           >
-            <span className={`text-[11px] ${tab.iconClass}`}>{tab.icon}</span>
+            {tab.iconSrc
+              ? <img src={tab.iconSrc} width={14} height={14} alt="" className="shrink-0" />
+              : <span className={`text-[11px] ${tab.iconClass}`}>{tab.icon}</span>
+            }
             <span className="text-xs">{tab.label}</span>
             <button
               onClick={(e) => { e.stopPropagation(); onClose(id) }}

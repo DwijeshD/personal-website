@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { SidePanel } from './ActivityBar'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
+import { iconSrcForFile } from '@/lib/fileIcons'
 
 interface Props {
   panel: SidePanel
@@ -24,93 +25,56 @@ interface Props {
   defaultContents: Record<string, string>
 }
 
-// ─── Icons (file-icons extension — font-based) ────────────────────────────────
-
-function FI({ font, char, color, size = 15 }: { font: string; char: string; color: string; size?: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        fontFamily: font,
-        color,
-        fontSize: size,
-        lineHeight: 1,
-        width: 16,
-        height: 16,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        userSelect: 'none',
-      }}
-    >
-      {char}
-    </span>
-  )
-}
-
-const DEV = 'fi-devopicons'
-const FA  = 'fi-fontawesome'
-const FIC = 'fi-file-icons'
-const OCT = 'fi-octicons'
-const MF  = 'fi-mfixx'
-
-const JsIcon     = () => <FI font={MF}  char={String.fromCodePoint(0xf129)} color='#f4bf75' />
-const TsIcon     = () => <FI font={FIC} char={String.fromCodePoint(0x02a6)} color='#6a9fb5' />
-const TsxIcon    = () => <FI font={FIC} char={String.fromCodePoint(0xe9e7)} color='#9dc0ce' />
-const ReactIcon  = () => <FI font={FIC} char={String.fromCodePoint(0xe9e6)} color='#6a9fb5' />
-const CssIcon    = () => <FI font={FA}  char={String.fromCodePoint(0xf13c)} color='#6a9fb5' />
-const ScssIcon   = () => <FI font={DEV} char={String.fromCodePoint(0xe64b)} color='#ff4ddb' />
-const HtmlIcon   = () => <FI font={FA}  char={String.fromCodePoint(0xf13b)} color='#d28445' />
-const JsonIcon   = () => <FI font={FIC} char={String.fromCodePoint(0xe958)} color='#75b5aa' />
-const MdIcon     = () => <FI font={OCT} char={String.fromCodePoint(0xf0c9)} color='#6a9fb5' />
-const PdfIcon    = () => <FI font={FA}  char={String.fromCodePoint(0xf1c1)} color='#ac4142' />
-const FileIcon   = () => <FI font={OCT} char={String.fromCodePoint(0xf011)} color='#6e6e6e' />
+// ─── Icons (material-icon-theme SVGs) ─────────────────────────────────────────
 
 const FolderIcon = ({ open }: { open: boolean }) => (
-  <FI font={OCT} char={String.fromCodePoint(open ? 0xf017 : 0xf016)} color='#dcb67a' size={17} />
+  <img src={open ? '/icons/files/folder-open.svg' : '/icons/files/folder.svg'} width={16} height={16} alt="" aria-hidden />
 )
 
 function iconForFile(name: string): React.ReactNode {
-  const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  switch (ext) {
-    case 'tsx':              return <TsxIcon />
-    case 'jsx':              return <ReactIcon />
-    case 'ts':               return <TsIcon />
-    case 'js':               return <JsIcon />
-    case 'html': case 'htm': return <HtmlIcon />
-    case 'css':              return <CssIcon />
-    case 'scss':             return <ScssIcon />
-    case 'json':             return <JsonIcon />
-    case 'md':               return <MdIcon />
-    case 'pdf':              return <PdfIcon />
-    default:                 return <FileIcon />
-  }
+  return <img src={iconSrcForFile(name)} width={16} height={16} alt="" aria-hidden />
 }
 
 // ─── GitStatus ────────────────────────────────────────────────────────────────
 
 function GitStatus() {
+  const [data, setData] = useState<{ branch: string; ahead: number; behind: number } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/git-status')
+      .then((r) => r.json())
+      .then((d) => setData({ branch: d.branch ?? 'main', ahead: d.ahead ?? 0, behind: d.behind ?? 0 }))
+      .catch(() => setData({ branch: 'main', ahead: 0, behind: 0 }))
+  }, [])
+
+  const branch = data?.branch ?? 'main'
+  const ahead  = data?.ahead  ?? 0
+  const behind = data?.behind ?? 0
+
   return (
     <div className="flex items-center gap-3 px-3 py-1.5 text-[11px] text-vsc-muted select-none">
       <span className="flex items-center gap-1">
         <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
           <path fillRule="evenodd" d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V7.5a2.5 2.5 0 0 1-2.5 2.5H9a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V9.5a1 1 0 0 0-1-1H4.5A2.5 2.5 0 0 1 2 6V4.372a2.25 2.25 0 1 1 1.5 0V6a1 1 0 0 0 1 1H5a2.5 2.5 0 0 1 2.5-2.5h.25v-.628A2.25 2.25 0 0 1 9.5 1.75zM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
         </svg>
-        main
+        {branch}
       </span>
-      <span className="flex items-center gap-0.5 text-[#89d185]">
-        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M3.47 7.78a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 1 1-1.06 1.06L9 4.81v7.44a.75.75 0 0 1-1.5 0V4.81L4.53 7.78a.75.75 0 0 1-1.06 0z"/>
-        </svg>
-        1
-      </span>
-      <span className="flex items-center gap-0.5 text-[#f14c4c]">
-        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M12.53 8.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L2.97 9.28a.75.75 0 0 1 1.06-1.06L7 11.19V3.75a.75.75 0 0 1 1.5 0v7.44l2.97-2.97a.75.75 0 0 1 1.06 0z"/>
-        </svg>
-        3
-      </span>
+      {ahead > 0 && (
+        <span className="flex items-center gap-0.5 text-[#89d185]">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M3.47 7.78a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 1 1-1.06 1.06L9 4.81v7.44a.75.75 0 0 1-1.5 0V4.81L4.53 7.78a.75.75 0 0 1-1.06 0z"/>
+          </svg>
+          {ahead}
+        </span>
+      )}
+      {behind > 0 && (
+        <span className="flex items-center gap-0.5 text-[#f14c4c]">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M12.53 8.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L2.97 9.28a.75.75 0 0 1 1.06-1.06L7 11.19V3.75a.75.75 0 0 1 1.5 0v7.44l2.97-2.97a.75.75 0 0 1 1.06 0z"/>
+          </svg>
+          {behind}
+        </span>
+      )}
     </div>
   )
 }
