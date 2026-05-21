@@ -240,29 +240,13 @@ function StreamingBubble({
   isStreaming: boolean
   busy: boolean
 }) {
-  const divRef  = useRef<HTMLDivElement>(null)
-  const prevLen = useRef(0)
-  const FADE_WINDOW = 10  // re-trigger animation every N new chars
-
-  useEffect(() => {
-    if (!isStreaming || !divRef.current || !content) return
-    const crossed = Math.floor(content.length / FADE_WINDOW) !== Math.floor(prevLen.current / FADE_WINDOW)
-    if (crossed) {
-      const el = divRef.current
-      el.style.animation = 'none'
-      void el.offsetWidth              // force reflow to restart animation
-      el.style.animation = 'streamReveal 220ms ease-out forwards'
-    }
-    prevLen.current = content.length
-  })
-
-  return (
-    <div ref={divRef}>
-      {content
-        ? renderMd(content)
-        : (busy ? <ThinkingIndicator /> : null)}
-    </div>
-  )
+  if (!content) return busy ? <ThinkingIndicator /> : null
+  // During streaming: plain text to avoid renderMd reconciliation flicker.
+  // After streaming: full markdown render.
+  if (isStreaming) {
+    return <span className="whitespace-pre-wrap">{content}</span>
+  }
+  return <>{renderMd(content)}</>
 }
 
 const BUG_KEYWORDS = /\b(bug|broken|error|issue|problem|crash|wrong|not work|doesn't work|doesn't load|fail|glitch|weird|strange|incorrect|missing|stuck)\b/i
@@ -342,6 +326,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const rawAccum       = useRef('')
   const displayIdx     = useRef(0)
   const networkDone    = useRef(false)
+  const abortRef       = useRef<AbortController | null>(null)
   const prefetchCache  = useRef<Map<string, string>>(new Map())
 
   // Drain accumulated text at a fixed rate for smooth, uniform display
@@ -455,10 +440,13 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     if (fileCtx.length > 0) pushLog('info', 'FILES', `attaching ${fileCtx.length} file(s): ${fileCtx.map(f => f.path).join(', ')}`)
 
     const requestSentAt = Date.now()
+    const controller = new AbortController()
+    abortRef.current = controller
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           messages: historyForApi,
           ...(fileCtx.length > 0        ? { fileContext: fileCtx }            : {}),
@@ -527,17 +515,29 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         `ended — ${totalChars} chars buffered, finish_reason: ${finishReason ?? 'not provided'}`,
       )
       if (totalChars === 0) {
-        setStreaming(false)  // nothing to display — stop immediately
+        setStreaming(false)
         pushLog('warn', 'EMPTY', 'stream closed with no content — model may have hit context limit or been filtered')
+        const hint = finishReason === 'length'
+          ? 'The model hit its context limit — try a shorter message or attach a smaller file.'
+          : 'No response received. The model may be unavailable — try again.'
+        setMessages((m) => {
+          const c = [...m]; c[c.length - 1] = { role: 'assistant', content: `⚠️ ${hint}` }; return c
+        })
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      pushLog('error', 'ERROR', msg)
-      networkDone.current = true
-      setMessages((m) => {
-        const c = [...m]; c[c.length - 1] = { role: 'assistant', content: 'Connection error.' }; return c
-      })
-      setStreaming(false)  // error — stop immediately, skip smooth display
+      if (e instanceof Error && e.name === 'AbortError') {
+        // User stopped — keep whatever was streamed, just stop
+        networkDone.current = true
+        pushLog('info', 'STOP', 'stopped by user')
+      } else {
+        const msg = e instanceof Error ? e.message : String(e)
+        pushLog('error', 'ERROR', msg)
+        networkDone.current = true
+        setMessages((m) => {
+          const c = [...m]; c[c.length - 1] = { role: 'assistant', content: 'Connection error.' }; return c
+        })
+        setStreaming(false)
+      }
     } finally {
       inputRef.current?.focus()
       if (BUG_KEYWORDS.test(content)) {
@@ -929,12 +929,6 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
             </div>
           )}
           <div className="flex items-end gap-2 bg-[#2a2a2a] border border-vsc-border/50 rounded-md px-3 py-2.5 focus-within:border-vsc-accent/50 transition-colors">
-            {/* Attach icon */}
-            <button className="shrink-0 text-vsc-muted/50 hover:text-vsc-muted transition-colors pb-0.5" title="Attach context">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-              </svg>
-            </button>
             <textarea
               ref={inputRef}
               rows={1}
@@ -952,24 +946,29 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
               className="flex-1 bg-transparent text-[12px] text-vsc-text outline-none resize-none placeholder:text-vsc-muted/40 disabled:opacity-50 leading-5 font-sans"
               style={{ minHeight: '20px', maxHeight: '120px' }}
             />
-            {/* Send / status icon */}
-            <button
-              onClick={handleSend}
-              disabled={busy || !input.trim()}
-              className="shrink-0 text-vsc-muted hover:text-vsc-accent transition-colors disabled:opacity-25 disabled:cursor-not-allowed pb-0.5"
-            >
-              {busy ? (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
-                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25"/>
-                  <path d="M12 2a10 10 0 0 1 10 10"/>
+            {/* Stop (during streaming) / Send button */}
+            {streaming ? (
+              <button
+                onClick={() => { abortRef.current?.abort(); networkDone.current = true }}
+                title="Stop generating"
+                className="shrink-0 text-vsc-muted hover:text-[#f14c4c] transition-colors pb-0.5"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
                 </svg>
-              ) : (
+              </button>
+            ) : (
+              <button
+                onClick={handleSend}
+                disabled={busy || !input.trim()}
+                className="shrink-0 text-vsc-muted hover:text-vsc-accent transition-colors disabled:opacity-25 disabled:cursor-not-allowed pb-0.5"
+              >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="22" y1="2" x2="11" y2="13"/>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>
-              )}
-            </button>
+              </button>
+            )}
           </div>
         </div>
 

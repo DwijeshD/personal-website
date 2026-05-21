@@ -118,7 +118,6 @@ export const TABS = [
   { id: 'file:server.ts',                       label: 'server.ts',                  icon: 'TS', iconClass: 'text-[#3178c6]' },
   { id: 'file:README.md',                       label: 'README.md',                  icon: 'M↓', iconClass: 'text-[#519aba]' },
   { id: 'file:Dwijesh_Dookraz_Resume.pdf',      label: 'Dwijesh_Dookraz_Resume.pdf', icon: 'PDF', iconClass: 'text-[#e44d26]' },
-  { id: 'file:link-test.html',                  label: 'link-test.html',             icon: '<>', iconClass: 'text-[#e34c26]' },
 ]
 
 // Base system prompt — context is injected per-request by contextBuilder

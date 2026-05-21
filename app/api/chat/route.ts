@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
   if (fileContext && fileContext.length > 0) {
     const blocks = fileContext
       .filter(f => typeof f.path === 'string' && typeof f.content === 'string')
-      .map(f => `File: ${f.path}\n\`\`\`\n${f.content.slice(0, 4000)}\n\`\`\``)
+      .map(f => `File: ${f.path}\n\`\`\`\n${f.content.slice(0, 2500)}\n\`\`\``)
       .join('\n\n')
     systemContent += `\n\n=== FILE CONTEXT ===\n${blocks}`
   }
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       { role: 'system', content: systemContent },
       ...(messages as Message[]),
     ],
-    max_tokens: hasFiles ? 1200 : 800,
+    max_tokens: hasFiles ? 1600 : 800,
     temperature: 0.4,
     stream: true,
     thinking: { type: 'disabled' },
