@@ -144,7 +144,7 @@ export default function Sidebar({
     if (!name) { cancelNew(); return }
     if (newMode === 'file') {
       const id = 'file:' + name
-      setWorkspaceFiles([...workspaceFiles, { id, name }])
+      setWorkspaceFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name }])
       onNavigate(id)
     } else if (newMode === 'folder') {
       setWorkspaceFolders([...workspaceFolders, { id: 'folder:' + name, name, open: true, files: [] }])
@@ -244,7 +244,7 @@ export default function Sidebar({
       ? base.slice(0, dotIdx) + '_copy' + base.slice(dotIdx)
       : base + '_copy'
     const newId = 'file:' + newName
-    setWorkspaceFiles([...workspaceFiles, { id: newId, name: newName }])
+    setWorkspaceFiles(prev => prev.some(f => f.id === newId) ? prev : [...prev, { id: newId, name: newName }])
     onNavigate(newId)
     setCtx(null)
   }

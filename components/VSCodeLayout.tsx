@@ -33,7 +33,8 @@ function idToFilename(id: string): string {
 // Default view mode: files with rich live previews open in split
 function defaultMode(filename: string): ViewMode {
   const ext = filename.split('.').pop()?.toLowerCase() ?? ''
-  const splitExts = new Set(['html', 'htm', 'md', 'tsx', 'jsx', 'css', 'scss'])
+  if (ext === 'md' || ext === 'markdown') return 'preview'
+  const splitExts = new Set(['html', 'htm', 'tsx', 'jsx', 'css', 'scss'])
   return splitExts.has(ext) ? 'split' : 'code'
 }
 
@@ -60,6 +61,7 @@ export default function VSCodeLayout() {
   const [workspaceFiles, setWorkspaceFiles]       = useState<CustomFile[]>(() => TABS.map(t => ({ id: t.id, name: t.label })))
   const [workspaceFolders, setWorkspaceFolders]   = useState<CustomFolder[]>([])
   const [pendingAiAction, setPendingAiAction]     = useState<AiFileAction | null>(null)
+  const [gitStatus, setGitStatus]                 = useState<{ branch: string; totalCommits: number } | null>(null)
 
   const [bottomTab, setBottomTab] = useState<BottomTab>('TERMINAL')
 
@@ -100,6 +102,7 @@ export default function VSCodeLayout() {
   // Warm up edge functions + OpenRouter connection on mount.
   // Chat uses SSE — abort via signal immediately after headers to avoid ECONNRESET.
   // ai-action is non-streaming — let it complete (it's fast and primes the model).
+  // git-status is fetched eagerly so the source control popup shows data instantly.
   useEffect(() => {
     const ctrl = new AbortController()
     fetch('/api/chat', {
@@ -115,6 +118,11 @@ export default function VSCodeLayout() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'hi' }),
     }).catch(() => {})
+
+    fetch('/api/git-status')
+      .then(r => r.json())
+      .then(d => setGitStatus({ branch: d.branch, totalCommits: d.totalCommits }))
+      .catch(() => {})
   }, [])
 
 
@@ -249,7 +257,7 @@ export default function VSCodeLayout() {
 
       {/* Source Control floating popup */}
       {sourceControlOpen && (
-        <SourceControlPopup onClose={() => setSourceControlOpen(false)} />
+        <SourceControlPopup onClose={() => setSourceControlOpen(false)} gitStatus={gitStatus} />
       )}
 
       {/* Settings popup */}

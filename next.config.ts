@@ -23,7 +23,8 @@ const securityHeaders = [
       // Tailwind and Google Fonts need unsafe-inline + font CDN
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob:",
+      // External image services used by README badges + GitHub profile widgets
+      "img-src 'self' data: blob: https://capsule-render.vercel.app https://readme-typing-svg.demolab.com https://media.giphy.com https://img.shields.io https://github-profile-summary-cards.vercel.app https://github-readme-streak-stats.herokuapp.com https://github-readme-activity-graph.vercel.app https://komarev.com https://raw.githubusercontent.com",
       // Client calls own API; Monaco fetches workers/types from jsdelivr CDN
       "connect-src 'self' https://cdn.jsdelivr.net",
       // Monaco editor spawns web workers via blob: URLs

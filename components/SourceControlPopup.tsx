@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { PERSON } from '@/lib/data'
 
 interface GitStatus {
@@ -10,15 +10,11 @@ interface GitStatus {
 
 interface Props {
   onClose: () => void
+  gitStatus: GitStatus | null
 }
 
-export default function SourceControlPopup({ onClose }: Props) {
+export default function SourceControlPopup({ onClose, gitStatus }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const [data, setData] = useState<GitStatus | null>(null)
-
-  useEffect(() => {
-    fetch('/api/git-status').then(r => r.json()).then(setData).catch(() => {})
-  }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -51,13 +47,13 @@ export default function SourceControlPopup({ onClose }: Props) {
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" className="text-vsc-muted shrink-0">
               <path fillRule="evenodd" d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V7.5a2.5 2.5 0 0 1-2.5 2.5H9a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V9.5a1 1 0 0 0-1-1H4.5A2.5 2.5 0 0 1 2 6V4.372a2.25 2.25 0 1 1 1.5 0V6a1 1 0 0 0 1 1H5a2.5 2.5 0 0 1 2.5-2.5h.25v-.628A2.25 2.25 0 0 1 9.5 1.75zM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
             </svg>
-            <span className="text-vsc-text font-semibold text-sm">{data?.branch ?? '…'}</span>
+            <span className="text-vsc-text font-semibold text-sm">{gitStatus?.branch ?? '…'}</span>
           </div>
 
           {/* Commit count */}
           <div className="flex flex-col items-center justify-center py-5 rounded bg-vsc-sidebar border border-vsc-border">
             <span className="text-4xl font-bold text-[#569cd6]">
-              {data ? data.totalCommits : '…'}
+              {gitStatus ? gitStatus.totalCommits : '…'}
             </span>
             <span className="text-[10px] text-vsc-muted mt-1.5 uppercase tracking-widest">Total Commits</span>
           </div>
