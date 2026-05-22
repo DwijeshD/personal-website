@@ -184,89 +184,89 @@ textarea.ime-text-area {
   --vsc-input: #3c3c3c;
 }
 
-:root[data-theme="rose-pine"] {
-  --vsc-bg: #191724;
-  --vsc-sidebar: #1f1d2e;
-  --vsc-activitybar: #26233a;
-  --vsc-titlebar: #15131e;
-  --vsc-border: #403d52;
-  --vsc-hover: #26233a;
-  --vsc-selection: #403d52;
-  --vsc-text: #e0def4;
-  --vsc-muted: #6e6a86;
-  --vsc-accent: #eb6f92;
-  --vsc-statusbar: #26233a;
-  --vsc-tab-active: #191724;
-  --vsc-tab-inactive: #1f1d2e;
-  --vsc-input: #26233a;
+:root[data-theme="dracula"] {
+  --vsc-bg: #282a36;
+  --vsc-sidebar: #21222c;
+  --vsc-activitybar: #21222c;
+  --vsc-titlebar: #191a21;
+  --vsc-border: #44475a;
+  --vsc-hover: #44475a;
+  --vsc-selection: #44475a;
+  --vsc-text: #f8f8f2;
+  --vsc-muted: #6272a4;
+  --vsc-accent: #bd93f9;
+  --vsc-statusbar: #191a21;
+  --vsc-tab-active: #282a36;
+  --vsc-tab-inactive: #21222c;
+  --vsc-input: #44475a;
 }
 
-:root[data-theme="tokyo-night"] {
-  --vsc-bg: #1a1b26;
-  --vsc-sidebar: #16161e;
-  --vsc-activitybar: #16161e;
-  --vsc-titlebar: #13131a;
-  --vsc-border: #292e42;
-  --vsc-hover: #1f2335;
-  --vsc-selection: #2d3f76;
-  --vsc-text: #a9b1d6;
-  --vsc-muted: #565f89;
-  --vsc-accent: #7aa2f7;
-  --vsc-statusbar: #16161e;
-  --vsc-tab-active: #1a1b26;
-  --vsc-tab-inactive: #16161e;
-  --vsc-input: #1f2335;
+:root[data-theme="night-owl"] {
+  --vsc-bg: #011627;
+  --vsc-sidebar: #0d2137;
+  --vsc-activitybar: #011627;
+  --vsc-titlebar: #010f1a;
+  --vsc-border: #1d3b53;
+  --vsc-hover: #0d2137;
+  --vsc-selection: #1d3b53;
+  --vsc-text: #d6deeb;
+  --vsc-muted: #637777;
+  --vsc-accent: #82aaff;
+  --vsc-statusbar: #084d81;
+  --vsc-tab-active: #011627;
+  --vsc-tab-inactive: #0d2137;
+  --vsc-input: #0d2137;
 }
 
-:root[data-theme="catppuccin"] {
-  --vsc-bg: #1e1e2e;
-  --vsc-sidebar: #181825;
-  --vsc-activitybar: #11111b;
-  --vsc-titlebar: #181825;
-  --vsc-border: #313244;
-  --vsc-hover: #313244;
-  --vsc-selection: #45475a;
-  --vsc-text: #cdd6f4;
-  --vsc-muted: #6c7086;
-  --vsc-accent: #cba6f7;
-  --vsc-statusbar: #11111b;
-  --vsc-tab-active: #1e1e2e;
-  --vsc-tab-inactive: #181825;
-  --vsc-input: #313244;
+:root[data-theme="one-dark"] {
+  --vsc-bg: #282c34;
+  --vsc-sidebar: #21252b;
+  --vsc-activitybar: #21252b;
+  --vsc-titlebar: #1d2026;
+  --vsc-border: #3e4452;
+  --vsc-hover: #2c313c;
+  --vsc-selection: #3e4452;
+  --vsc-text: #abb2bf;
+  --vsc-muted: #5c6370;
+  --vsc-accent: #61afef;
+  --vsc-statusbar: #21252b;
+  --vsc-tab-active: #282c34;
+  --vsc-tab-inactive: #21252b;
+  --vsc-input: #2c313c;
 }
 
-:root[data-theme="nord"] {
-  --vsc-bg: #2e3440;
-  --vsc-sidebar: #3b4252;
-  --vsc-activitybar: #2e3440;
-  --vsc-titlebar: #242932;
-  --vsc-border: #434c5e;
-  --vsc-hover: #3b4252;
-  --vsc-selection: #434c5e;
-  --vsc-text: #d8dee9;
-  --vsc-muted: #616e88;
-  --vsc-accent: #88c0d0;
-  --vsc-statusbar: #5e81ac;
-  --vsc-tab-active: #2e3440;
-  --vsc-tab-inactive: #3b4252;
-  --vsc-input: #3b4252;
+:root[data-theme="monokai"] {
+  --vsc-bg: #272822;
+  --vsc-sidebar: #1e1f1c;
+  --vsc-activitybar: #1e1f1c;
+  --vsc-titlebar: #1a1b17;
+  --vsc-border: #3e3d32;
+  --vsc-hover: #3e3d32;
+  --vsc-selection: #49483e;
+  --vsc-text: #f8f8f2;
+  --vsc-muted: #75715e;
+  --vsc-accent: #a6e22e;
+  --vsc-statusbar: #75715e;
+  --vsc-tab-active: #272822;
+  --vsc-tab-inactive: #1e1f1c;
+  --vsc-input: #3e3d32;
 }
 
-:root[data-theme="gruvbox"] {
-  --vsc-bg: #282828;
-  --vsc-sidebar: #32302f;
-  --vsc-activitybar: #3c3836;
-  --vsc-titlebar: #1d2021;
-  --vsc-border: #504945;
-  --vsc-hover: #3c3836;
-  --vsc-selection: #45403d;
-  --vsc-text: #ebdbb2;
-  --vsc-muted: #928374;
-  --vsc-accent: #d79921;
-  --vsc-statusbar: #d65d0e;
-  --vsc-tab-active: #282828;
-  --vsc-tab-inactive: #32302f;
-  --vsc-input: #3c3836;
+:root[data-theme="solarized-dark"] {
+  --vsc-bg: #002b36;
+  --vsc-sidebar: #073642;
+  --vsc-activitybar: #002b36;
+  --vsc-titlebar: #001e26;
+  --vsc-border: #094555;
+  --vsc-hover: #073642;
+  --vsc-selection: #094555;
+  --vsc-text: #839496;
+  --vsc-muted: #586e75;
+  --vsc-accent: #268bd2;
+  --vsc-statusbar: #073642;
+  --vsc-tab-active: #002b36;
+  --vsc-tab-inactive: #073642;
+  --vsc-input: #073642;
 }
 
 /* Override Tailwind compiled colors with CSS variables */

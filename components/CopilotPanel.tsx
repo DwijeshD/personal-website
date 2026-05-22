@@ -321,6 +321,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const [pendingBugMsg, setPendingBugMsg] = useState<string | null>(null)
   const [logs, setLogs]                   = useState<LogEntry[]>([])
   const [activeView, setActiveView]       = useState<'chat' | 'logs'>('chat')
+  const [activeModel, setActiveModel]     = useState<string | null>(null)
   const bottomRef      = useRef<HTMLDivElement>(null)
   const inputRef       = useRef<HTMLTextAreaElement>(null)
   const rawAccum       = useRef('')
@@ -328,6 +329,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const networkDone    = useRef(false)
   const abortRef       = useRef<AbortController | null>(null)
   const prefetchCache  = useRef<Map<string, string>>(new Map())
+  const activeModelRef = useRef<string | null>(null)
 
   // Drain accumulated text at a fixed rate for smooth, uniform display
   const CHARS_PER_TICK = 2   // characters revealed per tick
@@ -383,6 +385,13 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   useEffect(() => {
     onThinkingChange(streaming || actionLoading)
   }, [streaming, actionLoading, onThinkingChange])
+
+  useEffect(() => {
+    fetch('/api/model-info')
+      .then(r => r.json())
+      .then(({ model }) => { if (model && !activeModelRef.current) { activeModelRef.current = model; setActiveModel(model) } })
+      .catch(() => {})
+  }, [])
 
   const BUG_PREFILL = 'I encountered a bug with the website: '
   const bugReportRe = /^I encountered a bug with the website:\s*(.+)/i
@@ -491,6 +500,10 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
           if (data === '[DONE]') { pushLog('info', 'STREAM', '[DONE] received'); break }
           try {
             const parsed = JSON.parse(data)
+            if (parsed.model && !activeModelRef.current) {
+              activeModelRef.current = parsed.model
+              setActiveModel(parsed.model)
+            }
             const choice = parsed.choices?.[0]
             const delta  = choice?.delta?.content
             const reason = choice?.finish_reason
@@ -775,7 +788,9 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
               </button>
             </div>
 
-            <div className="text-[11px] text-vsc-muted/50 italic">Type / to use commands</div>
+            <div className="text-[11px] text-vsc-muted/50 font-mono truncate" title={activeModel ?? undefined}>
+              {activeModel ? `via ${activeModel}` : 'Powered by OpenRouter'}
+            </div>
           </div>
         ) : (
           <div className="space-y-4 px-3 py-4 font-mono text-sm">
@@ -973,7 +988,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         </div>
 
         {/* Footer: quick action + model badge */}
-        <div className="flex items-center justify-between px-3 pb-2.5 pt-0.5">
+        <div className="flex items-center justify-between px-3 pb-1 pt-0.5">
           <button
             onClick={() => sendChat("What can you help me with?")}
             disabled={busy}
