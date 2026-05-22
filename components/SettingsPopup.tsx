@@ -3,12 +3,12 @@
 import { useEffect, useRef } from 'react'
 
 const THEMES = [
-  { id: 'default',     name: 'Dwijesh Dark',  palette: ['#569cd6', '#4ec9b0', '#ce9178'] },
-  { id: 'rose-pine',   name: 'Rosé Pine',     palette: ['#eb6f92', '#c4a7e7', '#f6c177'] },
-  { id: 'tokyo-night', name: 'Tokyo Night',   palette: ['#7aa2f7', '#bb9af7', '#9ece6a'] },
-  { id: 'catppuccin',  name: 'Catppuccin',    palette: ['#cba6f7', '#f38ba8', '#a6e3a1'] },
-  { id: 'nord',        name: 'Nord',          palette: ['#88c0d0', '#81a1c1', '#a3be8c'] },
-  { id: 'gruvbox',     name: 'Gruvbox',       palette: ['#d79921', '#cc241d', '#689d6a'] },
+  { id: 'default',       name: 'VS Code Dark+',   palette: ['#569cd6', '#4ec9b0', '#ce9178'] },
+  { id: 'dracula',       name: 'Dracula',          palette: ['#bd93f9', '#ff79c6', '#50fa7b'] },
+  { id: 'night-owl',     name: 'Night Owl',        palette: ['#82aaff', '#c792ea', '#addb67'] },
+  { id: 'one-dark',      name: 'One Dark',         palette: ['#61afef', '#c678dd', '#98c379'] },
+  { id: 'monokai',       name: 'Monokai',          palette: ['#a6e22e', '#f92672', '#66d9ef'] },
+  { id: 'solarized-dark',name: 'Solarized Dark',   palette: ['#268bd2', '#2aa198', '#859900'] },
 ]
 
 const SHORTCUTS = [

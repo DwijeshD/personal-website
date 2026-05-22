@@ -85,6 +85,7 @@ interface CtxTarget {
   x: number; y: number
   id: string; name: string
   folderId?: string
+  blank?: boolean
 }
 
 export default function Sidebar({
@@ -192,6 +193,11 @@ export default function Sidebar({
     e.preventDefault()
     e.stopPropagation()
     setCtx({ x: e.clientX, y: e.clientY, id, name, folderId })
+  }
+
+  function openBlankCtx(e: React.MouseEvent) {
+    e.preventDefault()
+    setCtx({ x: e.clientX, y: e.clientY, id: '', name: '', blank: true })
   }
 
   function handleDelete() {
@@ -369,7 +375,7 @@ export default function Sidebar({
           </div>
 
           {/* File list */}
-          <ul className="flex-1 overflow-y-auto panel-scroll py-0.5">
+          <ul className="flex-1 overflow-y-auto panel-scroll py-0.5" onContextMenu={openBlankCtx}>
             {portfolioOpen && (
               <>
                 {/* Folders */}
@@ -540,7 +546,7 @@ export default function Sidebar({
               )
             })()}
           </div>
-          <div className="flex-1" />
+          <div className="flex-1" onContextMenu={openBlankCtx} />
           <BottomSection />
         </>
       )}
@@ -557,13 +563,17 @@ export default function Sidebar({
         >
           <CtxBtn label="New File"   onClick={() => { setCtx(null); setPortfolioOpen(true); startNew('file')   }} />
           <CtxBtn label="New Folder" onClick={() => { setCtx(null); setPortfolioOpen(true); startNew('folder') }} />
-          <CtxSep />
-          <CtxBtn label="Copy"      shortcut="Ctrl+C" onClick={handleCopy} />
-          <CtxBtn label="Paste"     shortcut="Ctrl+V" onClick={handlePaste}    disabled={!clipboard} />
-          <CtxBtn label="Copy Path"                   onClick={handleCopyPath} />
-          <CtxSep />
-          <CtxBtn label="Rename"    shortcut="F2"     onClick={handleRename} />
-          <CtxBtn label="Delete"    shortcut="Del"    onClick={handleDelete} danger />
+          {!ctx.blank && (
+            <>
+              <CtxSep />
+              <CtxBtn label="Copy"      shortcut="Ctrl+C" onClick={handleCopy} />
+              <CtxBtn label="Paste"     shortcut="Ctrl+V" onClick={handlePaste}    disabled={!clipboard} />
+              <CtxBtn label="Copy Path"                   onClick={handleCopyPath} />
+              <CtxSep />
+              <CtxBtn label="Rename"    shortcut="F2"     onClick={handleRename} />
+              <CtxBtn label="Delete"    shortcut="Del"    onClick={handleDelete} danger />
+            </>
+          )}
         </div>
       )}
     </div>
