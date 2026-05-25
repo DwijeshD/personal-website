@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from 'react'
 
+const SCROLLBAR_CSS = `<style>
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #424242; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+</style>`
+
 const LINK_INTERCEPTOR = `<script>
 document.addEventListener('click', function(e) {
   var a = e.target.closest('a');
@@ -31,9 +38,13 @@ document.addEventListener('click', function(e) {
 </script>`
 
 function inject(html: string): string {
-  const tag = '</body>'
-  const i = html.lastIndexOf(tag)
-  return i !== -1 ? html.slice(0, i) + LINK_INTERCEPTOR + html.slice(i) : html + LINK_INTERCEPTOR
+  const headTag = '</head>'
+  const hi = html.lastIndexOf(headTag)
+  const withCss = hi !== -1 ? html.slice(0, hi) + SCROLLBAR_CSS + html.slice(hi) : SCROLLBAR_CSS + html
+
+  const bodyTag = '</body>'
+  const bi = withCss.lastIndexOf(bodyTag)
+  return bi !== -1 ? withCss.slice(0, bi) + LINK_INTERCEPTOR + withCss.slice(bi) : withCss + LINK_INTERCEPTOR
 }
 
 interface Props {
