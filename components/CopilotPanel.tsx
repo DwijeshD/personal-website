@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { AiFileAction } from '@/lib/fileSystem'
+import { validateAiAction } from '@/lib/fileSystem'
 import { DEFAULT_CONTENT } from '@/lib/defaultContent'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   thinking?: string
+  action?: AiFileAction
 }
 
 const THINKING_WORDS = [
@@ -44,6 +46,13 @@ function parseThinkBlocks(raw: string): { thinking: string; content: string } {
 }
 
 // Render assistant markdown: **bold**, `code`, bullet lists, line breaks
+function formatModel(raw: string): string | null {
+  const model = raw.split('/').pop() ?? raw       // strip provider prefix
+  const clean = model.split(':')[0]               // strip :free/:beta/:nitro etc.
+  if (!clean || clean === 'free') return null
+  return clean
+}
+
 function renderMd(text: string): React.ReactNode {
   if (!text) return null
 
@@ -129,7 +138,7 @@ function renderMd(text: string): React.ReactNode {
 interface Props {
   onThinkingChange: (v: boolean) => void
   onClose:          () => void
-  onPendingAction:  (action: AiFileAction) => void
+  onPendingAction:  (action: AiFileAction, onResult: (applied: boolean) => void) => void
   workspaceFiles?:  string[]
   fileContents?:    Record<string, string>
 }
@@ -329,7 +338,8 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const networkDone    = useRef(false)
   const abortRef       = useRef<AbortController | null>(null)
   const prefetchCache  = useRef<Map<string, string>>(new Map())
-  const activeModelRef = useRef<string | null>(null)
+  const activeModelRef      = useRef<string | null>(null)
+  const pendingChatAction   = useRef<AiFileAction | null>(null)
 
   // Drain accumulated text at a fixed rate for smooth, uniform display
   const CHARS_PER_TICK = 2   // characters revealed per tick
@@ -350,6 +360,15 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
           return c
         })
       } else if (networkDone.current) {
+        if (pendingChatAction.current) {
+          const action = pendingChatAction.current
+          pendingChatAction.current = null
+          setMessages(m => {
+            const c = [...m]
+            if (c.length > 0) c[c.length - 1] = { ...c[c.length - 1], action }
+            return c
+          })
+        }
         setStreaming(false)
       }
     }, TICK_MS)
@@ -387,10 +406,25 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   }, [streaming, actionLoading, onThinkingChange])
 
   useEffect(() => {
-    fetch('/api/model-info')
-      .then(r => r.json())
-      .then(({ model }) => { if (model && !activeModelRef.current) { activeModelRef.current = model; setActiveModel(model) } })
-      .catch(() => {})
+    const cached    = localStorage.getItem('copilot:resolvedModel')
+    const cachedAt  = Number(localStorage.getItem('copilot:resolvedModelAt') ?? 0)
+    const stale     = Date.now() - cachedAt > 24 * 60 * 60 * 1000
+    if (cached) { activeModelRef.current = cached; setActiveModel(cached) }
+    if (!cached || stale) {
+      fetch('/api/model-info')
+        .then(r => r.json())
+        .then(({ model }) => {
+          if (model && model !== activeModelRef.current) {
+            activeModelRef.current = model
+            setActiveModel(model)
+          }
+          if (model) {
+            localStorage.setItem('copilot:resolvedModel', model)
+            localStorage.setItem('copilot:resolvedModelAt', String(Date.now()))
+          }
+        })
+        .catch(() => {})
+    }
   }, [])
 
   const BUG_PREFILL = 'I encountered a bug with the website: '
@@ -500,9 +534,10 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
           if (data === '[DONE]') { pushLog('info', 'STREAM', '[DONE] received'); break }
           try {
             const parsed = JSON.parse(data)
-            if (parsed.model && !activeModelRef.current) {
+            if (parsed.model && parsed.model !== activeModelRef.current) {
               activeModelRef.current = parsed.model
               setActiveModel(parsed.model)
+              localStorage.setItem('copilot:resolvedModel', parsed.model)
             }
             const choice = parsed.choices?.[0]
             const delta  = choice?.delta?.content
@@ -518,6 +553,17 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
             }
           } catch { /* skip malformed SSE */ }
         }
+      }
+
+      // Strip <file-action> from rawAccum before display interval types it out
+      const fileActionMatch = rawAccum.current.match(/<file-action>([\s\S]*?)<\/file-action>/i)
+      if (fileActionMatch) {
+        try {
+          const parsed = JSON.parse(fileActionMatch[1].trim())
+          const validation = validateAiAction(parsed)
+          if (validation.ok) pendingChatAction.current = validation.action
+        } catch { /* malformed JSON — ignore */ }
+        rawAccum.current = rawAccum.current.replace(/<file-action>[\s\S]*?<\/file-action>/gi, '').trim()
       }
 
       networkDone.current = true  // signal display interval to stop after draining
@@ -573,13 +619,17 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     setMessages(prev => [
       ...prev,
       { role: 'user', content },
-      { role: 'assistant', content: '⏳ Trying models…' },
+      { role: 'assistant', content: '' },
     ])
+
+    const controller = new AbortController()
+    abortRef.current = controller
 
     try {
       const res = await fetch('/api/ai-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           message: content,
           files: workspaceFiles,
@@ -609,17 +659,33 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         create_file: 'create', update_file: 'update',
         delete_file: 'delete', create_folder: 'create folder',
       }
+      const reply = data.reply ?? `Ready to ${verb[action.action] ?? action.action} \`${action.path}\` — confirm in the dialog.`
       setMessages(prev => {
         const c = [...prev]
-        c[c.length - 1] = {
-          role: 'assistant',
-          content: `✅ Ready to **${verb[action.action] ?? action.action}** \`${action.path}\`. Confirm in the dialog.`,
-        }
+        c[c.length - 1] = { role: 'assistant', content: reply }
         return c
       })
       setFailedIdx(null)
-      onPendingAction(action)
+      onPendingAction(action, (applied) => {
+        setMessages(prev => {
+          const c = [...prev]
+          const last = c[c.length - 1]
+          if (!last || last.role !== 'assistant') return prev
+          c[c.length - 1] = {
+            ...last,
+            content: last.content + (applied ? '\n\n✅ Applied.' : '\n\n❌ Cancelled — no changes made.'),
+          }
+          return c
+        })
+      })
     } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') {
+        pushLog('info', 'STOP', 'action stopped by user')
+        setMessages(prev => {
+          const c = [...prev]; c[c.length - 1] = { role: 'assistant', content: '⏹ Stopped.' }; return c
+        })
+        return
+      }
       const msg = e instanceof Error ? e.message : String(e)
       pushLog('error', 'ERROR', msg)
       setMessages(prev => {
@@ -788,8 +854,15 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
               </button>
             </div>
 
-            <div className="text-[11px] text-vsc-muted/50 font-mono truncate" title={activeModel ?? undefined}>
-              {activeModel ? `via ${activeModel}` : 'Powered by OpenRouter'}
+            <div className="flex flex-col items-center gap-0.5">
+              {activeModel && formatModel(activeModel) && (
+                <div className="text-[11px] text-vsc-muted/70 font-mono text-center break-all" title={activeModel}>
+                  {formatModel(activeModel)}
+                </div>
+              )}
+              <div className="text-[10px] text-vsc-muted/40 font-mono">
+                Powered by OpenRouter
+              </div>
             </div>
           </div>
         ) : (
@@ -831,6 +904,15 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                         />
                       : m.content}
                   </div>
+                  {m.action && !busy && (
+                    <button
+                      onClick={() => { onPendingAction(m.action!); setMessages(prev => { const c = [...prev]; c[i] = { ...c[i], action: undefined }; return c }) }}
+                      className="self-start flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-[#4ec9b0] border border-[#4ec9b0]/40 rounded hover:bg-[#4ec9b0]/10 transition-colors font-mono"
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      Apply {m.action.action.replace('_', ' ')} → {m.action.path}
+                    </button>
+                  )}
                   {failedIdx === i && lastEditMsg && !busy && (
                     <button
                       onClick={() => sendEditRequest(lastEditMsg)}
@@ -961,8 +1043,8 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
               className="flex-1 bg-transparent text-[12px] text-vsc-text outline-none resize-none placeholder:text-vsc-muted/40 disabled:opacity-50 leading-5 font-sans"
               style={{ minHeight: '20px', maxHeight: '120px' }}
             />
-            {/* Stop (during streaming) / Send button */}
-            {streaming ? (
+            {/* Stop (during streaming or action) / Send button */}
+            {(streaming || actionLoading) ? (
               <button
                 onClick={() => { abortRef.current?.abort(); networkDone.current = true }}
                 title="Stop generating"
