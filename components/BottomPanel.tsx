@@ -3,7 +3,7 @@
 import TerminalTab, { TerminalHandle } from './TerminalTab'
 import type { Diagnostic } from '@/lib/diagnostics'
 
-export type BottomTab = 'TERMINAL' | 'PROBLEMS' | 'OUTPUT'
+export type BottomTab = 'TERMINAL' | 'PROBLEMS'
 
 interface Props {
   onClose: () => void
@@ -13,6 +13,7 @@ interface Props {
   diagnostics: Diagnostic[]
   activeTab: BottomTab
   onTabChange: (tab: BottomTab) => void
+  onThemeChange?: (theme: string) => void
 }
 
 export default function BottomPanel({
@@ -23,6 +24,7 @@ export default function BottomPanel({
   diagnostics,
   activeTab,
   onTabChange,
+  onThemeChange,
 }: Props) {
   const errorCount   = diagnostics.filter((d) => d.severity === 'error').length
   const warningCount = diagnostics.filter((d) => d.severity === 'warning').length
@@ -31,7 +33,7 @@ export default function BottomPanel({
     <div className="flex flex-col h-full bg-vsc-bg border-t border-vsc-border">
       <div className="flex items-center justify-between px-3 py-1 bg-[#252526] shrink-0 border-b border-vsc-border">
         <div className="flex items-center gap-1">
-          {(['TERMINAL', 'PROBLEMS', 'OUTPUT'] as BottomTab[]).map((t) => (
+          {(['TERMINAL', 'PROBLEMS'] as BottomTab[]).map((t) => (
             <button
               key={t}
               onClick={() => onTabChange(t)}
@@ -68,15 +70,11 @@ export default function BottomPanel({
             ref={terminalRef}
             onNavigate={onNavigate}
             onLastCommandChange={onLastCommandChange}
+            onThemeChange={onThemeChange}
           />
         )}
         {activeTab === 'PROBLEMS' && (
           <ProblemsPanel diagnostics={diagnostics} onNavigate={onNavigate} />
-        )}
-        {activeTab === 'OUTPUT' && (
-          <div className="flex items-center justify-center h-full text-vsc-muted text-sm font-mono">
-            No output
-          </div>
         )}
       </div>
     </div>

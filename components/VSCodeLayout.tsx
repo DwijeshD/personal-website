@@ -61,13 +61,16 @@ export default function VSCodeLayout() {
   const [workspaceFiles, setWorkspaceFiles]       = useState<CustomFile[]>(() => TABS.map(t => ({ id: t.id, name: t.label })))
   const [workspaceFolders, setWorkspaceFolders]   = useState<CustomFolder[]>([])
   const [pendingAiAction, setPendingAiAction]     = useState<AiFileAction | null>(null)
+  const pendingActionResultRef = useRef<((applied: boolean) => void) | null>(null)
   const [gitStatus, setGitStatus]                 = useState<{ branch: string; totalCommits: number } | null>(null)
 
   const [bottomTab, setBottomTab] = useState<BottomTab>('TERMINAL')
 
+  const defaultFileIds = useMemo(() => new Set(TABS.map(t => t.id)), [])
+
   const diagnostics = useMemo(
-    () => computeDiagnostics(fileContents, workspaceFiles, DEFAULT_CONTENT),
-    [fileContents, workspaceFiles],
+    () => computeDiagnostics(fileContents, workspaceFiles, defaultFileIds),
+    [fileContents, workspaceFiles, defaultFileIds],
   )
 
   const terminalRef = useRef<TerminalHandle | null>(null)
@@ -102,6 +105,14 @@ export default function VSCodeLayout() {
   // Warm up edge functions + OpenRouter connection on mount.
   // Chat uses SSE — abort via signal immediately after headers to avoid ECONNRESET.
   // ai-action is non-streaming — let it complete (it's fast and primes the model).
+  // Preload all editor dynamic imports so first tab click is instant
+  useEffect(() => {
+    import('@monaco-editor/react')
+    import('./renderers/MarkdownRenderer')
+    import('./renderers/HTMLRenderer')
+    import('./renderers/LiveCodeRenderer')
+  }, [])
+
   // git-status is fetched eagerly so the source control popup shows data instantly.
   useEffect(() => {
     const ctrl = new AbortController()
@@ -194,13 +205,15 @@ export default function VSCodeLayout() {
     e.preventDefault()
     const startY = e.clientY
     const startH = terminalHeight
-    function onMove(ev: MouseEvent) {
-      setTerminalHeight(Math.max(100, Math.min(500, startH + (startY - ev.clientY))))
-    }
-    function onUp() {
+    function cleanup() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
+    function onMove(ev: MouseEvent) {
+      if (ev.buttons === 0) { cleanup(); return }
+      setTerminalHeight(Math.max(100, Math.min(500, startH + (startY - ev.clientY))))
+    }
+    function onUp() { cleanup() }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
@@ -226,7 +239,6 @@ export default function VSCodeLayout() {
         recentFiles={recentFiles}
         onOpenRecent={navigate}
         onFind={() => { setSidePanel('search'); setSearchQuery('') }}
-        onSelectAll={() => document.execCommand('selectAll')}
         onCopy={() => {
           const s = window.getSelection()?.toString()
           if (s) navigator.clipboard.writeText(s).catch(() => {})
@@ -349,7 +361,14 @@ export default function VSCodeLayout() {
                       key={activeTab}
                       filename={filename}
                       content={fileContents[activeTab] ?? DEFAULT_CONTENT[filename] ?? ''}
-                      onChange={(v) => setFileContents(prev => ({ ...prev, [activeTab]: v }))}
+                      onChange={(v) => setFileContents(prev => {
+                        if (v === (DEFAULT_CONTENT[filename] ?? '')) {
+                          const next = { ...prev }
+                          delete next[activeTab]
+                          return next
+                        }
+                        return { ...prev, [activeTab]: v }
+                      })}
                       mode={fileModes[activeTab] ?? defaultMode(filename)}
                       onModeChange={(m) => setFileModes(prev => ({ ...prev, [activeTab]: m }))}
                     />
@@ -372,6 +391,7 @@ export default function VSCodeLayout() {
                   diagnostics={diagnostics}
                   activeTab={bottomTab}
                   onTabChange={setBottomTab}
+                  onThemeChange={applyTheme}
                 />
               </div>
             </>
@@ -383,7 +403,10 @@ export default function VSCodeLayout() {
           <CopilotPanel
             onThinkingChange={setAiThinking}
             onClose={() => setCopilotOpen(false)}
-            onPendingAction={setPendingAiAction}
+            onPendingAction={(action, onResult) => {
+                pendingActionResultRef.current = onResult
+                setPendingAiAction(action)
+              }}
             workspaceFiles={[
               ...workspaceFiles.map(f => f.name),
               ...workspaceFolders.flatMap(f => f.files.map(fi => `${f.name}/${fi.name}`)),
@@ -397,8 +420,17 @@ export default function VSCodeLayout() {
       {pendingAiAction && (
         <AiActionModal
           action={pendingAiAction}
-          onApprove={() => executeAiAction(pendingAiAction)}
-          onReject={() => setPendingAiAction(null)}
+          onApprove={() => {
+            executeAiAction(pendingAiAction)
+            pendingActionResultRef.current?.(true)
+            pendingActionResultRef.current = null
+            setPendingAiAction(null)
+          }}
+          onReject={() => {
+            pendingActionResultRef.current?.(false)
+            pendingActionResultRef.current = null
+            setPendingAiAction(null)
+          }}
         />
       )}
 

@@ -1,11 +1,28 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 interface Props {
   open: boolean
   onClose: () => void
 }
 
+function formatModel(raw: string): string {
+  const model = raw.split('/').pop() ?? raw
+  return model.split(':')[0]
+}
+
 export default function AboutModal({ open, onClose }: Props) {
+  const [model, setModel] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    fetch('/api/model-info')
+      .then(r => r.json())
+      .then(d => { if (d.model) setModel(formatModel(d.model)) })
+      .catch(() => {})
+  }, [open])
+
   if (!open) return null
 
   return (
@@ -55,7 +72,7 @@ export default function AboutModal({ open, onClose }: Props) {
             </div>
             <div className="flex justify-between">
               <span className="token-prop">AI</span>
-              <span className="token-string">"Llama 3.3 70B via OpenRouter"</span>
+              <span className="token-string">"{model ?? 'OpenRouter'}"</span>
             </div>
             <div className="flex justify-between">
               <span className="token-prop">Theme</span>
