@@ -41,10 +41,11 @@ function defaultMode(filename: string): ViewMode {
 export default function VSCodeLayout() {
   const [openTabs, setOpenTabs]           = useState<string[]>(['file:home.html'])
   const [activeTab, setActiveTab]         = useState('file:home.html')
-  const [sidePanel, setSidePanel]         = useState<SidePanel>('explorer')
+  const [sidePanel, setSidePanel]         = useState<SidePanel>(null)
   const [terminalOpen, setTerminalOpen]   = useState(false)
   const [copilotOpen, setCopilotOpen]     = useState(false)
   const [terminalHeight, setTerminalHeight] = useState(240)
+  const [isResizing, setIsResizing]         = useState(false)
   const [palOpen, setPalOpen]             = useState(false)
   const [searchQuery, setSearchQuery]     = useState('')
   const [aiThinking, setAiThinking]       = useState(false)
@@ -57,7 +58,7 @@ export default function VSCodeLayout() {
   const [settingsOpen, setSettingsOpen]           = useState(false)
   const [selectedTheme, setSelectedTheme]         = useState('default')
   const [fileContents, setFileContents]           = useState<Record<string, string>>({})
-  const [fileModes, setFileModes]                 = useState<Record<string, ViewMode>>({})
+  const [fileModes, setFileModes]                 = useState<Record<string, ViewMode>>({ 'file:home.html': 'preview' })
   const [workspaceFiles, setWorkspaceFiles]       = useState<CustomFile[]>(() => TABS.map(t => ({ id: t.id, name: t.label })))
   const [workspaceFolders, setWorkspaceFolders]   = useState<CustomFolder[]>([])
   const [pendingAiAction, setPendingAiAction]     = useState<AiFileAction | null>(null)
@@ -205,7 +206,9 @@ export default function VSCodeLayout() {
     e.preventDefault()
     const startY = e.clientY
     const startH = terminalHeight
+    setIsResizing(true)
     function cleanup() {
+      setIsResizing(false)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
@@ -227,9 +230,10 @@ export default function VSCodeLayout() {
         transformOrigin: 'top left',
         transform: `scale(${zoom})`,
         width: `${100 / zoom}%`,
-        height: `${100 / zoom}vh`,
+        height: `${100 / zoom}dvh`,
       }}
     >
+      {isResizing && <div className="fixed inset-0 z-[9999] cursor-row-resize" />}
       <TitleBar
         onCommandPalette={() => setPalOpen(true)}
         onNewTab={() => navigate('file:home.html')}

@@ -8,8 +8,19 @@ const rateMap = new Map<string, { count: number; reset: number }>()
 const LIMIT = 3
 const WINDOW_MS = 60 * 60 * 1000
 
+// Use proxy-injected headers only — x-forwarded-for is fully attacker-controlled
 function getIp(req: NextRequest): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  return req.headers.get('x-real-ip') ?? req.headers.get('cf-connecting-ip') ?? 'unknown'
+}
+
+function allowedOrigin(req: NextRequest): boolean {
+  const origin = req.headers.get('origin')
+  if (!origin) return true
+  try {
+    const host = req.headers.get('host') ?? ''
+    const { hostname } = new URL(origin)
+    return hostname === 'localhost' || hostname === host.split(':')[0]
+  } catch { return false }
 }
 
 function checkRate(ip: string): { allowed: boolean; remaining: number } {
@@ -25,6 +36,8 @@ function checkRate(ip: string): { allowed: boolean; remaining: number } {
 }
 
 export async function POST(req: NextRequest) {
+  if (!allowedOrigin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const ip = getIp(req)
   const { allowed, remaining } = checkRate(ip)
   if (!allowed) {
@@ -69,8 +82,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    return NextResponse.json({ error: err.message ?? 'GitHub API error.' }, { status: 502 })
+    return NextResponse.json({ error: 'Failed to create issue. Please try again.' }, { status: 502 })
   }
 
   const issue = await res.json()
