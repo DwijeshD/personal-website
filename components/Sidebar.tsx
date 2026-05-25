@@ -269,16 +269,16 @@ export default function Sidebar({
           className={`
             w-full flex items-center gap-2 px-3 py-2 rounded-md text-[12px] font-medium transition-all
             ${copilotOpen
-              ? 'bg-[#2d2b55] border border-[#7c6af7]/50 text-[#a78bfa]'
-              : 'bg-[#1e1e2e] border border-vsc-border/50 text-vsc-muted hover:text-vsc-text hover:border-vsc-border'}
+              ? 'bg-vsc-selection border border-vsc-border text-vsc-accent'
+              : 'bg-vsc-bg border border-vsc-border/50 text-vsc-muted hover:text-vsc-text hover:border-vsc-border'}
           `}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className={copilotOpen ? 'text-[#a78bfa]' : 'text-vsc-muted'}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className={copilotOpen ? 'text-vsc-accent' : 'text-vsc-muted'}>
             <path d="M12 1l2.39 7.26L22 10l-7.61 2.74L12 20l-2.39-7.26L2 10l7.61-2.74L12 1z"/>
           </svg>
           <span className="flex-1 text-left">Dwijesh&apos;s Copilot</span>
           {copilotOpen && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#7c6af7]/20 text-[10px] text-[#a78bfa] border border-[#7c6af7]/30 shrink-0">
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-vsc-accent/10 text-[10px] text-vsc-accent border border-vsc-accent/30 shrink-0">
               open ✓
             </span>
           )}

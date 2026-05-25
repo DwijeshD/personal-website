@@ -906,7 +906,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                   </div>
                   {m.action && !busy && (
                     <button
-                      onClick={() => { onPendingAction(m.action!); setMessages(prev => { const c = [...prev]; c[i] = { ...c[i], action: undefined }; return c }) }}
+                      onClick={() => { onPendingAction(m.action!, () => { setMessages(prev => { const c = [...prev]; c[i] = { ...c[i], action: undefined }; return c }) }) }}
                       className="self-start flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-[#4ec9b0] border border-[#4ec9b0]/40 rounded hover:bg-[#4ec9b0]/10 transition-colors font-mono"
                     >
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>

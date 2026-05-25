@@ -3,6 +3,16 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { PERSON, ABOUT, PROJECTS, SKILLS, TABS } from '@/lib/data'
 
+// ── Matrix columns (stable, generated once) ───────────────────────────────────
+const MATRIX_COLS = Array.from({ length: 36 }, (_, i) => ({
+  id: i,
+  chars: Array.from({ length: 50 }, () => Math.random() > 0.5 ? '1' : '0').join('\n'),
+  left: `${(i / 36) * 100}%`,
+  dur: `${4 + (i * 1.3) % 6}s`,
+  delay: `-${(i * 0.9) % 7}s`,
+  opacity: 0.5 + (i % 4) * 0.12,
+}))
+
 // ── Donut algorithm ───────────────────────────────────────────────────────────
 function computeDonutFrame(A: number, B: number): string {
   const W = 80, H = 22
@@ -501,7 +511,6 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
   const donutA     = useRef(1)
   const donutB     = useRef(1)
   const dinoCanvas    = useRef<HTMLCanvasElement>(null)
-  const matrixCanvas  = useRef<HTMLCanvasElement>(null)
   const startTime  = useRef(Date.now())
   const bottomRef  = useRef<HTMLDivElement>(null)
   const inputRef   = useRef<HTMLInputElement>(null)
@@ -773,35 +782,6 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
     }
   }, [dinoActive])
 
-  // ── Matrix ─────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!matrixActive) return
-    const canvas = matrixCanvas.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight
-    const W = canvas.width, H = canvas.height
-    const fSize = 14
-    const cols = Math.floor(W / fSize)
-    const drops = Array.from({ length: cols }, () => (Math.random() * H / fSize) | 0)
-    const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン日月火水木金土0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*'
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H)
-    let raf: number
-    function draw() {
-      ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0, 0, W, H)
-      ctx.font = `${fSize}px monospace`
-      for (let i = 0; i < cols; i++) {
-        const ch = CHARS[Math.floor(Math.random() * CHARS.length)]
-        const x = i * fSize, y = drops[i] * fSize
-        ctx.fillStyle = '#fff'; ctx.fillText(ch, x, y)
-        if (y > H && Math.random() > 0.975) drops[i] = 0
-        drops[i]++
-      }
-      raf = requestAnimationFrame(draw)
-    }
-    raf = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(raf)
-  }, [matrixActive])
 
   // ── Monitor ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -935,8 +915,18 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
             <canvas ref={dinoCanvas} className="flex-1 w-full" />
           </div>
         ) : matrixActive ? (
-          <div className="relative flex flex-col h-full">
-            <canvas ref={matrixCanvas} className="flex-1 w-full" />
+          <div className="relative flex flex-col h-full overflow-hidden">
+            <div className="flex-1 relative overflow-hidden select-none pointer-events-none">
+              {MATRIX_COLS.map(col => (
+                <div
+                  key={col.id}
+                  className="absolute top-0 font-mono text-[13px] leading-[1.4] text-green-400 whitespace-pre"
+                  style={{ left: col.left, opacity: col.opacity, animation: `matrix-fall ${col.dur} linear infinite`, animationDelay: col.delay }}
+                >
+                  {col.chars}
+                </div>
+              ))}
+            </div>
             <div className="absolute bottom-2 left-0 right-0 text-center text-[10px] text-green-400/40 pointer-events-none select-none">
               press any key to exit
             </div>

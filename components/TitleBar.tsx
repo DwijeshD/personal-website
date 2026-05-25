@@ -164,7 +164,7 @@ export default function TitleBar({
       <button
         onClick={onToggleCopilot}
         title="Toggle Copilot (Ctrl+Shift+A)"
-        className={`px-2.5 py-0.5 text-xs rounded transition-colors select-none shrink-0 ${
+        className={`hidden sm:block px-2.5 py-0.5 text-xs rounded transition-colors select-none shrink-0 ${
           copilotActive ? 'text-vsc-accent' : 'text-vsc-muted hover:bg-white/10 hover:text-vsc-text'
         }`}
       >
@@ -172,7 +172,7 @@ export default function TitleBar({
       </button>
 
       {/* Back / Forward */}
-      <div className="flex items-center gap-0.5 px-1.5 shrink-0">
+      <div className="hidden sm:flex items-center gap-0.5 px-1.5 shrink-0">
         <button
           onClick={() => window.history.back()}
           title="Go Back"
@@ -194,7 +194,7 @@ export default function TitleBar({
       </div>
 
       {/* Center search capsule */}
-      <div className="flex-1 flex justify-center px-2 min-w-0">
+      <div className="hidden sm:flex flex-1 justify-center px-2 min-w-0">
         <button
           onClick={onCommandPalette}
           title="Search or type a command (Ctrl+P)"
@@ -211,7 +211,7 @@ export default function TitleBar({
       </div>
 
       {/* Layout toggle icons */}
-      <div className="flex items-center px-1 shrink-0 gap-0.5">
+      <div className="hidden sm:flex items-center px-1 shrink-0 gap-0.5">
         <button
           onClick={onToggleSidebar}
           title="Toggle Primary Sidebar (Ctrl+B)"
@@ -257,7 +257,7 @@ export default function TitleBar({
       </div>
 
       {/* Windows window controls */}
-      <div className="flex items-stretch shrink-0 h-full">
+      <div className="hidden sm:flex items-stretch shrink-0 h-full">
         <button
           onClick={() => window.blur()}
           title="Minimize"

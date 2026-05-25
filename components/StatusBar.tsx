@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 interface Props {
   activeTab: string
   aiThinking: boolean
@@ -58,14 +60,17 @@ export default function StatusBar({ activeTab, aiThinking, onToggleAI, zoom, err
         >
           AI Assistant
         </button>
-        <span>Ln 1, Col 1</span>
-        <span>UTF-8</span>
-        <span>{lang}</span>
+        <span className="hidden sm:inline">Ln 1, Col 1</span>
+        <span className="hidden sm:inline">UTF-8</span>
+        <span className="hidden sm:inline">{lang}</span>
         {zoom !== 1 && <span>{Math.round(zoom * 100)}%</span>}
         <span className="flex items-center gap-1 text-vsc-green">
           <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-          Available
+          <span className="hidden sm:inline">Available</span>
         </span>
+        <Link href="/privacy" className="hidden sm:inline opacity-50 hover:opacity-100 transition-opacity" title="Privacy Policy">
+          Privacy
+        </Link>
       </div>
     </div>
   )
