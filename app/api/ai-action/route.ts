@@ -27,7 +27,7 @@ const MODELS = [
   'nvidia/nemotron-3-super-120b-a12b:free',
 ]
 
-const MODEL_TIMEOUT_MS = 12_000
+const MODEL_TIMEOUT_MS = 45_000
 
 // ── System prompt ────────────────────────────────────────────────────────────
 const SYSTEM = `You are an AI coding assistant inside a browser-based VSCode-style IDE.
@@ -43,10 +43,10 @@ Available actions:
   create_folder — create a new folder
 
 Response schema:
-  {"action":"create_file","path":"relative/path.ext","content":"<complete file content>"}
-  {"action":"update_file","path":"relative/path.ext","content":"<complete file content>"}
-  {"action":"delete_file","path":"relative/path"}
-  {"action":"create_folder","path":"relative/folder"}
+  {"action":"create_file","path":"relative/path.ext","content":"<complete file content>","reply":"<natural language description of what you did>"}
+  {"action":"update_file","path":"relative/path.ext","content":"<complete file content>","reply":"<natural language description of what you did>"}
+  {"action":"delete_file","path":"relative/path","reply":"<natural language description of what you did>"}
+  {"action":"create_folder","path":"relative/folder","reply":"<natural language description of what you did>"}
 
 Hard rules:
   - ONE action, ONE JSON object, nothing else
@@ -54,6 +54,7 @@ Hard rules:
   - Use update_file if the file already exists; create_file if it is new
   - content must be syntactically complete and valid for the file type
   - Match TypeScript/React style for .ts/.tsx files; add 'use client' when needed
+  - reply must be 1-2 sentences describing what you did and why, in first person (e.g. "I've created test.html with a basic HTML5 boilerplate.")
   - NEVER output anything outside the JSON`
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -119,8 +120,6 @@ async function callModel(model: string, userContent: string): Promise<{ ok: bool
         max_tokens:  2048,
         temperature: 0.15,
         stream:      false,
-        thinking: { type: 'disabled' },
-        max_tokens_for_reasoning: 0,
       }),
     })
 
@@ -232,7 +231,10 @@ export async function POST(req: NextRequest) {
     const validation = validateAiAction(result.json)
     if (!validation.ok) continue  // invalid action schema, try next
 
-    return NextResponse.json({ action: validation.action, model }, {
+    const rawObj = result.json as Record<string, unknown>
+    const reply  = typeof rawObj.reply === 'string' ? rawObj.reply.slice(0, 400) : undefined
+
+    return NextResponse.json({ action: validation.action, reply, model }, {
       headers: { 'X-Content-Type-Options': 'nosniff' },
     })
   }

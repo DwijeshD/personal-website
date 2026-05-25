@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       { role: 'system', content: systemContent },
       ...(messages as Message[]),
     ],
-    max_tokens: hasFiles ? 1600 : 800,
+    max_tokens: hasFiles ? 3000 : 800,
     temperature: 0.4,
     stream: true,
     thinking: { type: 'disabled' },
