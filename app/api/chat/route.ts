@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
   const vpn = await isVpnOrProxy(ip)
   if (vpn) return err('Access denied.', 403)
 
-  const limit = checkRateLimit(ip)
+  const isPrefetch = req.headers.get('x-prefetch') === '1'
+  const limit = isPrefetch ? { allowed: true, remaining: -1, resetAt: 0 } : checkRateLimit(ip)
   if (!limit.allowed) {
     const resetIn = Math.ceil((limit.resetAt - Date.now()) / 1000 / 60 / 60)
     return err(`Daily message limit reached. Resets in ~${resetIn}h.`, 429)

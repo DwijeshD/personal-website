@@ -55,6 +55,7 @@ Hard rules:
   - content must be syntactically complete and valid for the file type
   - Match TypeScript/React style for .ts/.tsx files; add 'use client' when needed
   - reply must be 1-2 sentences describing what you did and why, in first person (e.g. "I've created test.html with a basic HTML5 boilerplate.")
+  - CRITICAL: When updating an existing file, make ONLY the specific change requested. Copy everything else EXACTLY as provided. Do NOT refactor, rename, reformat, or "improve" unrelated code. Do NOT add, remove, or alter anything the user did not ask about.
   - NEVER output anything outside the JSON`
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

@@ -145,7 +145,7 @@ export default function Sidebar({
     if (!name) { cancelNew(); return }
     if (newMode === 'file') {
       const id = 'file:' + name
-      setWorkspaceFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name }])
+      setWorkspaceFiles(workspaceFiles.some(f => f.id === id) ? workspaceFiles : [...workspaceFiles, { id, name }])
       onNavigate(id)
     } else if (newMode === 'folder') {
       setWorkspaceFolders([...workspaceFolders, { id: 'folder:' + name, name, open: true, files: [] }])
@@ -250,7 +250,7 @@ export default function Sidebar({
       ? base.slice(0, dotIdx) + '_copy' + base.slice(dotIdx)
       : base + '_copy'
     const newId = 'file:' + newName
-    setWorkspaceFiles(prev => prev.some(f => f.id === newId) ? prev : [...prev, { id: newId, name: newName }])
+    setWorkspaceFiles(workspaceFiles.some(f => f.id === newId) ? workspaceFiles : [...workspaceFiles, { id: newId, name: newName }])
     onNavigate(newId)
     setCtx(null)
   }
@@ -263,27 +263,6 @@ export default function Sidebar({
 
   const BottomSection = () => (
     <div className="shrink-0 border-t border-vsc-border/40">
-      <div className="px-2 pt-2 pb-1">
-        <button
-          onClick={onToggleCopilot}
-          className={`
-            w-full flex items-center gap-2 px-3 py-2 rounded-md text-[12px] font-medium transition-all
-            ${copilotOpen
-              ? 'bg-vsc-selection border border-vsc-border text-vsc-accent'
-              : 'bg-vsc-bg border border-vsc-border/50 text-vsc-muted hover:text-vsc-text hover:border-vsc-border'}
-          `}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className={copilotOpen ? 'text-vsc-accent' : 'text-vsc-muted'}>
-            <path d="M12 1l2.39 7.26L22 10l-7.61 2.74L12 20l-2.39-7.26L2 10l7.61-2.74L12 1z"/>
-          </svg>
-          <span className="flex-1 text-left">Dwijesh&apos;s Copilot</span>
-          {copilotOpen && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-vsc-accent/10 text-[10px] text-vsc-accent border border-vsc-accent/30 shrink-0">
-              open ✓
-            </span>
-          )}
-        </button>
-      </div>
       <GitStatus />
     </div>
   )
@@ -324,7 +303,7 @@ export default function Sidebar({
   }
 
   return (
-    <div ref={sidebarRef} className="w-[220px] bg-vsc-sidebar shrink-0 flex flex-col border-r border-vsc-border/30 overflow-hidden">
+    <div ref={sidebarRef} className="w-[220px] bg-vsc-sidebar shrink-0 flex flex-col border-r border-vsc-border/30 overflow-hidden panel-slide-left">
       {panel === 'explorer' && (
         <>
           {/* EXPLORER header */}

@@ -35,7 +35,14 @@ function isPrivateIp(ip: string): boolean {
   )
 }
 
+export function resetRateLimit(ip: string): void {
+  rateLimitMap.delete(ip)
+}
+
 export function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
+  // Local/private IPs are always exempt — development and owner use
+  if (isPrivateIp(ip)) return { allowed: true, remaining: DAILY_LIMIT, resetAt: Date.now() + WINDOW_MS }
+
   const now  = Date.now()
   const slot = rateLimitMap.get(ip)
 
