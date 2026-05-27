@@ -1,233 +1,62 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import TitleBar from './TitleBar'
 import ActivityBar from './ActivityBar'
 import Sidebar from './Sidebar'
 import TabBar from './TabBar'
 import StatusBar from './StatusBar'
 import CommandPalette from './CommandPalette'
-import BottomPanel, { type BottomTab } from './BottomPanel'
-import { computeDiagnostics } from '@/lib/diagnostics'
+import BottomPanel from './BottomPanel'
 import CopilotPanel from './CopilotPanel'
 import AboutModal from './modals/AboutModal'
 import KeyboardShortcutsModal from './modals/KeyboardShortcutsModal'
 import ResumePanel from './panels/ResumePanel'
-import FileEditorPanel, { type ViewMode } from './panels/FileEditorPanel'
+import FileEditorPanel from './panels/FileEditorPanel'
 import SourceControlPopup from './SourceControlPopup'
 import SettingsPopup from './SettingsPopup'
 import AiActionModal from './AiActionModal'
-import { TABS } from '@/lib/tabs'
 import { DEFAULT_CONTENT } from '@/lib/defaultContent'
+import { computeDiagnostics } from '@/lib/diagnostics'
 import type { TerminalHandle } from './TerminalTab'
-import type { SidePanel } from './ActivityBar'
-import type { CustomFile, CustomFolder, AiFileAction } from '@/lib/fileSystem'
-
-const ZOOM_LEVELS = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5]
-
-// All IDs are 'file:<filename>' — derive filename by slicing prefix
-function idToFilename(id: string): string {
-  return id.startsWith('file:') ? id.slice(5) : id
-}
-
-// Default view mode: files with rich live previews open in split
-function defaultMode(filename: string): ViewMode {
-  const ext = filename.split('.').pop()?.toLowerCase() ?? ''
-  if (ext === 'md' || ext === 'markdown') return 'preview'
-  const splitExts = new Set(['html', 'htm', 'tsx', 'jsx', 'css', 'scss'])
-  return splitExts.has(ext) ? 'split' : 'code'
-}
+import { useEditorState, idToFilename, defaultMode } from '@/hooks/useEditorState'
+import { usePanelState, ZOOM_LEVELS } from '@/hooks/usePanelState'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useResizablePanel } from '@/hooks/useResizablePanel'
+import { useGitStatus } from '@/hooks/useGitStatus'
+import { useEditorPrefetch } from '@/hooks/useEditorPrefetch'
 
 export default function VSCodeLayout() {
-  const [openTabs, setOpenTabs]           = useState<string[]>(['file:home.html'])
-  const [activeTab, setActiveTab]         = useState('file:home.html')
-  const [sidePanel, setSidePanel]         = useState<SidePanel>(null)
-  const [terminalOpen, setTerminalOpen]   = useState(false)
-  const [copilotOpen, setCopilotOpen]     = useState(false)
-  const [bugReportTrigger, setBugReportTrigger] = useState(0)
-  const [terminalHeight, setTerminalHeight] = useState(240)
-  const [isResizing, setIsResizing]         = useState(false)
-  const [palOpen, setPalOpen]             = useState(false)
-  const [searchQuery, setSearchQuery]     = useState('')
-  const [aiThinking, setAiThinking]       = useState(false)
-  const [recentFiles, setRecentFiles]     = useState<string[]>([])
-  const [lastCommand, setLastCommand]     = useState<string | null>(null)
-  const [zoomIdx, setZoomIdx]             = useState(3)
-  const [aboutOpen, setAboutOpen]                 = useState(false)
-  const [shortcutsOpen, setShortcutsOpen]         = useState(false)
-  const [sourceControlOpen, setSourceControlOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen]           = useState(false)
-  const [selectedTheme, setSelectedTheme]         = useState('default')
-  const [fileContents, setFileContents]           = useState<Record<string, string>>({})
-  const [fileModes, setFileModes]                 = useState<Record<string, ViewMode>>({ 'file:home.html': 'preview' })
-  const [workspaceFiles, setWorkspaceFiles]       = useState<CustomFile[]>(() => TABS.map(t => ({ id: t.id, name: t.label })))
-  const [workspaceFolders, setWorkspaceFolders]   = useState<CustomFolder[]>([])
-  const [pendingAiAction, setPendingAiAction]     = useState<AiFileAction | null>(null)
-  const pendingActionResultRef = useRef<((applied: boolean) => void) | null>(null)
-  const [gitStatus, setGitStatus]                 = useState<{ branch: string; totalCommits: number } | null>(null)
-
-  const [bottomTab, setBottomTab] = useState<BottomTab>('TERMINAL')
-
-  const defaultFileIds = useMemo(() => new Set(TABS.map(t => t.id)), [])
-
-  const diagnostics = useMemo(
-    () => computeDiagnostics(fileContents, workspaceFiles, defaultFileIds),
-    [fileContents, workspaceFiles, defaultFileIds],
-  )
+  const editor    = useEditorState()
+  const panels    = usePanelState()
+  const terminal  = useResizablePanel(240)
+  const gitStatus = useGitStatus()
+  useEditorPrefetch()
 
   const terminalRef = useRef<TerminalHandle | null>(null)
-  const zoom = ZOOM_LEVELS[zoomIdx]
+  const zoom = ZOOM_LEVELS[panels.zoomIdx]
 
-  const navigate = useCallback((id: string) => {
-    setOpenTabs((prev) => (prev.includes(id) ? prev : [...prev, id]))
-    setActiveTab(id)
-    setRecentFiles((prev) => [id, ...prev.filter((r) => r !== id)].slice(0, 8))
-  }, [])
+  const diagnostics = React.useMemo(
+    () => computeDiagnostics(editor.fileContents, editor.workspaceFiles, editor.defaultFileIds),
+    [editor.fileContents, editor.workspaceFiles, editor.defaultFileIds],
+  )
 
-  const closeTab = useCallback((id: string) => {
-    setOpenTabs((prev) => {
-      const next = prev.filter((t) => t !== id)
-      if (activeTab === id && next.length > 0) setActiveTab(next[next.length - 1])
-      return next
-    })
-  }, [activeTab])
+  useKeyboardShortcuts({
+    openPalette:     () => panels.setPalOpen(true),
+    closeTab:        editor.closeTab,
+    closeAllTabs:    () => editor.setOpenTabs([]),
+    openHomeTab:     () => editor.navigate('file:home.html'),
+    toggleSidebar:   () => panels.setSidePanel(p => p ? null : 'explorer'),
+    toggleTerminal:  panels.toggleTerminal,
+    toggleCopilot:   panels.toggleCopilot,
+    enterFullscreen: panels.enterFullscreen,
+    zoomIn:          () => panels.setZoomIdx(i => Math.min(i + 1, ZOOM_LEVELS.length - 1)),
+    zoomOut:         () => panels.setZoomIdx(i => Math.max(i - 1, 0)),
+    resetZoom:       () => panels.setZoomIdx(3),
+    closePalette:    () => panels.setPalOpen(false),
+  }, editor.activeTab)
 
-  const toggleSide = useCallback((panel: SidePanel) => {
-    setSidePanel((prev) => (prev === panel ? null : panel))
-  }, [])
-
-  function toggleTerminal() {
-    setTerminalOpen((v) => !v)
-  }
-
-  function toggleCopilot() {
-    setCopilotOpen((v) => !v)
-  }
-
-  function openBugReport() {
-    setCopilotOpen(true)
-    setBugReportTrigger((n) => n + 1)
-  }
-
-  // Warm up edge functions + OpenRouter connection on mount.
-  // Chat uses SSE — abort via signal immediately after headers to avoid ECONNRESET.
-  // ai-action is non-streaming — let it complete (it's fast and primes the model).
-  // Preload all editor dynamic imports so first tab click is instant
-  useEffect(() => {
-    import('@monaco-editor/react')
-    import('./renderers/MarkdownRenderer')
-    import('./renderers/HTMLRenderer')
-    import('./renderers/LiveCodeRenderer')
-  }, [])
-
-  // git-status is fetched eagerly so the source control popup shows data instantly.
-  useEffect(() => {
-    const ctrl = new AbortController()
-    fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: 'hi' }] }),
-      signal: ctrl.signal,
-    }).catch(() => {})
-    ctrl.abort()
-
-    fetch('/api/ai-action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'hi' }),
-    }).catch(() => {})
-
-    fetch('/api/git-status')
-      .then(r => r.json())
-      .then(d => setGitStatus({ branch: d.branch, totalCommits: d.totalCommits }))
-      .catch(() => {})
-  }, [])
-
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const ctrl = e.ctrlKey || e.metaKey
-      if (ctrl && e.key === 'p')                              { e.preventDefault(); setPalOpen(true) }
-      if (ctrl && e.key === 'w')                              { e.preventDefault(); if (activeTab) closeTab(activeTab) }
-      if (ctrl && e.shiftKey && e.key === 'W')                { e.preventDefault(); setOpenTabs([]) }
-      if (ctrl && e.key === 't')                              { e.preventDefault(); navigate('file:home.html') }
-      if (ctrl && e.key === 'b')                              { e.preventDefault(); setSidePanel((p) => p ? null : 'explorer') }
-      if (ctrl && e.key === '`')                              { e.preventDefault(); toggleTerminal() }
-      if (ctrl && e.shiftKey && e.key.toLowerCase() === 'a') { e.preventDefault(); toggleCopilot() }
-      if (e.key === 'F11')                                    { e.preventDefault(); enterFullscreen() }
-      if (ctrl && (e.key === '=' || e.key === '+'))           { e.preventDefault(); setZoomIdx((i) => Math.min(i + 1, ZOOM_LEVELS.length - 1)) }
-      if (ctrl && e.key === '-')                              { e.preventDefault(); setZoomIdx((i) => Math.max(i - 1, 0)) }
-      if (ctrl && e.key === '0')                              { e.preventDefault(); setZoomIdx(3) }
-      if (e.key === 'Escape')                                 { setPalOpen(false) }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, closeTab, navigate])
-
-  function applyTheme(theme: string) {
-    setSelectedTheme(theme)
-    if (theme === 'default') document.documentElement.removeAttribute('data-theme')
-    else document.documentElement.setAttribute('data-theme', theme)
-  }
-
-  function enterFullscreen() {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {})
-    else document.exitFullscreen().catch(() => {})
-  }
-
-  function executeAiAction(action: AiFileAction) {
-    const { path, content = '' } = action
-    const id = 'file:' + path
-    switch (action.action) {
-      case 'create_file':
-      case 'update_file':
-        setWorkspaceFiles(prev => prev.some(f => f.id === id) ? prev : [...prev, { id, name: path }])
-        setFileContents(prev => ({ ...prev, [id]: content }))
-        navigate(id)
-        break
-      case 'delete_file':
-        setWorkspaceFiles(prev => prev.filter(f => f.id !== id))
-        setWorkspaceFolders(prev => prev.map(folder => ({
-          ...folder, files: folder.files.filter(f => f.id !== id),
-        })))
-        closeTab(id)
-        setFileContents(prev => { const n = { ...prev }; delete n[id]; return n })
-        setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
-        break
-      case 'create_folder': {
-        const folderId = 'folder:' + path
-        setWorkspaceFolders(prev =>
-          prev.some(f => f.id === folderId) ? prev : [...prev, { id: folderId, name: path, open: true, files: [] }]
-        )
-        break
-      }
-    }
-    setPendingAiAction(null)
-  }
-
-  // Drag resize for terminal
-  function startResize(e: React.MouseEvent) {
-    e.preventDefault()
-    const startY = e.clientY
-    const startH = terminalHeight
-    setIsResizing(true)
-    function cleanup() {
-      setIsResizing(false)
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    function onMove(ev: MouseEvent) {
-      if (ev.buttons === 0) { cleanup(); return }
-      setTerminalHeight(Math.max(100, Math.min(500, startH + (startY - ev.clientY))))
-    }
-    function onUp() { cleanup() }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
-
-  const activeFile = idToFilename(activeTab)
+  const activeFile = idToFilename(editor.activeTab)
 
   return (
     <div
@@ -239,111 +68,103 @@ export default function VSCodeLayout() {
         height: `${100 / zoom}dvh`,
       }}
     >
-      {isResizing && <div className="fixed inset-0 z-[9999] cursor-row-resize" />}
+      {terminal.isResizing && <div className="fixed inset-0 z-[9999] cursor-row-resize" />}
+
       <TitleBar
-        onCommandPalette={() => setPalOpen(true)}
-        onNewTab={() => navigate('file:home.html')}
-        onOpenFile={() => setPalOpen(true)}
-        onCloseTab={() => activeTab && closeTab(activeTab)}
-        onCloseAllTabs={() => setOpenTabs([])}
-        recentFiles={recentFiles}
-        onOpenRecent={navigate}
-        onFind={() => { setSidePanel('search'); setSearchQuery('') }}
+        onCommandPalette={() => panels.setPalOpen(true)}
+        onNewTab={() => editor.navigate('file:home.html')}
+        onOpenFile={() => panels.setPalOpen(true)}
+        onCloseTab={() => editor.activeTab && editor.closeTab(editor.activeTab)}
+        onCloseAllTabs={() => editor.setOpenTabs([])}
+        recentFiles={editor.recentFiles}
+        onOpenRecent={editor.navigate}
+        onFind={() => { panels.setSidePanel('search'); panels.setSearchQuery('') }}
         onCopy={() => {
           const s = window.getSelection()?.toString()
           if (s) navigator.clipboard.writeText(s).catch(() => {})
         }}
-        onToggleSidebar={() => setSidePanel((p) => p ? null : 'explorer')}
-        onToggleTerminal={toggleTerminal}
-        onToggleCopilot={toggleCopilot}
-        onEnterFullscreen={enterFullscreen}
-        onZoomIn={() => setZoomIdx((i) => Math.min(i + 1, ZOOM_LEVELS.length - 1))}
-        onZoomOut={() => setZoomIdx((i) => Math.max(i - 1, 0))}
-        onResetZoom={() => setZoomIdx(3)}
-        onGoToFile={() => setPalOpen(true)}
-        onNavigate={navigate}
-        onStartTerminal={() => setTerminalOpen(true)}
+        onToggleSidebar={() => panels.setSidePanel(p => p ? null : 'explorer')}
+        onToggleTerminal={panels.toggleTerminal}
+        onToggleCopilot={panels.toggleCopilot}
+        onEnterFullscreen={panels.enterFullscreen}
+        onZoomIn={() => panels.setZoomIdx(i => Math.min(i + 1, ZOOM_LEVELS.length - 1))}
+        onZoomOut={() => panels.setZoomIdx(i => Math.max(i - 1, 0))}
+        onResetZoom={() => panels.setZoomIdx(3)}
+        onGoToFile={() => panels.setPalOpen(true)}
+        onNavigate={editor.navigate}
+        onStartTerminal={() => panels.setTerminalOpen(true)}
         onRunLastCommand={() => {
-          if (lastCommand && terminalRef.current) {
-            setTerminalOpen(true)
-            terminalRef.current.runCommand(lastCommand)
+          if (panels.lastCommand && terminalRef.current) {
+            panels.setTerminalOpen(true)
+            terminalRef.current.runCommand(panels.lastCommand)
           }
         }}
-        lastCommand={lastCommand}
-        onNewTerminal={() => { terminalRef.current?.clear(); setTerminalOpen(true) }}
+        lastCommand={panels.lastCommand}
+        onNewTerminal={() => { terminalRef.current?.clear(); panels.setTerminalOpen(true) }}
         onClearTerminal={() => terminalRef.current?.clear()}
-        onShowShortcuts={() => setShortcutsOpen(true)}
-        onAbout={() => setAboutOpen(true)}
-        onReportBug={openBugReport}
-        copilotActive={copilotOpen}
+        onShowShortcuts={() => panels.setShortcutsOpen(true)}
+        onAbout={() => panels.setAboutOpen(true)}
+        onReportBug={panels.openBugReport}
+        copilotActive={panels.copilotOpen}
       />
 
-      {/* Source Control floating popup */}
-      {sourceControlOpen && (
-        <SourceControlPopup onClose={() => setSourceControlOpen(false)} gitStatus={gitStatus} />
+      {panels.sourceControlOpen && (
+        <SourceControlPopup onClose={() => panels.setSourceControlOpen(false)} gitStatus={gitStatus} />
       )}
 
-      {/* Settings popup */}
-      {settingsOpen && (
+      {panels.settingsOpen && (
         <SettingsPopup
-          onClose={() => setSettingsOpen(false)}
-          onCommandPalette={() => { setPalOpen(true); setSettingsOpen(false) }}
-          onToggleTerminal={() => { toggleTerminal(); setSettingsOpen(false) }}
-          onToggleCopilot={() => { toggleCopilot(); setSettingsOpen(false) }}
-          onEnterFullscreen={() => { enterFullscreen(); setSettingsOpen(false) }}
-          selectedTheme={selectedTheme}
-          onThemeChange={applyTheme}
+          onClose={() => panels.setSettingsOpen(false)}
+          onCommandPalette={() => { panels.setPalOpen(true); panels.setSettingsOpen(false) }}
+          onToggleTerminal={() => { panels.toggleTerminal(); panels.setSettingsOpen(false) }}
+          onToggleCopilot={() => { panels.toggleCopilot(); panels.setSettingsOpen(false) }}
+          onEnterFullscreen={() => { panels.enterFullscreen(); panels.setSettingsOpen(false) }}
+          selectedTheme={panels.selectedTheme}
+          onThemeChange={panels.applyTheme}
         />
       )}
 
-      {/* Main row */}
       <div className="flex flex-1 overflow-hidden">
         <ActivityBar
-          activePanel={sidePanel}
-          onToggle={toggleSide}
-          onSourceControl={() => setSourceControlOpen((v) => !v)}
-          sourceControlOpen={sourceControlOpen}
-          onToggleAI={toggleCopilot}
-          aiOpen={copilotOpen}
-          onSettings={() => setSettingsOpen((v) => !v)}
-          settingsOpen={settingsOpen}
-          isDark={selectedTheme !== 'light'}
+          activePanel={panels.sidePanel}
+          onToggle={panels.toggleSide}
+          onSourceControl={() => panels.setSourceControlOpen(v => !v)}
+          sourceControlOpen={panels.sourceControlOpen}
+          onToggleAI={panels.toggleCopilot}
+          aiOpen={panels.copilotOpen}
+          onSettings={() => panels.setSettingsOpen(v => !v)}
+          settingsOpen={panels.settingsOpen}
+          isDark={panels.selectedTheme !== 'light'}
         />
 
         <Sidebar
-          panel={sidePanel}
-          activeTab={activeTab}
-          openTabs={openTabs}
-          onNavigate={navigate}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onToggleCopilot={toggleCopilot}
-          copilotOpen={copilotOpen}
-          workspaceFiles={workspaceFiles}
-          workspaceFolders={workspaceFolders}
-          onWorkspaceFilesChange={setWorkspaceFiles}
-          onWorkspaceFoldersChange={setWorkspaceFolders}
-          onFileDeleted={(id) => {
-            closeTab(id)
-            setFileContents(prev => { const n = { ...prev }; delete n[id]; return n })
-            setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
-          }}
-          fileContents={fileContents}
+          panel={panels.sidePanel}
+          activeTab={editor.activeTab}
+          openTabs={editor.openTabs}
+          onNavigate={editor.navigate}
+          searchQuery={panels.searchQuery}
+          onSearchChange={panels.setSearchQuery}
+          onToggleCopilot={panels.toggleCopilot}
+          copilotOpen={panels.copilotOpen}
+          workspaceFiles={editor.workspaceFiles}
+          workspaceFolders={editor.workspaceFolders}
+          onWorkspaceFilesChange={editor.setWorkspaceFiles}
+          onWorkspaceFoldersChange={editor.setWorkspaceFolders}
+          onFileDeleted={editor.deleteFileFromState}
+          fileContents={editor.fileContents}
           defaultContents={DEFAULT_CONTENT}
         />
 
-        {/* Editor column */}
         <div className="flex flex-col flex-1 overflow-hidden bg-vsc-bg min-w-0">
-          {openTabs.length > 0 && (
+          {editor.openTabs.length > 0 && (
             <TabBar
-              openTabs={openTabs}
-              activeTab={activeTab}
-              onSelect={setActiveTab}
-              onClose={closeTab}
+              openTabs={editor.openTabs}
+              activeTab={editor.activeTab}
+              onSelect={editor.setActiveTab}
+              onClose={editor.closeTab}
             />
           )}
 
-          {/* Breadcrumb */}
           <div className="h-[22px] flex items-center px-4 text-xs text-vsc-muted bg-vsc-bg border-b border-vsc-border/20 shrink-0 select-none">
             <span>portfolio</span>
             <span className="mx-1">›</span>
@@ -352,36 +173,28 @@ export default function VSCodeLayout() {
             <span className="text-vsc-text">{activeFile}</span>
           </div>
 
-          {/* Panels */}
           <div className="flex-1 overflow-hidden relative">
-            {openTabs.length === 0 ? (
+            {editor.openTabs.length === 0 ? (
               <div className="flex items-center justify-center h-full text-vsc-muted flex-col gap-3">
                 <div className="text-4xl opacity-20">📄</div>
                 <div className="text-sm">No file open</div>
-                <button onClick={() => navigate('file:home.html')} className="text-xs text-vsc-accent hover:underline">
+                <button onClick={() => editor.navigate('file:home.html')} className="text-xs text-vsc-accent hover:underline">
                   Open home.html
                 </button>
               </div>
             ) : (
               <div className="h-full overflow-hidden">
-                {openTabs.includes(activeTab) && (() => {
-                  const filename = idToFilename(activeTab)
+                {editor.openTabs.includes(editor.activeTab) && (() => {
+                  const filename = idToFilename(editor.activeTab)
                   if (filename === 'Dwijesh_Dookraz_Resume.pdf') return <ResumePanel />
                   return (
                     <FileEditorPanel
-                      key={activeTab}
+                      key={editor.activeTab}
                       filename={filename}
-                      content={fileContents[activeTab] ?? DEFAULT_CONTENT[filename] ?? ''}
-                      onChange={(v) => setFileContents(prev => {
-                        if (v === (DEFAULT_CONTENT[filename] ?? '')) {
-                          const next = { ...prev }
-                          delete next[activeTab]
-                          return next
-                        }
-                        return { ...prev, [activeTab]: v }
-                      })}
-                      mode={fileModes[activeTab] ?? defaultMode(filename)}
-                      onModeChange={(m) => setFileModes(prev => ({ ...prev, [activeTab]: m }))}
+                      content={editor.fileContents[editor.activeTab] ?? DEFAULT_CONTENT[filename] ?? ''}
+                      onChange={(v) => editor.updateFileContent(editor.activeTab, v, filename)}
+                      mode={editor.fileModes[editor.activeTab] ?? defaultMode(filename)}
+                      onModeChange={(m) => editor.setFileModes(prev => ({ ...prev, [editor.activeTab]: m }))}
                     />
                   )
                 })()}
@@ -389,86 +202,83 @@ export default function VSCodeLayout() {
             )}
           </div>
 
-          {/* Terminal panel */}
-          {terminalOpen && (
+          {panels.terminalOpen && (
             <>
-              <div className="ai-panel-resize shrink-0" onMouseDown={startResize} />
-              <div style={{ height: terminalHeight }} className="shrink-0 overflow-hidden panel-slide-bottom">
+              <div className="ai-panel-resize shrink-0" onMouseDown={terminal.startResize} />
+              <div style={{ height: terminal.height }} className="shrink-0 overflow-hidden panel-slide-bottom">
                 <BottomPanel
-                  onClose={() => setTerminalOpen(false)}
-                  onNavigate={navigate}
-                  onLastCommandChange={setLastCommand}
+                  onClose={() => panels.setTerminalOpen(false)}
+                  onNavigate={editor.navigate}
+                  onLastCommandChange={panels.setLastCommand}
                   terminalRef={terminalRef}
                   diagnostics={diagnostics}
-                  activeTab={bottomTab}
-                  onTabChange={setBottomTab}
-                  onThemeChange={applyTheme}
+                  activeTab={panels.bottomTab}
+                  onTabChange={panels.setBottomTab}
+                  onThemeChange={panels.applyTheme}
                 />
               </div>
             </>
           )}
         </div>
 
-        {/* Right: Copilot panel */}
-        {copilotOpen && (
+        {panels.copilotOpen && (
           <CopilotPanel
-            onThinkingChange={setAiThinking}
-            onClose={() => setCopilotOpen(false)}
-            triggerBugReport={bugReportTrigger}
+            onThinkingChange={panels.setAiThinking}
+            onClose={() => panels.setCopilotOpen(false)}
+            triggerBugReport={panels.bugReportTrigger}
             onPendingAction={(action, onResult) => {
-                pendingActionResultRef.current = onResult
-                setPendingAiAction(action)
-              }}
+              panels.pendingActionResultRef.current = onResult
+              panels.setPendingAiAction(action)
+            }}
             workspaceFiles={[
-              ...workspaceFiles.map(f => f.name),
-              ...workspaceFolders.flatMap(f => f.files.map(fi => `${f.name}/${fi.name}`)),
+              ...editor.workspaceFiles.map(f => f.name),
+              ...editor.workspaceFolders.flatMap(f => f.files.map(fi => `${f.name}/${fi.name}`)),
             ]}
-            fileContents={fileContents}
+            fileContents={editor.fileContents}
           />
         )}
       </div>
 
-      {/* AI Action confirmation modal */}
-      {pendingAiAction && (
+      {panels.pendingAiAction && (
         <AiActionModal
-          action={pendingAiAction}
+          action={panels.pendingAiAction}
           onApprove={() => {
-            executeAiAction(pendingAiAction)
-            pendingActionResultRef.current?.(true)
-            pendingActionResultRef.current = null
-            setPendingAiAction(null)
+            editor.executeAiAction(panels.pendingAiAction!)
+            panels.pendingActionResultRef.current?.(true)
+            panels.pendingActionResultRef.current = null
+            panels.setPendingAiAction(null)
           }}
           onReject={() => {
-            pendingActionResultRef.current?.(false)
-            pendingActionResultRef.current = null
-            setPendingAiAction(null)
+            panels.pendingActionResultRef.current?.(false)
+            panels.pendingActionResultRef.current = null
+            panels.setPendingAiAction(null)
           }}
         />
       )}
 
       <StatusBar
-        activeTab={activeTab}
-        aiThinking={aiThinking}
-        onToggleAI={toggleCopilot}
+        activeTab={editor.activeTab}
+        aiThinking={panels.aiThinking}
+        onToggleAI={panels.toggleCopilot}
         zoom={zoom}
-        errorCount={diagnostics.filter((d) => d.severity === 'error').length}
-        warningCount={diagnostics.filter((d) => d.severity === 'warning').length}
+        errorCount={diagnostics.filter(d => d.severity === 'error').length}
+        warningCount={diagnostics.filter(d => d.severity === 'warning').length}
         onShowProblems={() => {
-          setTerminalOpen(true)
-          setBottomTab('PROBLEMS')
+          panels.setTerminalOpen(true)
+          panels.setBottomTab('PROBLEMS')
         }}
       />
 
       <CommandPalette
-        open={palOpen}
-        onClose={() => setPalOpen(false)}
-        onNavigate={(id) => { navigate(id); setPalOpen(false) }}
-        workspaceFiles={workspaceFiles}
-        workspaceFolders={workspaceFolders}
+        open={panels.palOpen}
+        onClose={() => panels.setPalOpen(false)}
+        onNavigate={(id) => { editor.navigate(id); panels.setPalOpen(false) }}
+        workspaceFiles={editor.workspaceFiles}
+        workspaceFolders={editor.workspaceFolders}
       />
 
-      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
-      <KeyboardShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <AboutModal open={panels.aboutOpen} onClose={() => panels.setAboutOpen(false)} />
+      <KeyboardShortcutsModal open={panels.shortcutsOpen} onClose={() => panels.setShortcutsOpen(false)} />
     </div>
   )
 }
