@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { PERSON } from '@/lib/data'
+import { PERSON } from '@/lib/profile'
 
 interface GitStatus {
   branch: string

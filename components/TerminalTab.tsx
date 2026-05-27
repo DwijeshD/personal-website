@@ -1,7 +1,8 @@
 'use client'
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { PERSON, ABOUT, PROJECTS, SKILLS, TABS } from '@/lib/data'
+import { PERSON, ABOUT, PROJECTS, SKILLS } from '@/lib/profile'
+import { TABS } from '@/lib/tabs'
 
 // ── Matrix columns (stable, generated once) ───────────────────────────────────
 const MATRIX_COLS = Array.from({ length: 36 }, (_, i) => ({

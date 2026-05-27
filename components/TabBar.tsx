@@ -1,6 +1,6 @@
 'use client'
 
-import { TABS } from '@/lib/data'
+import { TABS } from '@/lib/tabs'
 import { iconSrcForFile } from '@/lib/fileIcons'
 
 interface Props {

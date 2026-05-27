@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AI_SYSTEM_PROMPT } from '@/lib/data'
+import { AI_SYSTEM_PROMPT } from '@/lib/ai/systemPrompt'
 import { buildContext } from '@/lib/contextBuilder'
 import { checkRateLimit, isVpnOrProxy } from '@/lib/rateLimit'
 
