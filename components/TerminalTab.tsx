@@ -904,15 +904,12 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       className="flex flex-col h-full bg-vsc-bg font-mono text-sm cursor-text"
       onClick={() => inputRef.current?.focus()}
     >
-      <div className="flex-1 overflow-auto panel-scroll px-4 py-2 space-y-0.5">
+      {dinoActive && <canvas ref={dinoCanvas} className="flex-1 w-full" />}
+      <div className={`flex-1 overflow-auto panel-scroll px-4 py-2 space-y-0.5 ${dinoActive ? 'hidden' : ''}`}>
         {donutActive ? (
           <div className="flex flex-col items-center justify-center h-full">
             <pre className="text-vsc-fn text-[9px] leading-[1.15] font-mono select-none">{donutFrame}</pre>
             <div className="text-vsc-muted text-[10px] mt-2">Ctrl+C or Esc to stop</div>
-          </div>
-        ) : dinoActive ? (
-          <div className="flex flex-col h-full">
-            <canvas ref={dinoCanvas} className="flex-1 w-full" />
           </div>
         ) : matrixActive ? (
           <div className="relative flex flex-col h-full overflow-hidden">

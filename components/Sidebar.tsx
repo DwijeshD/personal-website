@@ -261,6 +261,53 @@ export default function Sidebar({
     setCtx(null)
   }
 
+  const CopilotButton = () => (
+    <div className="shrink-0 px-3 py-2">
+      {/* Ambient glow behind entire button */}
+      <div className="relative">
+        <div
+          className="absolute inset-0 rounded-full opacity-20 blur-md pointer-events-none"
+          style={{ background: 'linear-gradient(135deg, #f0abfc, #818cf8, #38bdf8)' }}
+        />
+        {/* 1px gradient border via padding trick */}
+        <div
+          className="relative p-px rounded-full"
+          style={{ background: 'linear-gradient(135deg, #f0abfc 0%, #a78bfa 45%, #38bdf8 100%)' }}
+        >
+          <button
+            onClick={onToggleCopilot}
+            className="relative w-full flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-200 hover:brightness-125 active:scale-[0.98]"
+            style={{ background: '#1e1e2e' }}
+            title="Open Dwijesh's Copilot"
+          >
+            {/* Gradient star */}
+            <svg width="13" height="13" viewBox="0 0 24 24" className="shrink-0 flex-none">
+              <defs>
+                <linearGradient id="copilot-star" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#f0abfc"/>
+                  <stop offset="100%" stopColor="#38bdf8"/>
+                </linearGradient>
+              </defs>
+              <path fill="url(#copilot-star)" d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+            </svg>
+            {/* Gradient text */}
+            <span
+              className="truncate"
+              style={{
+                background: 'linear-gradient(135deg, #e9d5ff 0%, #c4b5fd 50%, #7dd3fc 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Dwijesh&apos;s Copilot
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
   const BottomSection = () => (
     <div className="shrink-0 border-t border-vsc-border/40">
       <GitStatus />
@@ -451,6 +498,7 @@ export default function Sidebar({
             )}
           </ul>
 
+          <CopilotButton />
           <BottomSection />
         </>
       )}

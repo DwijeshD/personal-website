@@ -20,10 +20,19 @@ function VscIcon({ name, size = 24, isDark }: { name: string; size?: number; isD
 }
 
 const CopilotChatIcon = ({ isDark }: { isDark: boolean }) => (
-  <svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke={isDark ? '#C5C5C5' : '#424242'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 11c0 4.42-4.03 8-9 8a9.8 9.8 0 0 1-3.54-.66L4 20l1.18-3.28A7.7 7.7 0 0 1 3 11C3 6.58 7.03 3 12 3s9 3.58 9 8z" />
-    <path d="M12 7.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" />
-  </svg>
+  <img
+    src="/vscode-copilot.png"
+    width={34}
+    height={34}
+    alt="Copilot"
+    style={{
+      filter: isDark
+        ? 'invert(1) brightness(0.77)'
+        : 'invert(0.74) brightness(0.6)',
+      mixBlendMode: 'screen',
+      display: 'block',
+    }}
+  />
 )
 
 const GithubIcon = () => (
@@ -72,7 +81,7 @@ export default function ActivityBar({
         {navBtn('explorer', <VscIcon name="files" isDark={isDark} />, 'Explorer')}
         {navBtn('search', <VscIcon name="search" isDark={isDark} />, 'Search')}
         {actionBtn(sourceControlOpen, <VscIcon name="source-control" isDark={isDark} />, 'Source Control', onSourceControl, 'source-control-activity-btn')}
-        {actionBtn(aiOpen, <CopilotChatIcon isDark={isDark} />, "Dwijesh's Copilot", onToggleAI)}
+        {actionBtn(aiOpen, <CopilotChatIcon isDark={isDark} />, "Copilot", onToggleAI)}
       </div>
 
       <div className="flex flex-col pb-2">
