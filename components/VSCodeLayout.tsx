@@ -44,6 +44,7 @@ export default function VSCodeLayout() {
   const [sidePanel, setSidePanel]         = useState<SidePanel>(null)
   const [terminalOpen, setTerminalOpen]   = useState(false)
   const [copilotOpen, setCopilotOpen]     = useState(false)
+  const [bugReportTrigger, setBugReportTrigger] = useState(0)
   const [terminalHeight, setTerminalHeight] = useState(240)
   const [isResizing, setIsResizing]         = useState(false)
   const [palOpen, setPalOpen]             = useState(false)
@@ -101,6 +102,11 @@ export default function VSCodeLayout() {
 
   function toggleCopilot() {
     setCopilotOpen((v) => !v)
+  }
+
+  function openBugReport() {
+    setCopilotOpen(true)
+    setBugReportTrigger((n) => n + 1)
   }
 
   // Warm up edge functions + OpenRouter connection on mount.
@@ -268,6 +274,7 @@ export default function VSCodeLayout() {
         onClearTerminal={() => terminalRef.current?.clear()}
         onShowShortcuts={() => setShortcutsOpen(true)}
         onAbout={() => setAboutOpen(true)}
+        onReportBug={openBugReport}
         copilotActive={copilotOpen}
       />
 
@@ -407,6 +414,7 @@ export default function VSCodeLayout() {
           <CopilotPanel
             onThinkingChange={setAiThinking}
             onClose={() => setCopilotOpen(false)}
+            triggerBugReport={bugReportTrigger}
             onPendingAction={(action, onResult) => {
                 pendingActionResultRef.current = onResult
                 setPendingAiAction(action)

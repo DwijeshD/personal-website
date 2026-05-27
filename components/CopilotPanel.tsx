@@ -136,11 +136,12 @@ function renderMd(text: string): React.ReactNode {
 }
 
 interface Props {
-  onThinkingChange: (v: boolean) => void
-  onClose:          () => void
-  onPendingAction:  (action: AiFileAction, onResult: (applied: boolean) => void) => void
-  workspaceFiles?:  string[]
-  fileContents?:    Record<string, string>
+  onThinkingChange:  (v: boolean) => void
+  onClose:           () => void
+  onPendingAction:   (action: AiFileAction, onResult: (applied: boolean) => void) => void
+  workspaceFiles?:   string[]
+  fileContents?:     Record<string, string>
+  triggerBugReport?: number
 }
 
 function resolveFileContent(name: string, fileContents: Record<string, string>): string {
@@ -318,7 +319,7 @@ function LogsView({ logs, onClear }: { logs: LogEntry[]; onClear: () => void }) 
   )
 }
 
-export default function CopilotPanel({ onThinkingChange, onClose, onPendingAction, workspaceFiles = [], fileContents = {} }: Props) {
+export default function CopilotPanel({ onThinkingChange, onClose, onPendingAction, workspaceFiles = [], fileContents = {}, triggerBugReport }: Props) {
   const [messages, setMessages]           = useState<Message[]>([])
   const [input, setInput]                 = useState('')
   const [streaming, setStreaming]         = useState(false)
@@ -341,6 +342,13 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const prefetchCache  = useRef<Map<string, string>>(new Map())
   const activeModelRef      = useRef<string | null>(null)
   const pendingChatAction   = useRef<AiFileAction | null>(null)
+
+  // Open bug report form when triggered externally (e.g. Help > Report a Bug)
+  useEffect(() => {
+    if (!triggerBugReport) return
+    setPendingBugMsg('__direct_report__')
+    setIssueState({ status: 'form', title: '', desc: '' })
+  }, [triggerBugReport])
 
   // Drain accumulated text at a fixed rate for smooth, uniform display
   const CHARS_PER_TICK = 2   // characters revealed per tick
@@ -931,73 +939,74 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                 </div>
               </div>
             ))}
-            {/* ── Bug report widget ── */}
-            {pendingBugMsg && !busy && (
-              <div className="mx-1 mb-2 rounded-md border border-[#f14c4c]/30 bg-[#1e1e1e] overflow-hidden text-[11px]">
-                {issueState.status === 'form' && (
-                  <div className="p-3 space-y-2">
-                    <input
-                      className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px]"
-                      placeholder="Issue title"
-                      maxLength={100}
-                      value={issueState.title}
-                      onChange={e => setIssueState({ ...issueState, title: e.target.value })}
-                    />
-                    <textarea
-                      className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px] resize-none"
-                      placeholder="Describe the issue"
-                      maxLength={2000}
-                      rows={3}
-                      value={issueState.desc}
-                      onChange={e => setIssueState({ ...issueState, desc: e.target.value })}
-                    />
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors px-2 py-0.5">Cancel</button>
-                      <button
-                        disabled={!issueState.title.trim()}
-                        onClick={async () => {
-                          const { title, desc } = issueState as { status: 'form'; title: string; desc: string }
-                          setIssueState({ status: 'submitting' })
-                          try {
-                            const r = await fetch('/api/report-issue', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ title, description: desc }),
-                            })
-                            const data = await r.json()
-                            if (!r.ok) setIssueState({ status: 'error', msg: data.error ?? 'Failed.' })
-                            else setIssueState({ status: 'done', number: data.number })
-                          } catch {
-                            setIssueState({ status: 'error', msg: 'Network error.' })
-                          }
-                        }}
-                        className="px-2 py-0.5 rounded bg-[#f14c4c]/20 text-[#f14c4c] hover:bg-[#f14c4c]/30 transition-colors disabled:opacity-40"
-                      >Submit</button>
-                    </div>
-                  </div>
-                )}
-                {issueState.status === 'submitting' && (
-                  <div className="px-3 py-2 text-vsc-muted/60 italic">Logging issue…</div>
-                )}
-                {issueState.status === 'done' && (
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-[#89d185]">✓ Issue #{issueState.number} logged</span>
-                    <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors">✕</button>
-                  </div>
-                )}
-                {issueState.status === 'error' && (
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-[#f14c4c]">{issueState.msg}</span>
-                    <button onClick={() => setIssueState({ status: 'form', title: '', desc: '' })} className="text-vsc-muted/50 hover:text-vsc-muted ml-2 transition-colors">Retry</button>
-                  </div>
-                )}
-              </div>
-            )}
-
             <div ref={bottomRef} />
           </div>
         )}
       </div>
+
+      {/* ── Bug report widget (always rendered, outside scroll area) ── */}
+      {pendingBugMsg && !busy && (
+        <div className="mx-3 mb-2 rounded-md border border-[#f14c4c]/30 bg-[#1e1e1e] overflow-hidden text-[11px]">
+          {issueState.status === 'form' && (
+            <div className="p-3 space-y-2">
+              <div className="text-[11px] font-semibold text-[#f14c4c]/80 mb-1">Report a Bug</div>
+              <input
+                className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px]"
+                placeholder="Issue title"
+                maxLength={100}
+                value={issueState.title}
+                onChange={e => setIssueState({ ...issueState, title: e.target.value })}
+              />
+              <textarea
+                className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px] resize-none"
+                placeholder="Describe the issue"
+                maxLength={2000}
+                rows={3}
+                value={issueState.desc}
+                onChange={e => setIssueState({ ...issueState, desc: e.target.value })}
+              />
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors px-2 py-0.5">Cancel</button>
+                <button
+                  disabled={!issueState.title.trim()}
+                  onClick={async () => {
+                    const { title, desc } = issueState as { status: 'form'; title: string; desc: string }
+                    setIssueState({ status: 'submitting' })
+                    try {
+                      const r = await fetch('/api/report-issue', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, description: desc }),
+                      })
+                      const data = await r.json()
+                      if (!r.ok) setIssueState({ status: 'error', msg: data.error ?? 'Failed.' })
+                      else setIssueState({ status: 'done', number: data.number })
+                    } catch {
+                      setIssueState({ status: 'error', msg: 'Network error.' })
+                    }
+                  }}
+                  className="px-2 py-0.5 rounded bg-[#f14c4c]/20 text-[#f14c4c] hover:bg-[#f14c4c]/30 transition-colors disabled:opacity-40"
+                >Submit</button>
+              </div>
+            </div>
+          )}
+          {issueState.status === 'submitting' && (
+            <div className="px-3 py-2 text-vsc-muted/60 italic">Logging issue…</div>
+          )}
+          {issueState.status === 'done' && (
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-[#89d185]">✓ Issue #{issueState.number} logged</span>
+              <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors">✕</button>
+            </div>
+          )}
+          {issueState.status === 'error' && (
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-[#f14c4c]">{issueState.msg}</span>
+              <button onClick={() => setIssueState({ status: 'form', title: '', desc: '' })} className="text-vsc-muted/50 hover:text-vsc-muted ml-2 transition-colors">Retry</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Bottom input area ── */}
       <div className={`shrink-0 border-t border-vsc-border/60 ${activeView !== 'chat' ? 'hidden' : ''}`}>

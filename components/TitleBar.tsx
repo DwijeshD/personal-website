@@ -29,6 +29,7 @@ interface Props {
   onClearTerminal: () => void
   onShowShortcuts: () => void
   onAbout: () => void
+  onReportBug: () => void
   copilotActive: boolean
 }
 
@@ -58,6 +59,7 @@ export default function TitleBar({
   onClearTerminal,
   onShowShortcuts,
   onAbout,
+  onReportBug,
   copilotActive,
 }: Props) {
   const recentSubmenu = recentFiles.length > 0
@@ -97,7 +99,7 @@ export default function TitleBar({
         {},
         { label: 'Toggle Sidebar', action: onToggleSidebar, shortcut: 'Ctrl+B' },
         { label: 'Toggle Terminal', action: onToggleTerminal, shortcut: 'Ctrl+`' },
-        { label: "Dwijesh's Copilot", action: onToggleCopilot, shortcut: 'Ctrl+Shift+A' },
+        { label: 'Copilot', action: onToggleCopilot, shortcut: 'Ctrl+Shift+A' },
         {},
         { label: 'Enter Full Screen', action: onEnterFullscreen, shortcut: 'F11' },
         {},
@@ -141,6 +143,8 @@ export default function TitleBar({
         { label: 'Keyboard Shortcuts', action: onShowShortcuts, shortcut: 'Ctrl+K Ctrl+S' },
         {},
         { label: 'GitHub Profile', action: () => window.open('https://github.com/DwijeshD', '_blank', 'noopener,noreferrer') },
+        {},
+        { label: 'Report a Bug', action: onReportBug },
         {},
         { label: 'About', action: onAbout },
       ],

@@ -101,14 +101,30 @@
       "Bash(findstr \":3000\")",
       "Bash(curl -s -X POST http://localhost:3000/api/report-issue -H \"Content-Type: application/json\" -d '{\"title\":\"Test issue from portfolio chat\",\"description\":\"Verifying GitHub Issues integration works.\"}')",
       "Bash(xargs wc *)",
-      "Bash(curl -s -I \"https://api.github.com/repos/DwijeshD/personalwebsite/commits?per_page=1\")"
+      "Bash(curl -s -I \"https://api.github.com/repos/DwijeshD/personalwebsite/commits?per_page=1\")",
+      "Bash(node -e \"require\\('react-markdown'\\)\")",
+      "Bash(node -e \"require\\('remark-gfm'\\)\")",
+      "Bash(taskkill /PID 30900 /F)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(awk \"/^  'home.html': /,/^  '/\")",
+      "Bash(git show *)",
+      "Read(//tmp/**)",
+      "Bash(cat)",
+      "Bash(node /tmp/replace_home.js)",
+      "PowerShell($env:TEMP)",
+      "Bash(cd \"c:\\\\Users\\\\dwije\\\\OneDrive\\\\Desktop\\\\Projects\\\\PortfolioWebsite\" && git show 69619b7:lib/defaultContent.ts > \"C:/Users/dwije/AppData/Local/Temp/old_default.ts\" && echo \"saved\")",
+      "Bash(node \"C:/Users/dwije/AppData/Local/Temp/replace_home.js\")",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(findstr -v \":3000 \")"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [
       "c:\\Users\\dwije\\.claude\\projects\\c--Users-dwije-OneDrive-Desktop-Projects-PortfolioWebsite",
       "c:\\Users\\dwije\\OneDrive\\Desktop\\Projects\\PortfolioWebsite\\.playwright-mcp",
       "C:\\Users\\dwije\\OneDrive\\Desktop\\Projects\\PortfolioWebsite",
-      "C:\\Users\\dwije\\.claude"
+      "C:\\Users\\dwije\\.claude",
+      "C:\\Users\\dwije\\AppData\\Local\\Temp"
     ]
   }
 }
