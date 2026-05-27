@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import type { BottomTab } from '@/components/BottomPanel'
-import type { SidePanel } from '@/components/ActivityBar'
+import type { BottomTab } from '@/components/panels/BottomPanel'
+import type { SidePanel } from '@/components/layout/ActivityBar'
 import type { AiFileAction } from '@/lib/fileSystem'
 
 // Exported so VSCodeLayout can reference ZOOM_LEVELS without re-importing
