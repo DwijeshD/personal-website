@@ -146,6 +146,7 @@ const STACK_LINES = [
   '',
 ]
 
+
 const MUSIC_LINES = [
   '',
   '  ♪  Now Playing                       lo-fi coding vibes',
@@ -212,8 +213,7 @@ function buildHelpText(): TerminalLine[] {
     h(''),
     h('  EXTRAS'),
     o('  neofetch        system info card'),
-    o('  music           coding playlist'),
-    o('  fortune         random dev wisdom'),
+      o('  fortune         random dev wisdom'),
     o('  sudo            nice try'),
     o('  donut           3D ASCII rotating donut'),
     o('  offline         chrome dinosaur game'),
@@ -355,8 +355,6 @@ function runCmd(
     case 'neofetch':
       return { lines: NEOFETCH.split('\n').map(t => ({ type: 'info' as const, text: t })) }
 
-    case 'music':
-      return { lines: MUSIC_LINES.map(o) }
 
     case 'fortune': {
       const quote = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
@@ -530,20 +528,22 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
     if (!dinoActive) return
     const canvas = dinoCanvas.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')!
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const cv = canvas as NonNullable<typeof canvas>
+    const ctx = cv.getContext('2d')!
 
     const LH = 150, GY = 127, DX = 80, DW = 44, DH = 43
-    const S  = () => canvas.height / LH
-    const LW = () => canvas.width  / S()
+    const S  = () => cv.height / LH
+    const LW = () => cv.width  / S()
     const p  = (n: number) => n * S()
 
     function resize() {
-      canvas.width  = canvas.clientWidth  || canvas.offsetWidth
-      canvas.height = canvas.clientHeight || canvas.offsetHeight
+      cv.width  = cv.clientWidth  || cv.offsetWidth
+      cv.height = cv.clientHeight || cv.offsetHeight
     }
     resize()
     const ro = new ResizeObserver(resize)
-    ro.observe(canvas)
+    ro.observe(cv)
 
     const mkImg = (src: string) => { const i = new Image(); i.src = src; return i }
     const imgRun1  = mkImg('/dino/trex-run1.webp')   // 88×85 VP8X (Wikimedia CC)
@@ -658,7 +658,7 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
     function onTouch(e: TouchEvent)    { e.preventDefault(); jump() }
     window.addEventListener('keydown', onKey)
     window.addEventListener('keyup',   onKeyUp)
-    canvas.addEventListener('touchstart', onTouch, { passive: false })
+    cv.addEventListener('touchstart', onTouch, { passive: false })
 
     let raf: number
     function loop() {
@@ -701,7 +701,7 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       } else if (!started) { tick++ }
 
       // Transparent bg — terminal dark background shows through
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, cv.width, cv.height)
 
       // Clouds (white tinted sprites)
       for (const c of clouds) {
@@ -711,7 +711,7 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
 
       // Ground line + scrolling dots
       ctx.fillStyle = 'rgba(255,255,255,0.35)'
-      ctx.fillRect(0, p(GY), canvas.width, p(1.5))
+      ctx.fillRect(0, p(GY), cv.width, p(1.5))
       ctx.fillStyle = 'rgba(255,255,255,0.18)'
       for (let dx2 = (horizX % 16); dx2 < lw; dx2 += 16) {
         ctx.fillRect(p(dx2),     p(GY + 3), p(3), p(1))
@@ -750,23 +750,23 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       ctx.textAlign = 'right'
       ctx.fillText(
         `HI ${String(Math.floor(hi / 5)).padStart(5,'0')}  ${String(Math.floor(score / 5)).padStart(5,'0')}`,
-        canvas.width - p(8), p(18)
+        cv.width - p(8), p(18)
       )
 
       if (!started) {
         ctx.fillStyle = 'rgba(255,255,255,0.7)'
         ctx.font = `bold ${p(11)}px 'Courier New', monospace`
         ctx.textAlign = 'center'
-        ctx.fillText('Press SPACE or ↑ to start', canvas.width / 2, p(GY - 30))
+        ctx.fillText('Press SPACE or ↑ to start', cv.width / 2, p(GY - 30))
       }
       if (over) {
         ctx.fillStyle = 'rgba(255,255,255,0.85)'
         ctx.font = `bold ${p(13)}px 'Courier New', monospace`
         ctx.textAlign = 'center'
-        ctx.fillText('G A M E  O V E R', canvas.width / 2, p(GY / 2 - 5))
+        ctx.fillText('G A M E  O V E R', cv.width / 2, p(GY / 2 - 5))
         ctx.font = `${p(9)}px 'Courier New', monospace`
         ctx.fillStyle = 'rgba(255,255,255,0.5)'
-        ctx.fillText('SPACE to restart  ·  Ctrl+C to exit', canvas.width / 2, p(GY / 2 + 12))
+        ctx.fillText('SPACE to restart  ·  Ctrl+C to exit', cv.width / 2, p(GY / 2 + 12))
       }
 
       raf = requestAnimationFrame(loop)
@@ -778,7 +778,7 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       ro.disconnect()
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('keyup',   onKeyUp)
-      canvas.removeEventListener('touchstart', onTouch)
+      cv.removeEventListener('touchstart', onTouch)
     }
   }, [dinoActive])
 

@@ -386,7 +386,7 @@ export default function VSCodeLayout() {
           {terminalOpen && (
             <>
               <div className="ai-panel-resize shrink-0" onMouseDown={startResize} />
-              <div style={{ height: terminalHeight }} className="shrink-0 overflow-hidden">
+              <div style={{ height: terminalHeight }} className="shrink-0 overflow-hidden panel-slide-bottom">
                 <BottomPanel
                   onClose={() => setTerminalOpen(false)}
                   onNavigate={navigate}

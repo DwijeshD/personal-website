@@ -207,14 +207,15 @@ const PREFETCH_QUERIES = [
   "What kind of work is Dwijesh looking for and how can I contact him?",
 ].filter((q, i, a) => a.indexOf(q) === i)
 
-async function fetchFullResponse(query: string): Promise<string> {
+async function fetchFullResponse(query: string): Promise<{ text: string; remaining: number | null }> {
   const res = await fetch('/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Prefetch': '1' },
     body: JSON.stringify({ messages: [{ role: 'user', content: query }] }),
   })
   if (!res.ok) throw new Error('prefetch failed')
 
+  const remaining = res.headers.get('X-RateLimit-Remaining')
   const reader  = res.body!.getReader()
   const decoder = new TextDecoder()
   let buffer = '', accumulated = ''
@@ -235,7 +236,7 @@ async function fetchFullResponse(query: string): Promise<string> {
       } catch { /* skip */ }
     }
   }
-  return accumulated
+  return { text: accumulated, remaining: remaining !== null ? Number(remaining) : null }
 }
 
 // Re-trigger the CSS animation on the same DOM node without remounting.
@@ -389,7 +390,10 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       setTimeout(() => {
         if (cancelled || prefetchCache.current.has(query)) return
         fetchFullResponse(query)
-          .then(text => { if (!cancelled && text) prefetchCache.current.set(query, text) })
+          .then(({ text, remaining }) => {
+            if (!cancelled && text) prefetchCache.current.set(query, text)
+            if (!cancelled && remaining !== null) setMsgsLeft(remaining)
+          })
           .catch(() => { /* prefetch failures are silent */ })
       }, i * 600)
     })
@@ -601,7 +605,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       inputRef.current?.focus()
       if (BUG_KEYWORDS.test(content)) {
         setPendingBugMsg(content)
-        setIssueState({ status: 'idle' })
+        setIssueState({ status: 'form', title: '', desc: '' })
       }
     }
   }
@@ -731,7 +735,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   }
 
   return (
-    <div className="flex flex-col h-full w-[340px] bg-[#181818] border-l border-vsc-border shrink-0 font-sans">
+    <div className="flex flex-col h-full w-[340px] bg-[#181818] border-l border-vsc-border shrink-0 font-sans panel-slide-right">
 
       {/* ── Tab bar ── */}
       <div className="flex items-center border-b border-vsc-border/60 shrink-0 select-none">
@@ -930,18 +934,6 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
             {/* ── Bug report widget ── */}
             {pendingBugMsg && !busy && (
               <div className="mx-1 mb-2 rounded-md border border-[#f14c4c]/30 bg-[#1e1e1e] overflow-hidden text-[11px]">
-                {issueState.status === 'idle' && (
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-vsc-muted/70">Detected an issue — log it to GitHub?</span>
-                    <div className="flex gap-2 ml-3 shrink-0">
-                      <button
-                        onClick={() => setIssueState({ status: 'form', title: pendingBugMsg.slice(0, 80), desc: '' })}
-                        className="px-2 py-0.5 rounded bg-[#f14c4c]/20 text-[#f14c4c] hover:bg-[#f14c4c]/30 transition-colors"
-                      >Log issue</button>
-                      <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors">✕</button>
-                    </div>
-                  </div>
-                )}
                 {issueState.status === 'form' && (
                   <div className="p-3 space-y-2">
                     <input
@@ -953,7 +945,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                     />
                     <textarea
                       className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px] resize-none"
-                      placeholder="Describe the issue (optional)"
+                      placeholder="Describe the issue"
                       maxLength={2000}
                       rows={3}
                       value={issueState.desc}
@@ -996,7 +988,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                 {issueState.status === 'error' && (
                   <div className="flex items-center justify-between px-3 py-2">
                     <span className="text-[#f14c4c]">{issueState.msg}</span>
-                    <button onClick={() => setIssueState({ status: 'form', title: pendingBugMsg.slice(0, 80), desc: '' })} className="text-vsc-muted/50 hover:text-vsc-muted ml-2 transition-colors">Retry</button>
+                    <button onClick={() => setIssueState({ status: 'form', title: '', desc: '' })} className="text-vsc-muted/50 hover:text-vsc-muted ml-2 transition-colors">Retry</button>
                   </div>
                 )}
               </div>
@@ -1046,7 +1038,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
             {/* Stop (during streaming or action) / Send button */}
             {(streaming || actionLoading) ? (
               <button
-                onClick={() => { abortRef.current?.abort(); networkDone.current = true }}
+                onClick={() => { abortRef.current?.abort(); rawAccum.current = rawAccum.current.slice(0, displayIdx.current); networkDone.current = true }}
                 title="Stop generating"
                 className="shrink-0 text-vsc-muted hover:text-[#f14c4c] transition-colors pb-0.5"
               >
@@ -1079,7 +1071,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
             Ask anything — or type @ to reference a file
           </button>
           <span className={`text-[10px] font-mono ${msgsLeft !== null && msgsLeft <= 5 ? 'text-yellow-500/70' : 'text-vsc-muted/40'}`}>
-            {msgsLeft !== null ? `${msgsLeft}/25 left` : '25/25 left'}
+            {msgsLeft !== null ? `${msgsLeft}/25 left` : null}
           </span>
         </div>
       </div>
