@@ -1,4 +1,4 @@
-import VSCodeLayout from '@/components/VSCodeLayout'
+import VSCodeLayout from '@/components/layout/VSCodeLayout'
 
 export default function Page() {
   return <VSCodeLayout />

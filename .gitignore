@@ -26,3 +26,7 @@ tsconfig.tsbuildinfo
 # Misc
 .DS_Store
 *.pem
+
+# Dev artifacts
+graphify-out/
+skills-lock.json
