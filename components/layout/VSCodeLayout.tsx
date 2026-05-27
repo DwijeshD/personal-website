@@ -227,6 +227,7 @@ export default function VSCodeLayout() {
             onClose={() => panels.setCopilotOpen(false)}
             triggerBugReport={panels.bugReportTrigger}
             onPendingAction={(action, onResult) => {
+              // eslint-disable-next-line react-hooks/immutability
               panels.pendingActionResultRef.current = onResult
               panels.setPendingAiAction(action)
             }}
@@ -245,11 +246,13 @@ export default function VSCodeLayout() {
           onApprove={() => {
             editor.executeAiAction(panels.pendingAiAction!)
             panels.pendingActionResultRef.current?.(true)
+            // eslint-disable-next-line react-hooks/immutability
             panels.pendingActionResultRef.current = null
             panels.setPendingAiAction(null)
           }}
           onReject={() => {
             panels.pendingActionResultRef.current?.(false)
+            // eslint-disable-next-line react-hooks/immutability
             panels.pendingActionResultRef.current = null
             panels.setPendingAiAction(null)
           }}
