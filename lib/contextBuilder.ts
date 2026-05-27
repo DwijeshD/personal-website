@@ -1,4 +1,4 @@
-import { profile } from './profileContext'
+import { profile } from './profile'
 
 // ── Section serialisers ────────────────────────────────────────────────────
 

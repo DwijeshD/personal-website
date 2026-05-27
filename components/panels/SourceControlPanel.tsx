@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { PERSON } from '@/lib/data'
+import { PERSON } from '@/lib/profile'
 
 const REPO = 'DwijeshD/personalwebsite'
 const API  = `https://api.github.com/repos/${REPO}/commits?per_page=6`

@@ -1,7 +1,7 @@
 'use client'
 
 import MenuBar, { MenuDef } from './MenuBar'
-import { TABS } from '@/lib/data'
+import { TABS } from '@/lib/tabs'
 
 interface Props {
   onCommandPalette: () => void

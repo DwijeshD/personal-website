@@ -1,6 +1,6 @@
 'use client'
 
-import { PERSON } from '@/lib/data'
+import { PERSON } from '@/lib/profile'
 
 export default function ResumePanel() {
   return (
