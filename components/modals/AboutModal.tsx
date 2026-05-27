@@ -60,23 +60,23 @@ export default function AboutModal({ open, onClose }: Props) {
           <div className="space-y-1 text-xs">
             <div className="flex justify-between">
               <span className="token-prop">Built by</span>
-              <span className="token-string">"Dwijesh Dookraz"</span>
+              <span className="token-string">&quot;Dwijesh Dookraz&quot;</span>
             </div>
             <div className="flex justify-between">
               <span className="token-prop">Framework</span>
-              <span className="token-string">"Next.js 15 + React 19"</span>
+              <span className="token-string">&quot;Next.js 15 + React 19&quot;</span>
             </div>
             <div className="flex justify-between">
               <span className="token-prop">Styling</span>
-              <span className="token-string">"Tailwind CSS"</span>
+              <span className="token-string">&quot;Tailwind CSS&quot;</span>
             </div>
             <div className="flex justify-between">
               <span className="token-prop">AI</span>
-              <span className="token-string">"{model ?? 'OpenRouter'}"</span>
+              <span className="token-string">&quot;{model ?? 'OpenRouter'}&quot;</span>
             </div>
             <div className="flex justify-between">
               <span className="token-prop">Theme</span>
-              <span className="token-string">"VS Code Dark+"</span>
+              <span className="token-string">&quot;VS Code Dark+&quot;</span>
             </div>
           </div>
 

@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/static-components */
 
 import { useEffect, useRef, useState } from 'react'
 import type { SidePanel } from './ActivityBar'

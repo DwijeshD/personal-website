@@ -18,6 +18,7 @@ export default function CommandPalette({ open, onClose, onNavigate, workspaceFil
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery('')
       setTimeout(() => inputRef.current?.focus(), 50)
     }

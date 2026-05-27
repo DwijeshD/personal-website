@@ -346,6 +346,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   // Open bug report form when triggered externally (e.g. Help > Report a Bug)
   useEffect(() => {
     if (!triggerBugReport) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPendingBugMsg('__direct_report__')
     setIssueState({ status: 'form', title: '', desc: '' })
   }, [triggerBugReport])
@@ -421,6 +422,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     const cached    = localStorage.getItem('copilot:resolvedModel')
     const cachedAt  = Number(localStorage.getItem('copilot:resolvedModelAt') ?? 0)
     const stale     = Date.now() - cachedAt > 24 * 60 * 60 * 1000
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (cached) { activeModelRef.current = cached; setActiveModel(cached) }
     if (!cached || stale) {
       fetch('/api/model-info')
@@ -494,6 +496,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     const fileCtx = attachedFiles(content, workspaceFiles, fileContents)
     if (fileCtx.length > 0) pushLog('info', 'FILES', `attaching ${fileCtx.length} file(s): ${fileCtx.map(f => f.path).join(', ')}`)
 
+    // eslint-disable-next-line react-hooks/purity
     const requestSentAt = Date.now()
     const controller = new AbortController()
     abortRef.current = controller
@@ -557,6 +560,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
             if (reason) finishReason = reason
             if (delta) {
               if (!firstTokenAt) {
+                // eslint-disable-next-line react-hooks/purity
                 firstTokenAt = Date.now()
                 pushLog('info', 'STREAM', `first token — latency ${firstTokenAt - requestSentAt}ms`)
               }
