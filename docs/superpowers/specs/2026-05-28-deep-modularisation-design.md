@@ -157,10 +157,55 @@ All 6 groups touch completely separate files. All 6 agents run simultaneously.
 
 ---
 
+---
+
+## Group 7 — `src/` directory migration (sequential, runs after Groups 1–6)
+
+Next.js natively supports a `src/` directory. Moving everything in means all source lives under one roof with `public/`, config files, and `node_modules/` cleanly separated at the root.
+
+### Moves
+```
+app/        → src/app/
+components/ → src/components/
+hooks/      → src/hooks/
+lib/        → src/lib/
+```
+
+`public/` stays at root — Next.js requirement.
+
+### Config changes (2 files only)
+
+**`tsconfig.json`** — update `@/` alias:
+```json
+"paths": {
+  "@/*": ["./src/*"]
+}
+```
+
+**`tailwind.config.ts`** — update content globs:
+```ts
+content: [
+  './src/app/**/*.{ts,tsx}',
+  './src/components/**/*.{ts,tsx}',
+  './src/lib/**/*.{ts,tsx}',
+  './src/hooks/**/*.{ts,tsx}',
+],
+```
+
+### Import changes
+**None.** All imports use the `@/` alias which resolves via tsconfig. Relative imports within a directory stay correct since relative positions don't change. Only the two config files above need edits.
+
+### Sequencing
+Must run **after** all 6 parallel groups complete, since those groups create files in `components/`, `lib/`, and `hooks/`. Moving before them would require updating every new file path in the agents' prompts.
+
+---
+
 ## Success Criteria
 
 - [ ] `npm run type-check` passes
 - [ ] `npm run build` passes
 - [ ] No file exceeds 250 lines
 - [ ] Each new file has one clear responsibility
+- [ ] All source code lives under `src/`
+- [ ] `public/` remains at project root
 - [ ] Zero functionality changes (visual output identical)
