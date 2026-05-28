@@ -42,7 +42,7 @@ function parseThinkBlocks(raw: string): { thinking: string; content: string } {
     rest = rest.slice(end + 8)
   }
 
-  return { thinking: thinking.trimStart(), content: content.trim() }
+  return { thinking: thinking.trimStart(), content: content.trimStart() }
 }
 
 // Render assistant markdown: **bold**, `code`, bullet lists, line breaks
@@ -332,7 +332,9 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const [pendingBugMsg, setPendingBugMsg] = useState<string | null>(null)
   const [logs, setLogs]                   = useState<LogEntry[]>([])
   const [activeView, setActiveView]       = useState<'chat' | 'logs'>('chat')
-  const [activeModel, setActiveModel]     = useState<string | null>(null)
+  const [activeModel, setActiveModel]     = useState<string | null>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('copilot:resolvedModel') : null
+  )
   const bottomRef      = useRef<HTMLDivElement>(null)
   const inputRef       = useRef<HTMLTextAreaElement>(null)
   const rawAccum       = useRef('')
@@ -401,7 +403,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         fetchFullResponse(query)
           .then(({ text, remaining }) => {
             if (!cancelled && text) prefetchCache.current.set(query, text)
-            if (!cancelled && remaining !== null) setMsgsLeft(remaining)
+            if (!cancelled && remaining !== null && remaining >= 0) setMsgsLeft(remaining)
           })
           .catch(() => { /* prefetch failures are silent */ })
       }, i * 600)
@@ -419,11 +421,10 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   }, [streaming, actionLoading, onThinkingChange])
 
   useEffect(() => {
-    const cached    = localStorage.getItem('copilot:resolvedModel')
-    const cachedAt  = Number(localStorage.getItem('copilot:resolvedModelAt') ?? 0)
-    const stale     = Date.now() - cachedAt > 24 * 60 * 60 * 1000
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (cached) { activeModelRef.current = cached; setActiveModel(cached) }
+    const cached   = localStorage.getItem('copilot:resolvedModel')
+    const cachedAt = Number(localStorage.getItem('copilot:resolvedModelAt') ?? 0)
+    const stale    = Date.now() - cachedAt > 24 * 60 * 60 * 1000
+    if (cached) activeModelRef.current = cached
     if (!cached || stale) {
       fetch('/api/model-info')
         .then(r => r.json())
@@ -615,7 +616,8 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       }
     } finally {
       inputRef.current?.focus()
-      if (BUG_KEYWORDS.test(content)) {
+      const aiMentionedForm = rawAccum.current.toLowerCase().includes('bug report form has appeared')
+      if (BUG_KEYWORDS.test(content) || aiMentionedForm) {
         setPendingBugMsg(content)
         setIssueState({ status: 'form', title: '', desc: '' })
       }
