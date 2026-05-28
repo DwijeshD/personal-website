@@ -82,9 +82,32 @@ const jsonLd = {
   ],
 }
 
+const PRELOAD_ICONS = [
+  // Activity bar (visible immediately)
+  '/icons/dark/files.svg',
+  '/icons/dark/search.svg',
+  '/icons/dark/source-control.svg',
+  '/icons/dark/settings-gear.svg',
+  // Default tab file icons
+  '/icons/files/html.svg',
+  '/icons/files/markdown.svg',
+  '/icons/files/css.svg',
+  '/icons/files/json.svg',
+  '/icons/files/typescript.svg',
+  // Sidebar folder/file
+  '/icons/files/folder.svg',
+  '/icons/files/folder-open.svg',
+  '/icons/files/file.svg',
+]
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {PRELOAD_ICONS.map(href => (
+          <link key={href} rel="preload" as="image" type="image/svg+xml" href={href} />
+        ))}
+      </head>
       <body suppressHydrationWarning>
         <script
           type="application/ld+json"
