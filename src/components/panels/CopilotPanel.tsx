@@ -6,10 +6,8 @@ import { validateAiAction } from '@/lib/fileSystem'
 import { DEFAULT_CONTENT } from '@/shared/content'
 
 import type { Message, LogEntry, IssueState } from '@/features/copilot/types'
-import { parseThinkBlocks } from '@/features/copilot/lib/parseThinkBlocks'
 import { detectIntent, BUG_KEYWORDS } from '@/features/copilot/lib/detectIntent'
 import { formatModel } from '@/features/copilot/lib/formatModel'
-import { fetchFullResponse, PREFETCH_QUERIES } from '@/features/copilot/lib/fetchChat'
 import { useStreamingDisplay } from '@/features/copilot/hooks/useStreamingDisplay'
 import { usePrefetchCache } from '@/features/copilot/hooks/usePrefetchCache'
 import { ThinkingIndicator } from '@/features/copilot/components/ThinkingIndicator'
@@ -91,7 +89,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const abortRef       = useRef<AbortController | null>(null)
   const activeModelRef = useRef<string | null>(null)
 
-  const { rawAccum, displayIdx, networkDone, pendingChatAction } = useStreamingDisplay(
+  const { rawAccumRef, displayIdxRef, networkDoneRef, pendingChatActionRef } = useStreamingDisplay(
     streaming,
     setStreaming,
     setMessages,
@@ -175,9 +173,9 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       : history
     setMessages([...history, { role: 'assistant', content: '', thinking: '' }])
     setInput('')
-    rawAccum.current = ''
-    displayIdx.current = 0
-    networkDone.current = false
+    rawAccumRef.current = ''
+    displayIdxRef.current = 0
+    networkDoneRef.current = false
     setStreaming(true)
 
     pushLog('info', 'REQUEST', `msg #${history.length} — "${content.slice(0, 80)}${content.length > 80 ? '…' : ''}"`)
@@ -185,8 +183,8 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     const cached = prefetchCache.current.get(content)
     if (cached) {
       prefetchCache.current.delete(content)
-      rawAccum.current = cached
-      networkDone.current = true
+      rawAccumRef.current = cached
+      networkDoneRef.current = true
       pushLog('info', 'CACHE', `served from prefetch — ${cached.length} chars buffered`)
       inputRef.current?.focus()
       return  // display interval handles rendering + setStreaming(false)
@@ -264,24 +262,24 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
                 pushLog('info', 'STREAM', `first token — latency ${firstTokenAt - requestSentAt}ms`)
               }
               totalChars += delta.length
-              rawAccum.current += delta  // buffer only — display interval renders at fixed rate
+              rawAccumRef.current += delta  // buffer only — display interval renders at fixed rate
             }
           } catch { /* skip malformed SSE */ }
         }
       }
 
       // Strip <file-action> from rawAccum before display interval types it out
-      const fileActionMatch = rawAccum.current.match(/<file-action>([\s\S]*?)<\/file-action>/i)
+      const fileActionMatch = rawAccumRef.current.match(/<file-action>([\s\S]*?)<\/file-action>/i)
       if (fileActionMatch) {
         try {
           const parsed = JSON.parse(fileActionMatch[1].trim())
           const validation = validateAiAction(parsed)
-          if (validation.ok) pendingChatAction.current = validation.action
+          if (validation.ok) pendingChatActionRef.current = validation.action
         } catch { /* malformed JSON — ignore */ }
-        rawAccum.current = rawAccum.current.replace(/<file-action>[\s\S]*?<\/file-action>/gi, '').trim()
+        rawAccumRef.current = rawAccumRef.current.replace(/<file-action>[\s\S]*?<\/file-action>/gi, '').trim()
       }
 
-      networkDone.current = true  // signal display interval to stop after draining
+      networkDoneRef.current = true  // signal display interval to stop after draining
 
       pushLog(
         totalChars === 0 ? 'warn' : 'info',
@@ -301,12 +299,12 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') {
         // User stopped — keep whatever was streamed, just stop
-        networkDone.current = true
+        networkDoneRef.current = true
         pushLog('info', 'STOP', 'stopped by user')
       } else {
         const msg = e instanceof Error ? e.message : String(e)
         pushLog('error', 'ERROR', msg)
-        networkDone.current = true
+        networkDoneRef.current = true
         setMessages((m) => {
           const c = [...m]; c[c.length - 1] = { role: 'assistant', content: 'Connection error.' }; return c
         })
@@ -314,7 +312,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       }
     } finally {
       inputRef.current?.focus()
-      const aiMentionedForm = rawAccum.current.toLowerCase().includes('bug report form has appeared')
+      const aiMentionedForm = rawAccumRef.current.toLowerCase().includes('bug report form has appeared')
       if (BUG_KEYWORDS.test(content) || aiMentionedForm) {
         setPendingBugMsg(content)
         setIssueState({ status: 'form', title: '', desc: '' })
@@ -696,7 +694,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
             {/* Stop (during streaming or action) / Send button */}
             {(streaming || actionLoading) ? (
               <button
-                onClick={() => { abortRef.current?.abort(); rawAccum.current = rawAccum.current.slice(0, displayIdx.current); networkDone.current = true }}
+                onClick={() => { abortRef.current?.abort(); rawAccumRef.current = rawAccumRef.current.slice(0, displayIdxRef.current); networkDoneRef.current = true }}
                 title="Stop generating"
                 className="shrink-0 text-vsc-muted hover:text-[#f14c4c] transition-colors pb-0.5"
               >

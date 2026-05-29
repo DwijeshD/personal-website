@@ -12,23 +12,23 @@ export function useStreamingDisplay(
   setStreaming: Dispatch<SetStateAction<boolean>>,
   setMessages: Dispatch<SetStateAction<Message[]>>,
 ): {
-  rawAccum: MutableRefObject<string>
-  displayIdx: MutableRefObject<number>
-  networkDone: MutableRefObject<boolean>
-  pendingChatAction: MutableRefObject<AiFileAction | null>
+  rawAccumRef: MutableRefObject<string>
+  displayIdxRef: MutableRefObject<number>
+  networkDoneRef: MutableRefObject<boolean>
+  pendingChatActionRef: MutableRefObject<AiFileAction | null>
 } {
-  const rawAccum         = useRef('')
-  const displayIdx       = useRef(0)
-  const networkDone      = useRef(false)
-  const pendingChatAction = useRef<AiFileAction | null>(null)
+  const rawAccumRef         = useRef('')
+  const displayIdxRef       = useRef(0)
+  const networkDoneRef      = useRef(false)
+  const pendingChatActionRef = useRef<AiFileAction | null>(null)
 
   useEffect(() => {
     if (!streaming) return
     const id = setInterval(() => {
-      const total = rawAccum.current.length
-      if (displayIdx.current < total) {
-        displayIdx.current = Math.min(displayIdx.current + CHARS_PER_TICK, total)
-        const slice = rawAccum.current.slice(0, displayIdx.current)
+      const total = rawAccumRef.current.length
+      if (displayIdxRef.current < total) {
+        displayIdxRef.current = Math.min(displayIdxRef.current + CHARS_PER_TICK, total)
+        const slice = rawAccumRef.current.slice(0, displayIdxRef.current)
         const { thinking, content } = parseThinkBlocks(slice)
         setMessages(m => {
           const c = [...m]
@@ -36,10 +36,10 @@ export function useStreamingDisplay(
           c[c.length - 1] = { role: 'assistant', content, thinking }
           return c
         })
-      } else if (networkDone.current) {
-        if (pendingChatAction.current) {
-          const action = pendingChatAction.current
-          pendingChatAction.current = null
+      } else if (networkDoneRef.current) {
+        if (pendingChatActionRef.current) {
+          const action = pendingChatActionRef.current
+          pendingChatActionRef.current = null
           setMessages(m => {
             const c = [...m]
             if (c.length > 0) c[c.length - 1] = { ...c[c.length - 1], action }
@@ -52,5 +52,5 @@ export function useStreamingDisplay(
     return () => clearInterval(id)
   }, [streaming, setStreaming, setMessages])
 
-  return { rawAccum, displayIdx, networkDone, pendingChatAction }
+  return { rawAccumRef, displayIdxRef, networkDoneRef, pendingChatActionRef }
 }
