@@ -1,9 +1,13 @@
 'use client'
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { PERSON, ABOUT, PROJECTS, SKILLS } from '@/lib/profile'
-import { TABS } from '@/lib/tabs'
+import { dispatch } from '@/features/terminal/commands'
+import { makeLogs, makeDeployLogs, buildMonitorFrame, type StreamEntry } from '@/features/terminal/monitor'
+import DinoGame from '@/features/terminal/components/DinoGame'
+import MatrixEffect from '@/features/terminal/components/MatrixEffect'
 
+export type { TerminalHandle } from '@/features/terminal/types'
+import type { TerminalLine, TerminalHandle } from '@/features/terminal/types'
 
 // ── Donut algorithm ───────────────────────────────────────────────────────────
 function computeDonutFrame(A: number, B: number): string {
@@ -30,455 +34,12 @@ function computeDonutFrame(A: number, B: number): string {
   return rows.join('\n')
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const THEMES: Record<string, string> = {
-  'default':        'VS Code Dark+',
-  'dracula':        'Dracula',
-  'night-owl':      'Night Owl',
-  'one-dark':       'One Dark Pro',
-  'monokai':        'Monokai',
-  'solarized-dark': 'Solarized Dark',
-}
-
-const FORTUNES = [
-  '"First, solve the problem. Then, write the code." — John Johnson',
-  '"Any fool can write code a computer understands. Good programmers write code humans can understand." — Fowler',
-  '"Debugging is twice as hard as writing the code in the first place." — Kernighan',
-  '"Make it work, make it right, make it fast." — Kent Beck',
-  '"The best code is no code at all." — Jeff Atwood',
-  '"Talk is cheap. Show me the code." — Linus Torvalds',
-  '"Perfection is achieved not when there is nothing to add, but when there is nothing to take away." — Saint-Exupéry',
-  'You are now manually breathing.',
-  'Have you tried turning it off and on again?',
-  'It works on my machine. Ship the machine.',
-  'git blame yourself',
-  'The bug is always in the last place you look. Because once you find it, you stop looking.',
-  'There is no cloud. Just someone else\'s computer.',
-  'Tabs > Spaces. (I said what I said.)',
-  'import antigravity',
-  '99 little bugs in the code. Take one down, patch it around. 127 little bugs in the code.',
-  '"If debugging is the process of removing bugs, then programming must be the process of putting them in." — Dijkstra',
-]
-
-const NEOFETCH = `
-         .          ${PERSON.name}
-        .o.         ─────────────────────────────────
-       .ooo.        OS: Portfolio OS 1.0.0
-      .ooooo.       Host: dwijesh.dev
-     .oooooooo.     Shell: Next.js 15
-    .oooooooooo.    Terminal: VS Code Portfolio
-   .oooooooooooo.
-  .oooooooooooooo.  Education: BSc CS, First Class Honours
-                    Role: Backend Engineer · AI/ML
-                    GitHub: github.com/DwijeshD
-`
-
-const TIMELINE_LINES = [
-  '',
-  '  2021 ──  University of Southampton',
-  '           BSc Computer Science',
-  '           Algorithms · Systems · Software Engineering',
-  '',
-  '  2022 ──  Deeper into CS',
-  '           Data structures, networks, compilers',
-  '           First real Python projects',
-  '',
-  '  2023 ──  Machine Learning focus',
-  '           Signal processing, PyTorch pipelines',
-  '           Started dissertation research',
-  '',
-  '  2024 ──  Dissertation: rPPG Heart Rate (82%)',
-  '           Deep learning + video-based physiology',
-  '           ↓',
-  '           First Class Honours',
-  '           ↓',
-  '           Nusmark — Backend Engineer',
-  '           Calendar sync · OAuth2 · Webhooks · Firestore',
-  '',
-  '  2025 ──  AI Tooling & Systems',
-  '           OpenRouter, streaming, Monaco editor',
-  '           Built this portfolio',
-  '',
-  '  Now  ──  Open to new opportunities',
-  '',
-]
-
-const ARCHITECTURE_LINES = [
-  '',
-  '  ┌───────────────────────────────────────────────┐',
-  '  │           dwijesh.dev — Architecture          │',
-  '  ├──────────────────────────┬────────────────────┤',
-  '  │  BROWSER                 │  API ROUTES         │',
-  '  │  ┌──────────────────┐    │  /api/chat          │',
-  '  │  │  VSCodeLayout    │    │    → OpenRouter SSE │',
-  '  │  │  AB · Side · Ed  │    │  /api/ai-action     │',
-  '  │  │  Copilot · Term  │    │    → File CRUD      │',
-  '  │  └──────────────────┘    │  /api/git-status    │',
-  '  │  Renderers:              │    → GitHub API     │',
-  '  │  Monaco · MD · HTML · JS │                     │',
-  '  │                          │  INFRA              │',
-  '  │                          │  Next.js 15 (Edge)  │',
-  '  │                          │  Vercel · dwijesh.dev│',
-  '  └──────────────────────────┴────────────────────┘',
-  '',
-]
-
-const STACK_LINES = [
-  '',
-  '  Framework   Next.js 15 (App Router) + React 19',
-  '  Language    TypeScript (strict mode)',
-  '  Styling     Tailwind CSS v4',
-  '  Editor      Monaco Editor (@monaco-editor/react)',
-  '  AI          OpenRouter → claude-sonnet-4-6',
-  '  Streaming   SSE (Server-Sent Events)',
-  '  Markdown    react-markdown + remark-gfm + rehype-raw',
-  '  Icons       material-icon-theme SVGs (80+ mappings)',
-  '  Deployment  Vercel (Edge Functions)',
-  '  Domain      dwijesh.dev',
-  '',
-]
-
-
-const MUSIC_LINES = [
-  '',
-  '  ♪  Now Playing                       lo-fi coding vibes',
-  '  ────────────────────────────────────────────────────────',
-  '  ▶  [══════════════════════░░░░░░░░]  3:14 / 4:52',
-  '',
-  '  Playlist: Late Night Stack',
-  '  ──────────────────────────────────────',
-  '    01  Nujabes           — Feather',
-  '    02  J Dilla           — Time: The Donut of the Heart',
-  '    03  Khruangbin        — Lady and Man',
-  '    04  LoFi Girl         — Nightfall Study',
-  '    05  Floating Points   — LesAlpx',
-  '',
-  '  Tip: jam.computer · lofi.cafe · poolsuite.net',
-  '',
-]
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-interface TerminalLine {
-  type: 'input' | 'output' | 'error' | 'info' | 'success' | 'warning'
-  text: string
-}
-
-export interface TerminalHandle {
-  clear: () => void
-  runCommand: (cmd: string) => void
-  getLastCommand: () => string | null
-  pushLines: (lines: TerminalLine[]) => void
-}
+const PROMPT = 'dwijesh@portfolio:~$'
 
 interface Props {
   onNavigate: (id: string) => void
   onLastCommandChange: (cmd: string | null) => void
   onThemeChange?: (theme: string) => void
-}
-
-const PROMPT = 'dwijesh@portfolio:~$'
-
-// ── Help text ─────────────────────────────────────────────────────────────────
-function buildHelpText(): TerminalLine[] {
-  const h = (t: string): TerminalLine => ({ type: 'info', text: t })
-  const o = (t: string): TerminalLine => ({ type: 'output', text: t })
-  return [
-    h(''),
-    h('  PORTFOLIO'),
-    o('  whoami          personal intro'),
-    o('  skills          technical skills by category'),
-    o('  projects        project list  |  projects open <name>'),
-    o('  timeline        career & education timeline'),
-    o('  contact         GitHub · LinkedIn · email'),
-    h(''),
-    h('  SYSTEM'),
-    o('  ls              list workspace files'),
-    o('  open <file>     open file in editor'),
-    o('  cat <file>      alias for open'),
-    o('  architecture    system architecture diagram'),
-    o('  stack           technology stack'),
-    o('  logs            live app log stream'),
-    o('  deploy          simulate CI/CD pipeline'),
-    o('  monitor         live system metrics'),
-    o('  theme [name]    list or apply a color theme'),
-    o('  clear           clear terminal'),
-    h(''),
-    h('  EXTRAS'),
-    o('  neofetch        system info card'),
-      o('  fortune         random dev wisdom'),
-    o('  sudo            nice try'),
-    o('  donut           3D ASCII rotating donut'),
-    o('  dino            chrome dinosaur game'),
-    o('  matrix          enter the matrix'),
-    h(''),
-  ]
-}
-
-// ── Static command runner ─────────────────────────────────────────────────────
-function runCmd(
-  cmd: string,
-  onNavigate: (id: string) => void,
-  onThemeChange?: (theme: string) => void,
-): { lines: TerminalLine[]; clear?: boolean } {
-  const parts = cmd.trim().split(/\s+/)
-  const name = parts[0].toLowerCase()
-  const arg  = parts.slice(1).join(' ')
-  const o = (t: string): TerminalLine => ({ type: 'output',  text: t })
-  const e = (t: string): TerminalLine => ({ type: 'error',   text: t })
-  const i = (t: string): TerminalLine => ({ type: 'info',    text: t })
-  const s = (t: string): TerminalLine => ({ type: 'success', text: t })
-
-  switch (name) {
-    case 'help':
-      return { lines: buildHelpText() }
-
-    case 'ls':
-      return {
-        lines: [
-          o(''),
-          o('  ' + TABS.map(t => t.label).join('   ')),
-          o(''),
-          i(`  ${TABS.length} files`),
-          o(''),
-        ],
-      }
-
-    case 'cat':
-    case 'open': {
-      if (!arg) return { lines: [e(`${name}: missing filename`)] }
-      const tab = TABS.find(t =>
-        t.label.toLowerCase() === arg.toLowerCase() ||
-        t.id.toLowerCase() === arg.toLowerCase()
-      )
-      if (!tab) return { lines: [e(`${name}: ${arg}: No such file`)] }
-      onNavigate(tab.id)
-      return { lines: [i(`Opening ${tab.label}...`)] }
-    }
-
-    case 'whoami':
-      return {
-        lines: [
-          o(''),
-          s(`  ${PERSON.name}`),
-          i(`  ${PERSON.headline}`),
-          o(''),
-          ...ABOUT.split('\n').map(l => o('  ' + l)),
-          o(''),
-          o(`  github    ${PERSON.github}`),
-          o(`  email     ${PERSON.email}`),
-          o(`  status    ${PERSON.available ? '● open to opportunities' : '○ not available'}`),
-          o(''),
-        ],
-      }
-
-    case 'skills': {
-      const lines: TerminalLine[] = [o('')]
-      for (const [cat, vals] of Object.entries(SKILLS)) {
-        lines.push(i(`  ${cat}`))
-        lines.push(o(`    ${(vals as string[]).join('  ·  ')}`))
-      }
-      lines.push(o(''))
-      return { lines }
-    }
-
-    case 'projects': {
-      const sub = parts[1]?.toLowerCase()
-      const projName = parts.slice(2).join(' ')
-      if (sub === 'open' && projName) {
-        const proj = PROJECTS.find(p =>
-          p.id === projName || p.name.toLowerCase().includes(projName.toLowerCase())
-        )
-        if (!proj) return { lines: [e(`projects: "${projName}" not found`)] }
-        return {
-          lines: [
-            o(''),
-            s(`  ${proj.name}`),
-            i(`  ${proj.subtitle}`),
-            o(''),
-            ...proj.description.split('. ').filter(Boolean).map(l => o(`  ${l.trim()}.`)),
-            o(''),
-            o(`  Tags: ${proj.tags.join(' · ')}`),
-            o(''),
-          ],
-        }
-      }
-      return {
-        lines: [
-          o(''),
-          ...PROJECTS.flatMap(p => [
-            s(`  ${p.name}`),
-            i(`    ${p.subtitle}  —  ${p.tags.join(', ')}`),
-            o(''),
-          ]),
-          i('  tip: projects open <name> for full details'),
-          o(''),
-        ],
-      }
-    }
-
-    case 'timeline':
-      return {
-        lines: TIMELINE_LINES.map(l =>
-          l.includes('──') || l.includes('Now') ? i(l) : o(l)
-        ),
-      }
-
-    case 'contact':
-      return {
-        lines: [
-          o(''),
-          o(`  github    ${PERSON.github}`),
-          o(`  linkedin  ${PERSON.linkedin}`),
-          o(`  email     ${PERSON.email}`),
-          o(''),
-        ],
-      }
-
-    case 'architecture':
-      return {
-        lines: ARCHITECTURE_LINES.map(l =>
-          /[┌┐└┘├┤┬┴┼─│]/.test(l) ? i(l) : o(l)
-        ),
-      }
-
-    case 'stack':
-      return { lines: STACK_LINES.map(o) }
-
-    case 'neofetch':
-      return { lines: NEOFETCH.split('\n').map(t => ({ type: 'info' as const, text: t })) }
-
-
-    case 'fortune': {
-      const quote = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
-      return { lines: [o(''), i(`  ${quote}`), o('')] }
-    }
-
-    case 'theme': {
-      if (!arg) {
-        return {
-          lines: [
-            o(''),
-            i('  Available themes:'),
-            ...Object.entries(THEMES).map(([id, label]) => o(`    ${id.padEnd(16)} ${label}`)),
-            o(''),
-            i('  Usage: theme <id>'),
-            o(''),
-          ],
-        }
-      }
-      const id = arg.toLowerCase().replace(/\s+/g, '-')
-      if (!THEMES[id]) return { lines: [e(`theme: "${arg}" not found — run "theme" to list`)] }
-      onThemeChange?.(id)
-      return { lines: [s(`  Theme applied: ${THEMES[id]}`)] }
-    }
-
-    case 'sudo': {
-      const jokes = [
-        'is not in the sudoers file. This incident will be reported.',
-        'command not found (and neither is your permission).',
-        'Error: universe.exe has insufficient permissions.',
-        'Segmentation fault (core dumped).',
-        'nice try.',
-      ]
-      if (arg === 'make me a sandwich') return { lines: [o('  Okay.')] }
-      return {
-        lines: [
-          i(`  [sudo] password for ${PERSON.name.split(' ')[0].toLowerCase()}:`),
-          e(`  ${PERSON.name.split(' ')[0]} ${jokes[Math.floor(Math.random() * jokes.length)]}`),
-        ],
-      }
-    }
-
-    case 'clear':
-      return { lines: [], clear: true }
-
-    case '':
-      return { lines: [] }
-
-    default:
-      return { lines: [e(`bash: ${name}: command not found  —  type 'help' for commands`)] }
-  }
-}
-
-// ── Monitor helpers ───────────────────────────────────────────────────────────
-function bar(pct: number, w = 20): string {
-  const f = Math.round(Math.min(100, Math.max(0, pct)) / 100 * w)
-  return '█'.repeat(f) + '░'.repeat(w - f)
-}
-function fmtTime(s: number): string {
-  const h = Math.floor(s / 3600).toString().padStart(2, '0')
-  const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0')
-  const sec = (s % 60).toString().padStart(2, '0')
-  return `${h}:${m}:${sec}`
-}
-function buildMonitorFrame(cpu: number, mem: number, net: number, uptime: number, fps: number): string {
-  const p = (n: number) => String(n).padStart(3)
-  return [
-    '  ┌─────────────────────────────────────────┐',
-    '  │  SYSTEM MONITOR           Ctrl+C to exit│',
-    '  ├─────────────────────────────────────────┤',
-    `  │  CPU      [${bar(cpu)}]  ${p(cpu)}%    │`,
-    `  │  Memory   [${bar(mem)}]  ${p(mem)}%    │`,
-    `  │  Network  [${bar(net)}]  ${p(net)} r/s │`,
-    '  ├─────────────────────────────────────────┤',
-    `  │  Uptime   ${fmtTime(uptime).padEnd(31)}│`,
-    `  │  FPS      ${String(fps).padEnd(31)}│`,
-    `  │  AI       claude-sonnet-4-6              │`,
-    '  ├─────────────────────────────────────────┤',
-    '  │  ● monaco    ● terminal   ● diagnostics │',
-    '  │  ● sidebar   ● copilot    ● status-bar  │',
-    '  └─────────────────────────────────────────┘',
-  ].join('\n')
-}
-
-// ── Streaming log factories ───────────────────────────────────────────────────
-type StreamEntry = { type: TerminalLine['type']; text: string; delay: number }
-
-function makeLogs(): StreamEntry[] {
-  const ts = (ms: number) => new Date(Date.now() + ms).toISOString().replace('T', ' ').slice(0, 19)
-  return [
-    { type: 'info',    text: `  [${ts(0)}]    INFO   renderer     Monaco editor mounted`,            delay: 0   },
-    { type: 'info',    text: `  [${ts(100)}]  INFO   tabs         Loaded 6 default files`,           delay: 150 },
-    { type: 'info',    text: `  [${ts(250)}]  INFO   api          git-status fetched (main · 47)`,   delay: 200 },
-    { type: 'info',    text: `  [${ts(400)}]  INFO   copilot      AI panel initialized`,             delay: 150 },
-    { type: 'warning', text: `  [${ts(600)}]  WARN   ai.context   Attachment truncated to 2500c`,    delay: 300 },
-    { type: 'info',    text: `  [${ts(700)}]  INFO   api.chat     Stream started — claude-sonnet-4-6`, delay: 200 },
-    { type: 'info',    text: `  [${ts(1200)}] INFO   api.chat     Stream done — 847 tokens, 1.2s`,   delay: 500 },
-    { type: 'info',    text: `  [${ts(1400)}] INFO   terminal     Command: neofetch`,                delay: 200 },
-    { type: 'info',    text: `  [${ts(1600)}] DEBUG  diagnostics  Scanned 2 files, 0 errors`,        delay: 200 },
-    { type: 'success', text: `  [${ts(1800)}] INFO   deploy       Build OK — 21.4s`,                 delay: 200 },
-  ]
-}
-
-function makeDeployLogs(): StreamEntry[] {
-  return [
-    { type: 'info',    text: '  $ vercel deploy --prod',                                            delay: 0   },
-    { type: 'output',  text: '',                                                                    delay: 200 },
-    { type: 'info',    text: '  ◆  Inspecting code...',                                            delay: 300 },
-    { type: 'success', text: '  ✓  Code inspection passed',                                        delay: 600 },
-    { type: 'output',  text: '',                                                                    delay: 100 },
-    { type: 'info',    text: '  ◆  Installing dependencies...',                                    delay: 200 },
-    { type: 'output',  text: '     ▸ next@15.3.1  ▸ react@19.1.0',                                delay: 400 },
-    { type: 'output',  text: '     ▸ @monaco-editor/react@4.7.0  ▸ tailwindcss@4.1.4',            delay: 300 },
-    { type: 'success', text: '  ✓  Dependencies installed  [4.2s]',                               delay: 400 },
-    { type: 'output',  text: '',                                                                    delay: 100 },
-    { type: 'info',    text: '  ◆  Building...',                                                   delay: 200 },
-    { type: 'output',  text: '     Compiling TypeScript...',                                       delay: 300 },
-    { type: 'success', text: '  ✓  Compiled successfully',                                         delay: 800 },
-    { type: 'output',  text: '     Generating static pages (8/8)...',                             delay: 300 },
-    { type: 'success', text: '  ✓  Build complete  [12.3s]',                                      delay: 600 },
-    { type: 'output',  text: '',                                                                    delay: 100 },
-    { type: 'info',    text: '  ◆  Deploying to Vercel...',                                        delay: 200 },
-    { type: 'success', text: '  ✓  Edge functions deployed',                                       delay: 800 },
-    { type: 'success', text: '  ✓  Static assets uploaded (847 files)',                            delay: 500 },
-    { type: 'success', text: '  ✓  DNS assigned',                                                 delay: 300 },
-    { type: 'output',  text: '',                                                                    delay: 200 },
-    { type: 'success', text: '  🚀 https://dwijesh.dev',                                           delay: 400 },
-    { type: 'output',  text: '',                                                                    delay: 100 },
-    { type: 'info',    text: '     Commit: 1c54020 — feat: terminal commands, dino, matrix',      delay: 100 },
-    { type: 'info',    text: '     Duration: 21.4s',                                               delay: 100 },
-    { type: 'output',  text: '',                                                                    delay: 0   },
-  ]
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -487,7 +48,7 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
     { type: 'info', text: `  Welcome to Dwijesh's portfolio terminal. Type 'help' for commands.` },
     { type: 'output', text: '' },
   ])
-  const [input, setInput]   = useState('')
+  const [input, setInput]     = useState('')
   const [history, setHistory] = useState<string[]>([])
   const [histIdx, setHistIdx] = useState(-1)
 
@@ -498,13 +59,11 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
   const [monitorActive, setMonitorActive] = useState(false)
   const [monitorFrame,  setMonitorFrame]  = useState('')
 
-  const donutA       = useRef(1)
-  const donutB       = useRef(1)
-  const dinoCanvas   = useRef<HTMLCanvasElement>(null)
-  const matrixCanvas = useRef<HTMLCanvasElement>(null)
-  const startTime    = useRef(Date.now())
-  const bottomRef  = useRef<HTMLDivElement>(null)
-  const inputRef   = useRef<HTMLInputElement>(null)
+  const donutA    = useRef(1)
+  const donutB    = useRef(1)
+  const startTime = useRef(Date.now())
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef  = useRef<HTMLInputElement>(null)
 
   // ── Donut ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -515,292 +74,6 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
     }, 50)
     return () => clearInterval(id)
   }, [donutActive])
-
-  // ── Dino (Wikimedia sprites, white on transparent/dark terminal bg) ──
-  useEffect(() => {
-    if (!dinoActive) return
-    const canvas = dinoCanvas.current
-    if (!canvas) return
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const cv = canvas as NonNullable<typeof canvas>
-    const ctx = cv.getContext('2d')!
-
-    const LH = 150, GY = 127, DX = 80, DW = 44, DH = 43
-    const S  = () => cv.height / LH
-    const LW = () => cv.width  / S()
-    const p  = (n: number) => n * S()
-
-    function resize() {
-      cv.width  = cv.clientWidth  || cv.offsetWidth
-      cv.height = cv.clientHeight || cv.offsetHeight
-    }
-    resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(cv)
-
-    const mkImg = (src: string) => { const i = new Image(); i.src = src; return i }
-    const imgRun1  = mkImg('/dino/trex-run1.webp')   // 88×85 VP8X (Wikimedia CC)
-    const imgRun2  = mkImg('/dino/trex-run2.webp')   // 88×85
-    const imgDead  = mkImg('/dino/trex-dead.webp')   // 88×85
-    const imgDuck  = mkImg('/dino/trex-duck1.webp')  // 118×85
-    const imgCSm   = mkImg('/dino/cactus-small.webp')
-    const imgCLg   = mkImg('/dino/cactus-large.webp')
-    const imgCloud = mkImg('/dino/cloud.png')
-
-    // Recolor: tint any transparent-bg sprite to white
-    const tintCache = new Map<HTMLImageElement, HTMLCanvasElement>()
-    function getTinted(img: HTMLImageElement): HTMLCanvasElement | null {
-      if (!img.complete || !img.naturalWidth) return null
-      if (!tintCache.has(img)) {
-        const off = document.createElement('canvas')
-        off.width = img.naturalWidth; off.height = img.naturalHeight
-        const c = off.getContext('2d')!
-        c.drawImage(img, 0, 0)
-        c.globalCompositeOperation = 'source-in'
-        c.fillStyle = 'rgba(255,255,255,0.92)'
-        c.fillRect(0, 0, off.width, off.height)
-        tintCache.set(img, off)
-      }
-      return tintCache.get(img)!
-    }
-
-    function drawSprite(img: HTMLImageElement, lx: number, ly: number, lw: number, lh: number): boolean {
-      const t = getTinted(img)
-      if (!t) return false
-      ctx.drawImage(t, 0, 0, t.width, t.height, p(lx), p(ly), p(lw), p(lh))
-      return true
-    }
-
-    const WHT = 'rgba(255,255,255,0.9)'
-    function drawPtero(lx: number, ly: number, wingsUp: boolean) {
-      ctx.fillStyle = WHT
-      ctx.fillRect(p(lx+4),  p(ly+12), p(26), p(10))
-      ctx.fillRect(p(lx+22), p(ly+9),  p(10), p(6))
-      ctx.fillRect(p(lx+30), p(ly+11), p(5),  p(3))
-      ctx.fillRect(p(lx+8),  p(ly+20), p(3),  p(8))
-      ctx.fillRect(p(lx+14), p(ly+20), p(3),  p(8))
-      if (wingsUp) {
-        ctx.fillRect(p(lx),    p(ly),    p(28), p(6))
-        ctx.fillRect(p(lx+2),  p(ly+4),  p(6),  p(5))
-        ctx.fillRect(p(lx+10), p(ly+6),  p(16), p(6))
-      } else {
-        ctx.fillRect(p(lx+2),  p(ly+20), p(24), p(6))
-        ctx.fillRect(p(lx+10), p(ly+24), p(14), p(6))
-      }
-    }
-
-    let started = false, over = false
-    let dy = GY - DH, vy = 0, grounded = true, ducking = false
-    let speed = 6, score = 0, hi = 0, tick = 0
-    let nextObs = 60 + Math.random() * 60, horizX = 0
-    type Obs = { x: number; w: number; h: number; type: 'S'|'L'|'P'; py?: number }
-    let obs: Obs[] = []
-    let clouds = [{ x: 100, y: 20 }, { x: 280, y: 13 }, { x: 460, y: 28 }]
-
-    function jump() {
-      if (!started) { started = true; return }
-      if (over)     { doRestart(); return }
-      if (grounded) { vy = -8; grounded = false; ducking = false }
-    }
-    function doRestart() {
-      dy = GY - DH; vy = 0; grounded = true; ducking = false
-      speed = 6; score = 0; tick = 0; nextObs = 60 + Math.random() * 60
-      over = false; started = true; horizX = 0; obs = []
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === ' ' || e.key === 'ArrowUp')  { e.preventDefault(); jump() }
-      if (e.key === 'ArrowDown') { e.preventDefault(); if (started && !over && grounded) ducking = true }
-    }
-    function onKeyUp(e: KeyboardEvent) { if (e.key === 'ArrowDown') ducking = false }
-    function onTouch(e: TouchEvent)    { e.preventDefault(); jump() }
-    window.addEventListener('keydown', onKey)
-    window.addEventListener('keyup',   onKeyUp)
-    cv.addEventListener('touchstart', onTouch, { passive: false })
-
-    let raf: number
-    function loop() {
-      const lw = LW()
-
-      if (started && !over) {
-        tick++
-        vy += 0.55; dy += vy
-        if (dy >= GY - DH) { dy = GY - DH; vy = 0; grounded = true }
-        speed = 6 + Math.floor(score / 200) * 0.5
-        score++; horizX += speed
-        for (const c of clouds) {
-          c.x -= speed * 0.3
-          if (c.x + 46 < 0) { c.x = lw + Math.random() * 80; c.y = 8 + Math.random() * 22 }
-        }
-        if (--nextObs <= 0) {
-          const usePtero = score > 4000 && Math.random() < 0.25
-          if (usePtero) {
-            const yOpts = [GY - 45, GY - 67, GY - 87]
-            obs.push({ x: lw + 10, w: 42, h: 30, type: 'P',
-                       py: yOpts[Math.floor(Math.random() * yOpts.length)] })
-          } else {
-            obs.push(Math.random() < 0.45
-              ? { x: lw + 10, w: 46, h: 46, type: 'L' }
-              : { x: lw + 10, w: 17, h: 35, type: 'S' })
-          }
-          nextObs = Math.floor(60 + Math.random() * 80)
-        }
-        obs = obs.filter(o => { o.x -= speed; return o.x + o.w > -10 })
-        const dinoTop = ducking ? GY - DH * 0.55 : dy
-        const dinoH   = ducking ? DH * 0.55       : DH
-        const PAD = 5
-        for (const o of obs) {
-          const oTop = o.type === 'P' ? o.py! : GY - o.h
-          if (DX + DW - PAD > o.x + PAD && DX + PAD < o.x + o.w - PAD &&
-              dinoTop + PAD < oTop + o.h - PAD && dinoTop + dinoH - PAD > oTop + PAD) {
-            over = true; if (score > hi) hi = score
-          }
-        }
-      } else if (!started) { tick++ }
-
-      // Transparent bg — terminal dark background shows through
-      ctx.clearRect(0, 0, cv.width, cv.height)
-
-      // Clouds
-      for (const c of clouds) {
-        drawSprite(imgCloud, c.x, c.y, 46, 14)
-      }
-
-      // Ground line + scrolling dots
-      ctx.fillStyle = 'rgba(255,255,255,0.35)'
-      ctx.fillRect(0, p(GY), cv.width, p(1.5))
-      ctx.fillStyle = 'rgba(255,255,255,0.18)'
-      for (let dx2 = (horizX % 16); dx2 < lw; dx2 += 16) {
-        ctx.fillRect(p(dx2),     p(GY + 3), p(3), p(1))
-        ctx.fillRect(p(dx2 + 9), p(GY + 5), p(2), p(1))
-      }
-
-      // Obstacles
-      for (const o of obs) {
-        if (o.type === 'S') {
-          drawSprite(imgCSm, o.x, GY - o.h, o.w, o.h)
-        } else if (o.type === 'L') {
-          drawSprite(imgCLg, o.x, GY - o.h, o.w, o.h)
-        } else {
-          drawPtero(o.x, o.py!, Math.floor(tick / 8) % 2 === 0)
-        }
-      }
-
-      // T-Rex
-      const runF     = Math.floor(tick / 6) % 2
-      const dinoY    = ducking && started ? GY - DH * 0.55 : dy
-      const isDucking = ducking && started && !over
-      if (isDucking) {
-        drawSprite(imgDuck, DX, dinoY, 59, DH)
-      } else if (over) {
-        drawSprite(imgDead, DX, dinoY, DW, DH)
-      } else {
-        drawSprite(runF === 0 ? imgRun1 : imgRun2, DX, dinoY, DW, DH)
-      }
-
-      // Score
-      ctx.fillStyle = 'rgba(255,255,255,0.55)'
-      ctx.font = `bold ${p(12)}px 'Courier New', monospace`
-      ctx.textAlign = 'right'
-      ctx.fillText(
-        `HI ${String(Math.floor(hi / 5)).padStart(5,'0')}  ${String(Math.floor(score / 5)).padStart(5,'0')}`,
-        cv.width - p(8), p(18)
-      )
-
-      if (!started) {
-        ctx.fillStyle = 'rgba(255,255,255,0.7)'
-        ctx.font = `bold ${p(11)}px 'Courier New', monospace`
-        ctx.textAlign = 'center'
-        ctx.fillText('Press SPACE or ↑ to start', cv.width / 2, p(GY - 30))
-      }
-      if (over) {
-        ctx.fillStyle = 'rgba(255,255,255,0.85)'
-        ctx.font = `bold ${p(13)}px 'Courier New', monospace`
-        ctx.textAlign = 'center'
-        ctx.fillText('G A M E  O V E R', cv.width / 2, p(GY / 2 - 5))
-        ctx.font = `${p(9)}px 'Courier New', monospace`
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
-        ctx.fillText('SPACE to restart  ·  Ctrl+C to exit', cv.width / 2, p(GY / 2 + 12))
-      }
-
-      raf = requestAnimationFrame(loop)
-    }
-
-    const allImgs = [imgRun1, imgRun2, imgDead, imgDuck, imgCSm, imgCLg, imgCloud]
-    Promise.all(allImgs.map(img =>
-      img.complete ? Promise.resolve() : new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res() })
-    )).then(() => { raf = requestAnimationFrame(loop) })
-
-    return () => {
-      cancelAnimationFrame(raf)
-      ro.disconnect()
-      window.removeEventListener('keydown', onKey)
-      window.removeEventListener('keyup',   onKeyUp)
-      cv.removeEventListener('touchstart', onTouch)
-    }
-  }, [dinoActive])
-
-
-  // ── Matrix ────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!matrixActive) return
-    const canvas = matrixCanvas.current
-    if (!canvas) return
-    const cv  = canvas as NonNullable<typeof canvas>
-    const ctx = cv.getContext('2d')!
-
-    const FS    = 14
-    const CHARS = 'ｦｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789'
-
-    let cols = 0
-    let drops: number[] = []
-    let bgR = 30, bgG = 30, bgB = 30
-
-    function resize() {
-      cv.width  = cv.offsetWidth  || cv.clientWidth
-      cv.height = cv.offsetHeight || cv.clientHeight
-      const rgb = getComputedStyle(cv.parentElement!).backgroundColor.match(/\d+/g)?.map(Number) ?? [30, 30, 30]
-      bgR = rgb[0]; bgG = rgb[1]; bgB = rgb[2]
-      const newCols = Math.floor(cv.width / FS)
-      if (newCols !== cols) {
-        cols = newCols
-        drops = Array.from({ length: cols }, (_, i) => -Math.floor(Math.random() * 30 + i % 10))
-      }
-      ctx.fillStyle = `rgb(${bgR},${bgG},${bgB})`
-      ctx.fillRect(0, 0, cv.width, cv.height)
-    }
-    resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(cv)
-
-    const randChar = () => CHARS[Math.floor(Math.random() * CHARS.length)]
-
-    let raf: number
-    let last = 0
-    function draw(ts: number) {
-      raf = requestAnimationFrame(draw)
-      if (ts - last < 40) return
-      last = ts
-
-      ctx.fillStyle = `rgba(${bgR},${bgG},${bgB},0.07)`
-      ctx.fillRect(0, 0, cv.width, cv.height)
-      ctx.font = `bold ${FS}px monospace`
-      ctx.textAlign = 'left'
-
-      for (let i = 0; i < cols; i++) {
-        const py = drops[i] * FS
-        if (py >= 0 && py < cv.height) {
-          ctx.fillStyle = 'rgba(210,255,210,0.98)'
-          ctx.fillText(randChar(), i * FS, py)
-        }
-        drops[i]++
-        if (drops[i] * FS > cv.height && Math.random() > 0.975)
-          drops[i] = -Math.floor(Math.random() * 25)
-      }
-    }
-    raf = requestAnimationFrame(draw)
-
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [matrixActive])
 
   // ── Monitor ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -852,8 +125,8 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
   }
 
   function execute(cmd: string) {
-    const trimmed = cmd.trim()
-    const nameLow = trimmed.split(/\s+/)[0].toLowerCase()
+    const trimmed  = cmd.trim()
+    const nameLow  = trimmed.split(/\s+/)[0].toLowerCase()
     const inputLine: TerminalLine = { type: 'input', text: `${PROMPT} ${trimmed}` }
 
     if (nameLow === 'donut') {
@@ -879,7 +152,13 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       setLines(prev => [...prev, inputLine]); streamLines(makeDeployLogs()); record(trimmed); return
     }
 
-    const { lines: newLines, clear } = runCmd(trimmed, onNavigate, onThemeChange)
+    const ctx = {
+      theme: '',
+      setTheme: (t: string) => onThemeChange?.(t),
+      workspaceFiles: [],
+      onNavigate,
+    }
+    const { lines: newLines, clear } = dispatch(trimmed, ctx)
     if (clear) setLines([])
     else setLines(prev => [...prev, inputLine, ...newLines])
     if (trimmed) record(trimmed)
@@ -888,16 +167,12 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
   function submit() { execute(input); setInput('') }
 
   function onKeyDown(e: React.KeyboardEvent) {
-    if (donutActive)  {
+    if (donutActive) {
       if ((e.ctrlKey && e.key === 'c') || e.key === 'Escape') { e.preventDefault(); stopMode(setDonutActive) }
       return
     }
-    if (dinoActive)   {
-      if ((e.ctrlKey && e.key === 'c') || e.key === 'Escape') { e.preventDefault(); stopMode(setDinoActive) }
-      return
-    }
-    if (matrixActive) { stopMode(setMatrixActive); return }
-    if (monitorActive){
+    if (dinoActive || matrixActive) return
+    if (monitorActive) {
       if ((e.ctrlKey && e.key === 'c') || e.key === 'Escape') { e.preventDefault(); stopMode(setMonitorActive) }
       return
     }
@@ -917,15 +192,8 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       className="flex flex-col h-full bg-vsc-bg font-mono text-sm cursor-text"
       onClick={() => inputRef.current?.focus()}
     >
-      {dinoActive && <canvas ref={dinoCanvas} className="flex-1 w-full" />}
-      {matrixActive && (
-        <div className="flex-1 relative overflow-hidden">
-          <canvas ref={matrixCanvas} className="w-full h-full" />
-          <div className="absolute bottom-2 left-0 right-0 text-center text-[10px] text-green-400/40 pointer-events-none select-none">
-            press any key to exit
-          </div>
-        </div>
-      )}
+      {dinoActive && <DinoGame onStop={() => stopMode(setDinoActive)} />}
+      {matrixActive && <MatrixEffect onStop={() => stopMode(setMatrixActive)} />}
       <div className={`flex-1 overflow-auto panel-scroll px-4 py-2 space-y-0.5 ${dinoActive || matrixActive ? 'hidden' : ''}`}>
         {donutActive ? (
           <div className="flex flex-col items-center justify-center h-full">
