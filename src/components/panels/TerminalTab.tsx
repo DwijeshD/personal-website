@@ -241,7 +241,7 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
                 } ${l.type === 'success' ? 'text-green-400'   : ''
                 } ${l.type === 'warning' ? 'text-yellow-400'  : ''}`}>
                   {l.prompt && <span className="text-vsc-fn shrink-0 select-none">{l.prompt}</span>}
-                  <span className="whitespace-pre-wrap break-all">{l.text}</span>
+                  <span className="whitespace-pre overflow-hidden">{l.text}</span>
                 </div>
               )
             }}
