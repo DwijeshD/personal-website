@@ -3,7 +3,7 @@
 
 import { stripTs } from './stripTypeScript'
 
-const DARK_BASE = `*{box-sizing:border-box}body{margin:0;font-family:'Consolas',Consolas,monospace;background:#1e1e1e;color:#d4d4d4;font-size:13px;line-height:1.6;}`
+const DARK_BASE = `*{box-sizing:border-box}body{margin:0;font-family:'Consolas',Consolas,monospace;background:#1e1e1e;color:#d4d4d4;font-size:13px;line-height:1.6;}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#424242;border-radius:2px}::-webkit-scrollbar-thumb:hover{background:#555}`
 
 function jsDoc(code: string): string {
   const safe = code.replace(/<\/script>/gi, '<\\/script>')
