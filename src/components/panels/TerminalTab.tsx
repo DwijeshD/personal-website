@@ -1,6 +1,7 @@
 'use client'
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import { dispatch } from '@/features/terminal/commands'
 import { makeLogs, makeDeployLogs, buildMonitorFrame, type StreamEntry } from '@/features/terminal/monitor'
 import DinoGame from '@/features/terminal/components/DinoGame'
@@ -62,8 +63,19 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
   const donutA    = useRef(1)
   const donutB    = useRef(1)
   const startTime = useRef(Date.now())
-  const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
+
+  const listRef          = useRef<FixedSizeList>(null)
+  const [listHeight, setListHeight] = useState(400)
+  const listContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = listContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setListHeight(entry.contentRect.height))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // ── Donut ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -93,8 +105,8 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
   }, [monitorActive])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [lines])
+    listRef.current?.scrollToItem(lines.length - 1, 'end')
+  }, [lines.length])
 
   useImperativeHandle(ref, () => ({
     clear: () => setLines([]),
@@ -195,10 +207,12 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       className="flex flex-col h-full bg-vsc-bg font-mono text-sm cursor-text"
       onClick={() => inputRef.current?.focus()}
     >
-      {dinoActive && <DinoGame onStop={stopDino} />}
-      {matrixActive && <MatrixEffect onStop={stopMatrix} />}
-      <div className={`flex-1 overflow-auto panel-scroll px-4 py-2 space-y-0.5 ${dinoActive || matrixActive ? 'hidden' : ''}`}>
-        {donutActive ? (
+      <div ref={listContainerRef} className="flex-1 overflow-hidden">
+        {dinoActive ? (
+          <DinoGame onStop={stopDino} />
+        ) : matrixActive ? (
+          <MatrixEffect onStop={stopMatrix} />
+        ) : donutActive ? (
           <div className="flex flex-col items-center justify-center h-full">
             <pre className="text-vsc-fn text-[9px] leading-[1.15] font-mono select-none">{donutFrame}</pre>
             <div className="text-vsc-muted text-[10px] mt-2">Ctrl+C or Esc to stop</div>
@@ -208,24 +222,30 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
             <pre className="text-vsc-fn text-[11px] leading-[1.6] font-mono select-none">{monitorFrame}</pre>
           </div>
         ) : (
-          <>
-            {lines.map((l, i) => (
-              <div
-                key={i}
-                className={`leading-5 whitespace-pre-wrap break-all
-                  ${l.type === 'input'   ? 'text-vsc-fn'      : ''}
-                  ${l.type === 'output'  ? 'text-vsc-text/90' : ''}
-                  ${l.type === 'error'   ? 'text-red-400'     : ''}
-                  ${l.type === 'info'    ? 'text-vsc-comment'  : ''}
-                  ${l.type === 'success' ? 'text-green-400'   : ''}
-                  ${l.type === 'warning' ? 'text-yellow-400'  : ''}
-                `}
-              >
-                {l.text}
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </>
+          <FixedSizeList
+            ref={listRef}
+            height={listHeight}
+            width="100%"
+            itemCount={lines.length}
+            itemSize={20}
+            className="panel-scroll"
+          >
+            {({ index, style }: ListChildComponentProps) => {
+              const l = lines[index]
+              return (
+                <div style={style} className={`px-2 flex items-baseline gap-2 font-mono text-[13px] leading-5 ${
+                  l.type === 'input'   ? 'text-vsc-text'    : ''
+                } ${l.type === 'output'  ? 'text-vsc-text/90' : ''
+                } ${l.type === 'error'   ? 'text-red-400'     : ''
+                } ${l.type === 'info'    ? 'text-vsc-comment' : ''
+                } ${l.type === 'success' ? 'text-green-400'   : ''
+                } ${l.type === 'warning' ? 'text-yellow-400'  : ''}`}>
+                  {l.prompt && <span className="text-vsc-fn shrink-0 select-none">{l.prompt}</span>}
+                  <span className="whitespace-pre-wrap break-all">{l.text}</span>
+                </div>
+              )
+            }}
+          </FixedSizeList>
         )}
       </div>
 
