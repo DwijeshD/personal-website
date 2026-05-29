@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AI_SYSTEM_PROMPT } from '@/lib/ai/systemPrompt'
 import { buildContext } from '@/lib/contextBuilder'
 import { checkRateLimit, isVpnOrProxy } from '@/lib/rateLimit'
+import { allowedOrigin } from '@/shared/utils/api/security'
 
 export const runtime = 'edge'
 
@@ -27,17 +28,6 @@ interface FileContext {
 
 function err(msg: string, status: number) {
   return NextResponse.json({ error: msg }, { status })
-}
-
-// Reject cross-origin requests from unknown domains
-function allowedOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get('origin')
-  if (!origin) return true  // same-origin or non-browser (no Origin header)
-  try {
-    const host = req.headers.get('host') ?? ''
-    const { hostname } = new URL(origin)
-    return hostname === 'localhost' || hostname === host.split(':')[0]
-  } catch { return false }
 }
 
 export async function POST(req: NextRequest) {

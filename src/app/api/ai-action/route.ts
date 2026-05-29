@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAiAction } from '@/lib/fileSystem'
 import { isVpnOrProxy } from '@/lib/rateLimit'
+import { allowedOrigin } from '@/shared/utils/api/security'
 
 export const runtime = 'edge'
 
@@ -147,17 +148,6 @@ async function callModel(model: string, userContent: string): Promise<{ ok: bool
 
 function err(msg: string, status: number) {
   return NextResponse.json({ error: msg }, { status })
-}
-
-// ── Origin guard ─────────────────────────────────────────────────────────────
-function allowedOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get('origin')
-  if (!origin) return true
-  try {
-    const host = req.headers.get('host') ?? ''
-    const { hostname } = new URL(origin)
-    return hostname === 'localhost' || hostname === host.split(':')[0]
-  } catch { return false }
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
