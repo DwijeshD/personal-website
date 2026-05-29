@@ -1,8 +1,16 @@
 {
   "permissions": {
+    "defaultMode": "bypassPermissions",
     "allow": [
-      "WebFetch(domain:openrouter.ai)",
-      "PowerShell(*)"
+      "Bash(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "PowerShell(*)",
+      "Agent(*)"
     ]
   }
 }
