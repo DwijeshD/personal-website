@@ -5,135 +5,18 @@ import type { AiFileAction } from '@/lib/fileSystem'
 import { validateAiAction } from '@/lib/fileSystem'
 import { DEFAULT_CONTENT } from '@/lib/defaultContent'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  thinking?: string
-  action?: AiFileAction
-}
-
-const THINKING_WORDS = [
-  'Thinking', 'Reasoning', 'Cogitating', 'Computing',
-  'Pondering', 'Deliberating', 'Ruminating', 'Considering',
-]
-
-function ThinkingIndicator() {
-  const [idx, setIdx] = useState(0)
-  useEffect(() => {
-    const t = setInterval(() => setIdx(i => (i + 1) % THINKING_WORDS.length), 1500)
-    return () => clearInterval(t)
-  }, [])
-  return <span className="text-vsc-muted/50 text-xs italic">{THINKING_WORDS[idx]}&hellip;</span>
-}
-
-function parseThinkBlocks(raw: string): { thinking: string; content: string } {
-  let thinking = ''
-  let content = ''
-  let rest = raw
-
-  while (rest.length > 0) {
-    const start = rest.indexOf('<think>')
-    if (start === -1) { content += rest; break }
-    content += rest.slice(0, start)
-    rest = rest.slice(start + 7)
-    const end = rest.indexOf('</think>')
-    if (end === -1) { thinking += rest; break }
-    thinking += rest.slice(0, end)
-    rest = rest.slice(end + 8)
-  }
-
-  return { thinking: thinking.trimStart(), content: content.trimStart() }
-}
-
-// Render assistant markdown: **bold**, `code`, bullet lists, line breaks
-function formatModel(raw: string): string | null {
-  const model = raw.split('/').pop() ?? raw       // strip provider prefix
-  const clean = model.split(':')[0]               // strip :free/:beta/:nitro etc.
-  if (!clean || clean === 'free') return null
-  return clean
-}
-
-function renderMd(text: string): React.ReactNode {
-  if (!text) return null
-
-  const inline = (s: string, base: number): React.ReactNode[] => {
-    const nodes: React.ReactNode[] = []
-    let rem = s
-    let k = base * 1000
-
-    while (rem.length > 0) {
-      const bi = rem.indexOf('**')
-      const ci = rem.indexOf('`')
-      const first = Math.min(bi < 0 ? Infinity : bi, ci < 0 ? Infinity : ci)
-
-      if (first === Infinity) { nodes.push(rem); break }
-      if (first > 0) nodes.push(rem.slice(0, first))
-
-      if (bi >= 0 && (ci < 0 || bi <= ci)) {
-        const end = rem.indexOf('**', bi + 2)
-        if (end < 0) { nodes.push(rem.slice(bi)); break }
-        nodes.push(
-          <strong key={k++} className="font-semibold text-vsc-text">
-            {rem.slice(bi + 2, end)}
-          </strong>
-        )
-        rem = rem.slice(end + 2)
-      } else {
-        const end = rem.indexOf('`', ci + 1)
-        if (end < 0) { nodes.push(rem.slice(ci)); break }
-        nodes.push(
-          <code key={k++} className="px-1 bg-[#1a1a2e] border border-vsc-border/50 rounded text-[#9cdcfe] text-[11px] font-mono">
-            {rem.slice(ci + 1, end)}
-          </code>
-        )
-        rem = rem.slice(end + 1)
-      }
-    }
-    return nodes
-  }
-
-  const lines = text.split('\n')
-  const out: React.ReactNode[] = []
-
-  lines.forEach((line, i) => {
-    const t = line.trimStart()
-    const isBullet = /^[-•*] /.test(t)
-    const isNumbered = /^\d+\. /.test(t)
-    const isHeading = t.startsWith('### ') || t.startsWith('## ') || t.startsWith('# ')
-
-    if (isHeading) {
-      const content = t.replace(/^#{1,3} /, '')
-      out.push(
-        <div key={i} className="font-semibold text-vsc-text text-[12px] mt-1.5 mb-0.5">
-          {inline(content, i)}
-        </div>
-      )
-    } else if (isBullet) {
-      out.push(
-        <div key={i} className="flex gap-1.5 items-baseline">
-          <span className="text-vsc-accent/60 shrink-0 mt-0.5 text-[10px]">›</span>
-          <span>{inline(t.slice(2), i)}</span>
-        </div>
-      )
-    } else if (isNumbered) {
-      const match = t.match(/^(\d+)\. (.*)/)
-      if (match) {
-        out.push(
-          <div key={i} className="flex gap-1.5 items-baseline">
-            <span className="text-vsc-muted shrink-0 text-[11px] min-w-[14px]">{match[1]}.</span>
-            <span>{inline(match[2], i)}</span>
-          </div>
-        )
-      }
-    } else if (t === '') {
-      if (i > 0 && i < lines.length - 1) out.push(<div key={i} className="h-1.5" />)
-    } else {
-      out.push(<div key={i}>{inline(line, i)}</div>)
-    }
-  })
-
-  return <div className="space-y-0.5">{out}</div>
-}
+import type { Message, LogEntry, IssueState } from '@/features/copilot/types'
+import { parseThinkBlocks } from '@/features/copilot/lib/parseThinkBlocks'
+import { detectIntent, BUG_KEYWORDS } from '@/features/copilot/lib/detectIntent'
+import { formatModel } from '@/features/copilot/lib/formatModel'
+import { fetchFullResponse, PREFETCH_QUERIES } from '@/features/copilot/lib/fetchChat'
+import { useStreamingDisplay } from '@/features/copilot/hooks/useStreamingDisplay'
+import { usePrefetchCache } from '@/features/copilot/hooks/usePrefetchCache'
+import { ThinkingIndicator } from '@/features/copilot/components/ThinkingIndicator'
+import { CopilotIcon } from '@/features/copilot/components/CopilotIcon'
+import { LogsView } from '@/features/copilot/components/LogsView'
+import { BugReportWidget } from '@/features/copilot/components/BugReportWidget'
+import { CopilotMarkdown } from '@/features/copilot/components/CopilotMarkdown'
 
 interface Props {
   onThinkingChange:  (v: boolean) => void
@@ -167,79 +50,6 @@ function attachedFiles(
     .slice(0, 5)
 }
 
-function CopilotIcon({ size = 48, muted = false }: { size?: number; muted?: boolean }) {
-  return (
-    <img
-      src="/vscode-copilot.png"
-      width={size}
-      height={size}
-      alt="Copilot"
-      style={{
-        filter: `invert(1) ${muted ? 'brightness(0.5)' : 'brightness(1)'}`,
-        mixBlendMode: 'screen',
-        display: 'block',
-      }}
-    />
-  )
-}
-
-function detectIntent(text: string): 'action' | 'chat' {
-  const lower = text.toLowerCase()
-  const verbs = ['create', 'make', 'add', 'write', 'generate', 'update', 'edit', 'modify',
-                 'change', 'delete', 'remove', 'rename', 'move', 'rewrite', 'refactor']
-  const fileKeys = ['file', 'folder', 'directory', 'component', 'page', 'readme',
-                    '.tsx', '.ts', '.js', '.jsx', '.css', '.json', '.md', '.html']
-  return verbs.some(v => lower.includes(v)) && fileKeys.some(k => lower.includes(k))
-    ? 'action' : 'chat'
-}
-
-const SUGGESTED = [
-  { label: 'What has he built?',     query: 'What projects has Dwijesh built and what problems do they solve?' },
-  { label: 'Tech stack',             query: "What is Dwijesh's full tech stack and what systems has he worked on?" },
-  { label: 'rPPG dissertation',      query: 'Tell me about the rPPG heart rate prediction dissertation.' },
-  { label: 'Open to work?',          query: 'Is Dwijesh open to new roles? What kind of work is he looking for?' },
-]
-
-// All queries worth pre-fetching (suggested + quick prompts, deduplicated)
-const PREFETCH_QUERIES = [
-  ...SUGGESTED.map(s => s.query),
-  "What is Dwijesh's full tech stack and the systems he's built?",
-  "What are Dwijesh's main projects and what makes them technically interesting?",
-  "What kind of work is Dwijesh looking for and how can I contact him?",
-].filter((q, i, a) => a.indexOf(q) === i)
-
-async function fetchFullResponse(query: string): Promise<{ text: string; remaining: number | null }> {
-  const res = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Prefetch': '1' },
-    body: JSON.stringify({ messages: [{ role: 'user', content: query }] }),
-  })
-  if (!res.ok) throw new Error('prefetch failed')
-
-  const remaining = res.headers.get('X-RateLimit-Remaining')
-  const reader  = res.body!.getReader()
-  const decoder = new TextDecoder()
-  let buffer = '', accumulated = ''
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() ?? ''
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue
-      const data = line.slice(6).trim()
-      if (data === '[DONE]') break
-      try {
-        const delta = JSON.parse(data).choices?.[0]?.delta?.content
-        if (delta) accumulated += delta
-      } catch { /* skip */ }
-    }
-  }
-  return { text: accumulated, remaining: remaining !== null ? Number(remaining) : null }
-}
-
 // Re-trigger the CSS animation on the same DOM node without remounting.
 // Key-based remounting causes a visible flash; this approach doesn't.
 function StreamingBubble({
@@ -252,71 +62,12 @@ function StreamingBubble({
   busy: boolean
 }) {
   if (!content) return busy ? <ThinkingIndicator /> : null
-  // During streaming: plain text to avoid renderMd reconciliation flicker.
+  // During streaming: plain text to avoid markdown reconciliation flicker.
   // After streaming: full markdown render.
   if (isStreaming) {
     return <span className="whitespace-pre-wrap">{content}</span>
   }
-  return <>{renderMd(content)}</>
-}
-
-const BUG_KEYWORDS = /\b(bug|broken|error|issue|problem|crash|wrong|not work|doesn't work|doesn't load|fail|glitch|weird|strange|incorrect|missing|stuck)\b/i
-
-type IssueState = { status: 'idle' } | { status: 'form'; title: string; desc: string } | { status: 'submitting' } | { status: 'done'; number: number } | { status: 'error'; msg: string }
-
-interface LogEntry {
-  ts: number
-  level: 'info' | 'warn' | 'error'
-  tag: string
-  msg: string
-}
-
-function LogsView({ logs, onClear }: { logs: LogEntry[]; onClear: () => void }) {
-  const bottomRef = useRef<HTMLDivElement>(null)
-  useEffect(() => { bottomRef.current?.scrollIntoView() }, [logs.length])
-
-  if (logs.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-vsc-muted text-[11px] gap-2">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-40">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <span className="opacity-50">No logs — send a message to start</span>
-      </div>
-    )
-  }
-
-  const startTs = logs[0].ts
-
-  return (
-    <div className="h-full overflow-y-auto panel-scroll font-mono text-[11px]">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-vsc-border/30 sticky top-0 bg-[#181818]">
-        <span className="text-vsc-muted/50">{logs.length} entries</span>
-        <button onClick={onClear} className="text-vsc-muted/40 hover:text-vsc-muted transition-colors text-[10px]">Clear</button>
-      </div>
-      <div className="p-3 space-y-0.5">
-        {logs.map((l, i) => (
-          <div key={i} className="flex gap-2 leading-5 items-baseline">
-            <span className="text-vsc-muted/40 shrink-0 tabular-nums">
-              +{((l.ts - startTs) / 1000).toFixed(2)}s
-            </span>
-            <span className={`shrink-0 font-semibold min-w-[80px] ${
-              l.level === 'error' ? 'text-red-400' :
-              l.level === 'warn'  ? 'text-yellow-400' :
-              'text-[#4ec9b0]/70'
-            }`}>
-              [{l.tag}]
-            </span>
-            <span className="text-vsc-text/75 break-all">{l.msg}</span>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
-    </div>
-  )
+  return <CopilotMarkdown content={content} />
 }
 
 export default function CopilotPanel({ onThinkingChange, onClose, onPendingAction, workspaceFiles = [], fileContents = {}, triggerBugReport }: Props) {
@@ -337,13 +88,15 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   )
   const bottomRef      = useRef<HTMLDivElement>(null)
   const inputRef       = useRef<HTMLTextAreaElement>(null)
-  const rawAccum       = useRef('')
-  const displayIdx     = useRef(0)
-  const networkDone    = useRef(false)
   const abortRef       = useRef<AbortController | null>(null)
-  const prefetchCache  = useRef<Map<string, string>>(new Map())
-  const activeModelRef      = useRef<string | null>(null)
-  const pendingChatAction   = useRef<AiFileAction | null>(null)
+  const activeModelRef = useRef<string | null>(null)
+
+  const { rawAccum, displayIdx, networkDone, pendingChatAction } = useStreamingDisplay(
+    streaming,
+    setStreaming,
+    setMessages,
+  )
+  const prefetchCache = usePrefetchCache(setMsgsLeft)
 
   // Open bug report form when triggered externally (e.g. Help > Report a Bug)
   useEffect(() => {
@@ -352,65 +105,6 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     setPendingBugMsg('__direct_report__')
     setIssueState({ status: 'form', title: '', desc: '' })
   }, [triggerBugReport])
-
-  // Drain accumulated text at a fixed rate for smooth, uniform display
-  const CHARS_PER_TICK = 2   // characters revealed per tick
-  const TICK_MS        = 45  // tick interval → ~44 chars/sec
-
-  useEffect(() => {
-    if (!streaming) return
-    const id = setInterval(() => {
-      const total = rawAccum.current.length
-      if (displayIdx.current < total) {
-        displayIdx.current = Math.min(displayIdx.current + CHARS_PER_TICK, total)
-        const slice = rawAccum.current.slice(0, displayIdx.current)
-        const { thinking, content } = parseThinkBlocks(slice)
-        setMessages(m => {
-          const c = [...m]
-          if (c.length === 0) return c
-          c[c.length - 1] = { role: 'assistant', content, thinking }
-          return c
-        })
-      } else if (networkDone.current) {
-        if (pendingChatAction.current) {
-          const action = pendingChatAction.current
-          pendingChatAction.current = null
-          setMessages(m => {
-            const c = [...m]
-            if (c.length > 0) c[c.length - 1] = { ...c[c.length - 1], action }
-            return c
-          })
-        }
-        setStreaming(false)
-      }
-    }, TICK_MS)
-    return () => clearInterval(id)
-  }, [streaming])
-
-  function pushLog(level: LogEntry['level'], tag: string, msg: string) {
-    setLogs(prev => [...prev, { ts: Date.now(), level, tag, msg }])
-  }
-
-  // Pre-fetch suggested answers on mount so first click is instant
-  useEffect(() => {
-    let cancelled = false
-    const controllers: AbortController[] = []
-
-    // Stagger requests to avoid hammering the API
-    PREFETCH_QUERIES.forEach((query, i) => {
-      setTimeout(() => {
-        if (cancelled || prefetchCache.current.has(query)) return
-        fetchFullResponse(query)
-          .then(({ text, remaining }) => {
-            if (!cancelled && text) prefetchCache.current.set(query, text)
-            if (!cancelled && remaining !== null && remaining >= 0) setMsgsLeft(remaining)
-          })
-          .catch(() => { /* prefetch failures are silent */ })
-      }, i * 600)
-    })
-
-    return () => { cancelled = true; controllers.forEach(c => c.abort()) }
-  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -441,6 +135,10 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         .catch(() => {})
     }
   }, [])
+
+  function pushLog(level: LogEntry['level'], tag: string, msg: string) {
+    setLogs(prev => [...prev, { ts: Date.now(), level, tag, msg }])
+  }
 
   const BUG_PREFILL = 'I encountered a bug with the website: '
   const bugReportRe = /^I encountered a bug with the website:\s*(.+)/i
@@ -952,66 +650,11 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
 
       {/* ── Bug report widget (always rendered, outside scroll area) ── */}
       {pendingBugMsg && !busy && (
-        <div className="mx-3 mb-2 rounded-md border border-[#f14c4c]/30 bg-[#1e1e1e] overflow-hidden text-[11px]">
-          {issueState.status === 'form' && (
-            <div className="p-3 space-y-2">
-              <div className="text-[11px] font-semibold text-[#f14c4c]/80 mb-1">Report a Bug</div>
-              <input
-                className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px]"
-                placeholder="Issue title"
-                maxLength={100}
-                value={issueState.title}
-                onChange={e => setIssueState({ ...issueState, title: e.target.value })}
-              />
-              <textarea
-                className="w-full bg-[#2a2a2a] border border-vsc-border/50 rounded px-2 py-1 text-vsc-text outline-none focus:border-vsc-accent/50 text-[11px] resize-none"
-                placeholder="Describe the issue"
-                maxLength={2000}
-                rows={3}
-                value={issueState.desc}
-                onChange={e => setIssueState({ ...issueState, desc: e.target.value })}
-              />
-              <div className="flex justify-end gap-2">
-                <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors px-2 py-0.5">Cancel</button>
-                <button
-                  disabled={!issueState.title.trim()}
-                  onClick={async () => {
-                    const { title, desc } = issueState as { status: 'form'; title: string; desc: string }
-                    setIssueState({ status: 'submitting' })
-                    try {
-                      const r = await fetch('/api/report-issue', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title, description: desc }),
-                      })
-                      const data = await r.json()
-                      if (!r.ok) setIssueState({ status: 'error', msg: data.error ?? 'Failed.' })
-                      else setIssueState({ status: 'done', number: data.number })
-                    } catch {
-                      setIssueState({ status: 'error', msg: 'Network error.' })
-                    }
-                  }}
-                  className="px-2 py-0.5 rounded bg-[#f14c4c]/20 text-[#f14c4c] hover:bg-[#f14c4c]/30 transition-colors disabled:opacity-40"
-                >Submit</button>
-              </div>
-            </div>
-          )}
-          {issueState.status === 'submitting' && (
-            <div className="px-3 py-2 text-vsc-muted/60 italic">Logging issue…</div>
-          )}
-          {issueState.status === 'done' && (
-            <div className="flex items-center justify-between px-3 py-2">
-              <span className="text-[#89d185]">✓ Issue #{issueState.number} logged</span>
-              <button onClick={() => setPendingBugMsg(null)} className="text-vsc-muted/50 hover:text-vsc-muted transition-colors">✕</button>
-            </div>
-          )}
-          {issueState.status === 'error' && (
-            <div className="flex items-center justify-between px-3 py-2">
-              <span className="text-[#f14c4c]">{issueState.msg}</span>
-              <button onClick={() => setIssueState({ status: 'form', title: '', desc: '' })} className="text-vsc-muted/50 hover:text-vsc-muted ml-2 transition-colors">Retry</button>
-            </div>
-          )}
-        </div>
+        <BugReportWidget
+          issueState={issueState}
+          onStateChange={setIssueState}
+          onDismiss={() => setPendingBugMsg(null)}
+        />
       )}
 
       {/* ── Bottom input area ── */}
