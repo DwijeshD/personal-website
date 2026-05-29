@@ -13,8 +13,9 @@ out
 # TypeScript
 tsconfig.tsbuildinfo
 
-# Playwright testing artifacts
+# Tool artifact directories
 .playwright-mcp/
+.agents/
 
 # Local Claude Code settings (personal overrides)
 .claude/settings.local.json
