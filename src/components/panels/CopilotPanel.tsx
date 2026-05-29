@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AiFileAction } from '@/lib/fileSystem'
 import { validateAiAction } from '@/lib/fileSystem'
-import { DEFAULT_CONTENT } from '@/lib/defaultContent'
+import { DEFAULT_CONTENT } from '@/shared/content'
 
 import type { Message, LogEntry, IssueState } from '@/features/copilot/types'
 import { parseThinkBlocks } from '@/features/copilot/lib/parseThinkBlocks'

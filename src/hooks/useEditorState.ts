@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { TABS } from '@/lib/tabs'
-import { DEFAULT_CONTENT } from '@/lib/defaultContent'
+import { DEFAULT_CONTENT } from '@/shared/content'
 import type { CustomFile, CustomFolder, AiFileAction } from '@/lib/fileSystem'
 
 export type ViewMode = 'code' | 'preview' | 'split'
