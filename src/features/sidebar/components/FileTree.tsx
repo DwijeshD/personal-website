@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
 import { iconSrcForFile } from '@/lib/fileIcons'
 import type { CtxTarget } from '../types'
@@ -319,25 +320,48 @@ export function FileTree({
             ))}
 
             {/* All files */}
-            {workspaceFiles.map((f: CustomFile) => (
-              <FileRow
-                key={f.id}
-                id={f.id}
-                name={nameOverrides[f.id] ?? f.name}
-                icon={iconForFile(nameOverrides[f.id] ?? f.name)}
-                depth={1}
-                activeTab={activeTab}
-                openTabs={openTabs}
-                onNavigate={onNavigate}
-                onContextMenu={openCtx}
-                renamingId={renamingId}
-                renameVal={renameVal}
-                onRenameChange={setRenameVal}
-                onRenameCommit={commitRename}
-                onRenameCancel={() => setRenamingId(null)}
-                renameRef={renameRef}
-              />
-            ))}
+            {workspaceFiles.length > 50 ? (
+              <FixedSizeList
+                height={Math.min(workspaceFiles.length * 26, 400)}
+                width="100%"
+                itemCount={workspaceFiles.length}
+                itemSize={26}
+              >
+                {({ index, style }: ListChildComponentProps) => {
+                  const f = workspaceFiles[index]
+                  return (
+                    <div style={style} key={f.id}>
+                      <FileRow
+                        id={f.id} name={nameOverrides[f.id] ?? f.name} icon={iconForFile(f.name)} depth={1}
+                        activeTab={activeTab} openTabs={openTabs} onNavigate={onNavigate} onContextMenu={openCtx}
+                        renamingId={renamingId} renameVal={renameVal} onRenameChange={setRenameVal}
+                        onRenameCommit={commitRename} onRenameCancel={() => setRenamingId(null)} renameRef={renameRef}
+                      />
+                    </div>
+                  )
+                }}
+              </FixedSizeList>
+            ) : (
+              workspaceFiles.map((f: CustomFile) => (
+                <FileRow
+                  key={f.id}
+                  id={f.id}
+                  name={nameOverrides[f.id] ?? f.name}
+                  icon={iconForFile(nameOverrides[f.id] ?? f.name)}
+                  depth={1}
+                  activeTab={activeTab}
+                  openTabs={openTabs}
+                  onNavigate={onNavigate}
+                  onContextMenu={openCtx}
+                  renamingId={renamingId}
+                  renameVal={renameVal}
+                  onRenameChange={setRenameVal}
+                  onRenameCommit={commitRename}
+                  onRenameCancel={() => setRenamingId(null)}
+                  renameRef={renameRef}
+                />
+              ))
+            )}
 
             {/* Inline input for new file/folder */}
             {newMode && (
