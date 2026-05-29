@@ -99,6 +99,7 @@ export default function DinoGame({ onStop }: DinoGameProps) {
     }
     function onKey(e: KeyboardEvent) {
       if (e.ctrlKey && e.key === 'c') { e.preventDefault(); onStop(); return }
+      if (e.key === 'Escape') { e.preventDefault(); onStop(); return }
       if (e.key === ' ' || e.key === 'ArrowUp')  { e.preventDefault(); jump() }
       if (e.key === 'ArrowDown') { e.preventDefault(); if (started && !over && grounded) ducking = true }
     }

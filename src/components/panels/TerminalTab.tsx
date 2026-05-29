@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { dispatch } from '@/features/terminal/commands'
 import { makeLogs, makeDeployLogs, buildMonitorFrame, type StreamEntry } from '@/features/terminal/monitor'
 import DinoGame from '@/features/terminal/components/DinoGame'
@@ -109,6 +109,9 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
     setTimeout(() => inputRef.current?.focus(), 0)
   }
 
+  const stopDino   = useCallback(() => stopMode(setDinoActive),   [])
+  const stopMatrix = useCallback(() => stopMode(setMatrixActive), [])
+
   function streamLines(entries: StreamEntry[]) {
     let total = 0
     for (const entry of entries) {
@@ -192,8 +195,8 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
       className="flex flex-col h-full bg-vsc-bg font-mono text-sm cursor-text"
       onClick={() => inputRef.current?.focus()}
     >
-      {dinoActive && <DinoGame onStop={() => stopMode(setDinoActive)} />}
-      {matrixActive && <MatrixEffect onStop={() => stopMode(setMatrixActive)} />}
+      {dinoActive && <DinoGame onStop={stopDino} />}
+      {matrixActive && <MatrixEffect onStop={stopMatrix} />}
       <div className={`flex-1 overflow-auto panel-scroll px-4 py-2 space-y-0.5 ${dinoActive || matrixActive ? 'hidden' : ''}`}>
         {donutActive ? (
           <div className="flex flex-col items-center justify-center h-full">
