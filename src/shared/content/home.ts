@@ -15,11 +15,14 @@ export const HOME_HTML = `<!DOCTYPE html>
       box-sizing:border-box;
     }
 
+    html,body{
+      overflow-x:hidden;
+    }
+
     body{
       background:#121212;
       color:#f5f5f5;
       font-family:'Space Grotesk',sans-serif;
-      overflow-x:hidden;
     }
 
     .noise{
@@ -120,30 +123,22 @@ export const HOME_HTML = `<!DOCTYPE html>
       align-items:center;
     }
 
-    .typing{
+    #typer{
       font-size:1.2rem;
       color:#d7ff38;
       font-family:'JetBrains Mono',monospace;
       white-space:nowrap;
-      overflow:hidden;
-      border-right:2px solid #d7ff38;
-      width:0;
-      animation:
-        typing 4s steps(40,end) infinite,
-        blink .8s infinite;
     }
 
-    @keyframes typing{
-      0%{width:0}
-      40%{width:100%}
-      60%{width:100%}
-      100%{width:0}
+    .cursor{
+      color:#d7ff38;
+      font-size:1.2rem;
+      font-family:'JetBrains Mono',monospace;
+      animation:blink .8s infinite;
     }
 
     @keyframes blink{
-      50%{
-        border-color:transparent;
-      }
+      50%{opacity:0;}
     }
 
     .description{
@@ -389,11 +384,9 @@ export const HOME_HTML = `<!DOCTYPE html>
         <div class="tag">Python Engineer</div>
       </div>
 
-      <div class="typing-wrapper fade">
-        <div class="typing">
-          Exploring LLMs & RAG pipelines 🤖
-        </div>
-      </div>
+<div class="typing-wrapper">
+  <span id="typer"></span><span class="cursor">|</span>
+</div>
 
       <p class="description fade">
         I build scalable AI systems, autonomous agents, and backend
@@ -469,5 +462,47 @@ export const HOME_HTML = `<!DOCTYPE html>
 
 </div>
 
+<script>
+const phrases = [
+  'Exploring LLMs & RAG pipelines',
+  'Building autonomous AI agents',
+  'Designing distributed systems',
+  'Shipping production ML models',
+  'Engineering real-time pipelines',
+  'Obsessing over system correctness'
+];
+
+const typer = document.getElementById('typer');
+
+let phraseIndex = 0;
+let charIndex = 0;
+let deleting = false;
+
+function tick() {
+  const phrase = phrases[phraseIndex];
+
+  if (!deleting) {
+    typer.textContent = phrase.slice(0, charIndex++);
+
+    if (charIndex > phrase.length) {
+      deleting = true;
+      setTimeout(tick, 1500);
+      return;
+    }
+  } else {
+    typer.textContent = phrase.slice(0, charIndex--);
+
+    if (charIndex < 0) {
+      deleting = false;
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+      charIndex = 0;
+    }
+  }
+
+  setTimeout(tick, deleting ? 35 : 60);
+}
+
+tick();
+</script>
 </body>
 </html>`

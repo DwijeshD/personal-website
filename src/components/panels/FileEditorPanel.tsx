@@ -8,6 +8,8 @@ import type * as MonacoTypes from 'monaco-editor'
 const MonacoEditor     = dynamic(() => import('@monaco-editor/react'),              { ssr: false, loading: () => <EditorSkeleton /> })
 const MarkdownRenderer = dynamic(() => import('../renderers/MarkdownRenderer'),      { ssr: false })
 const HTMLRenderer     = dynamic(() => import('../renderers/HTMLRenderer'),          { ssr: false })
+const SVGRenderer      = dynamic(() => import('../renderers/SVGRenderer'),           { ssr: false })
+const TxtRenderer      = dynamic(() => import('../renderers/TxtRenderer'),           { ssr: false })
 const LiveCodeRenderer = dynamic(() => import('../renderers/LiveCodeRenderer'),      { ssr: false })
 
 export type ViewMode = 'code' | 'split' | 'preview'
@@ -26,6 +28,8 @@ function liveRenderer(filename: string, content: string): React.ReactNode {
   const ext = filename.split('.').pop()?.toLowerCase() ?? ''
   if (ext === 'md' || ext === 'markdown') return <MarkdownRenderer content={content} />
   if (ext === 'html' || ext === 'htm')    return <HTMLRenderer content={content} />
+  if (ext === 'svg')                      return <SVGRenderer content={content} />
+  if (ext === 'txt')                      return <TxtRenderer content={content} />
   return <LiveCodeRenderer filename={filename} content={content} />
 }
 
