@@ -61,7 +61,7 @@ export default function HTMLRenderer({ content }: Props) {
 
   return (
     <iframe
-      sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+      sandbox="allow-scripts allow-forms allow-popups"
       srcDoc={debounced}
       className="w-full h-full border-0 bg-[#1e1e1e]"
       title="HTML Preview"

@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { Suspense, useRef } from 'react'
+import UrlSync from './UrlSync'
 import TitleBar from './TitleBar'
 import ActivityBar from './ActivityBar'
 import Sidebar from './Sidebar'
@@ -282,6 +283,10 @@ export default function VSCodeLayout() {
 
       <AboutModal open={panels.aboutOpen} onClose={() => panels.setAboutOpen(false)} />
       <KeyboardShortcutsModal open={panels.shortcutsOpen} onClose={() => panels.setShortcutsOpen(false)} />
+
+      <Suspense fallback={null}>
+        <UrlSync activeTab={editor.activeTab} navigate={editor.navigate} />
+      </Suspense>
     </div>
   )
 }

@@ -204,6 +204,6 @@ export function buildDoc(ext: string, content: string): { html: string; isScript
     case 'xml':                     return { html: xmlDoc(content),           isScript: false }
     case 'py': case 'c': case 'rs': case 'go':
                                     return { html: syntaxDoc(ext, content),   isScript: false }
-    default:                        return { html: jsDoc(content),            isScript: true  }
+    default:                        return { html: syntaxDoc('txt', content), isScript: false }
   }
 }

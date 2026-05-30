@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 
 export function allowedOrigin(req: NextRequest): boolean {
   const origin = req.headers.get('origin')
-  if (!origin) return true
+  if (!origin) return false
   try {
     const host = req.headers.get('host') ?? ''
     const { hostname } = new URL(origin)

@@ -31,3 +31,6 @@ tsconfig.tsbuildinfo
 # Dev artifacts
 graphify-out/
 skills-lock.json
+
+# Sentry Config File
+.env.sentry-build-plugin
