@@ -1,7 +1,16 @@
 import type { Metadata, Viewport } from 'next'
+import { JetBrains_Mono } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono',
+})
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dwijesh.dev'
 
@@ -133,20 +142,12 @@ const PRELOAD_ICONS = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={jetbrainsMono.variable}>
       <head>
         {PRELOAD_ICONS.map(href => (
           <link key={href} rel="preload" as="image" type="image/svg+xml" href={href} />
         ))}
         <link rel="alternate" type="application/rss+xml" title="Dwijesh Dookraz — Portfolio" href="/feed.xml" />
-        {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
-          <script
-            type="text/javascript"
-            dangerouslySetInnerHTML={{
-              __html: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","${process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID}");`,
-            }}
-          />
-        )}
       </head>
       <body suppressHydrationWarning>
         <script
@@ -161,6 +162,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`,
           }}
         />
+        {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.addEventListener('load',function(){(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","${process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID}")});`,
+            }}
+          />
+        )}
       </body>
     </html>
   )
