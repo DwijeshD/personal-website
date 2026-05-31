@@ -25,13 +25,15 @@ import { usePanelState, ZOOM_LEVELS } from '@/hooks/usePanelState'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useResizablePanel } from '@/hooks/useResizablePanel'
 import { useGitStatus } from '@/hooks/useGitStatus'
+import { useGitHubStats } from '@/hooks/useGitHubStats'
 import { useEditorPrefetch } from '@/hooks/useEditorPrefetch'
 
 export default function VSCodeLayout() {
   const editor    = useEditorState()
   const panels    = usePanelState()
   const terminal  = useResizablePanel(240)
-  const gitStatus = useGitStatus()
+  const gitStatus  = useGitStatus()
+  const ghStats    = useGitHubStats()
   useEditorPrefetch()
 
   const terminalRef = useRef<TerminalHandle | null>(null)
@@ -110,7 +112,7 @@ export default function VSCodeLayout() {
       />
 
       {panels.sourceControlOpen && (
-        <SourceControlPopup onClose={() => panels.setSourceControlOpen(false)} gitStatus={gitStatus} />
+        <SourceControlPopup onClose={() => panels.setSourceControlOpen(false)} gitStatus={gitStatus} ghStats={ghStats} />
       )}
 
       {panels.settingsOpen && (
