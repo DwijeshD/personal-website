@@ -7,16 +7,18 @@ import ActivityBar from './ActivityBar'
 import Sidebar from './Sidebar'
 import TabBar from './TabBar'
 import StatusBar from './StatusBar'
-import CommandPalette from '../overlays/CommandPalette'
-import BottomPanel from '../panels/BottomPanel'
-import CopilotPanel from '../panels/CopilotPanel'
-import AboutModal from '../modals/AboutModal'
-import KeyboardShortcutsModal from '../modals/KeyboardShortcutsModal'
-import ResumePanel from '../panels/ResumePanel'
+import dynamic from 'next/dynamic'
 import FileEditorPanel from '../panels/FileEditorPanel'
-import SourceControlPopup from '../overlays/SourceControlPopup'
-import SettingsPopup from '../overlays/SettingsPopup'
-import AiActionModal from '../overlays/AiActionModal'
+
+const CommandPalette    = dynamic(() => import('../overlays/CommandPalette'))
+const BottomPanel       = dynamic(() => import('../panels/BottomPanel'))
+const CopilotPanel      = dynamic(() => import('../panels/CopilotPanel'))
+const AboutModal        = dynamic(() => import('../modals/AboutModal'))
+const KeyboardShortcutsModal = dynamic(() => import('../modals/KeyboardShortcutsModal'))
+const ResumePanel       = dynamic(() => import('../panels/ResumePanel'))
+const SourceControlPopup = dynamic(() => import('../overlays/SourceControlPopup'))
+const SettingsPopup     = dynamic(() => import('../overlays/SettingsPopup'))
+const AiActionModal     = dynamic(() => import('../overlays/AiActionModal'))
 import { DEFAULT_CONTENT } from '@/shared/content'
 import { computeDiagnostics } from '@/lib/diagnostics'
 import type { TerminalHandle } from '../panels/TerminalTab'
