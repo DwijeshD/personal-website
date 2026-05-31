@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Dwijesh Dookraz', url: SITE_URL }],
   creator: 'Dwijesh Dookraz',
+  verification: { google: 'QchqJ-794tSYJ4m3tCeC2b-wLST5ZQJyjtXasG6vJ2Q' },
   robots: { index: true, follow: true },
   icons: {
     icon: '/vscode-icon.png',
