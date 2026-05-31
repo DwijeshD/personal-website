@@ -22,11 +22,16 @@ export async function GET() {
       }
     )
 
-    if (!res.ok) return NextResponse.json({ branch, ahead: 0, behind: 0, totalCommits: 0 })
+    if (!res.ok) {
+      console.error(`[git-status] GitHub API ${res.status} ${res.statusText} — token present: ${!!token}`)
+      return NextResponse.json({ branch, ahead: 0, behind: 0, totalCommits: 0 })
+    }
 
     const link = res.headers.get('link') ?? ''
+    console.log(`[git-status] link header: "${link}"`)
     const match = link.match(/[?&]page=(\d+)>;\s*rel="last"/)
     const totalCommits = match ? parseInt(match[1], 10) : 1
+    console.log(`[git-status] match: ${match?.[1]} → totalCommits: ${totalCommits}`)
 
     return NextResponse.json({ branch, ahead: 0, behind: 0, totalCommits })
   } catch {

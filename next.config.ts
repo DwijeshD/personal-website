@@ -27,7 +27,7 @@ const securityHeaders = [
       // External image services used by README badges + GitHub profile widgets
       "img-src 'self' data: blob: https://capsule-render.vercel.app https://readme-typing-svg.demolab.com https://media.giphy.com https://img.shields.io https://github-profile-summary-cards.vercel.app https://github-readme-streak-stats.herokuapp.com https://github-readme-activity-graph.vercel.app https://komarev.com https://raw.githubusercontent.com",
       // Client calls own API; Monaco fetches from jsdelivr; Clarity telemetry; Sentry error reporting
-      "connect-src 'self' https://cdn.jsdelivr.net https://www.clarity.ms https://*.clarity.ms https://*.ingest.sentry.io",
+      "connect-src 'self' https://cdn.jsdelivr.net https://www.clarity.ms https://*.clarity.ms https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
       // Monaco editor spawns web workers via blob: URLs
       "worker-src blob: 'self'",
       // No plugins (Flash etc.)

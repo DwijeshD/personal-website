@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 
 const DARK_BASE = `<style>
-html, body { margin: 0; padding: 16px; background: #1e1e1e; display: flex; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box; }
-svg { max-width: 100%; max-height: 100%; }
+html, body { margin: 0; padding: 0; background: #1e1e1e; }
+svg { display: block; width: 100%; height: auto; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #424242; border-radius: 2px; }
@@ -29,7 +29,7 @@ export default function SVGRenderer({ content }: Props) {
 
   return (
     <iframe
-      sandbox=""
+      sandbox="allow-scripts"
       srcDoc={debounced}
       className="w-full h-full border-0 bg-[#1e1e1e]"
       title="SVG Preview"
