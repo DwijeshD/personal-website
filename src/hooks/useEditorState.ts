@@ -13,7 +13,7 @@ export function idToFilename(id: string): string {
 
 export function defaultMode(filename: string): ViewMode {
   const ext = filename.split('.').pop()?.toLowerCase() ?? ''
-  if (ext === 'md' || ext === 'markdown') return 'preview'
+  if (ext === 'md' || ext === 'markdown' || ext === 'svg' || ext === 'txt') return 'preview'
   const splitExts = new Set(['html', 'htm', 'tsx', 'jsx', 'css', 'scss'])
   return splitExts.has(ext) ? 'split' : 'code'
 }
@@ -22,7 +22,7 @@ export function useEditorState() {
   const [openTabs, setOpenTabs]           = useState<string[]>(['file:home.html'])
   const [activeTab, setActiveTab]         = useState('file:home.html')
   const [fileContents, setFileContents]   = useState<Record<string, string>>({})
-  const [fileModes, setFileModes]         = useState<Record<string, ViewMode>>({ 'file:home.html': 'preview' })
+  const [fileModes, setFileModes]         = useState<Record<string, ViewMode>>({ 'file:home.html': 'preview', 'file:about.svg': 'preview' })
   const [workspaceFiles, setWorkspaceFiles]     = useState<CustomFile[]>(() => TABS.map(t => ({ id: t.id, name: t.label })))
   const [workspaceFolders, setWorkspaceFolders] = useState<CustomFolder[]>([])
   const [recentFiles, setRecentFiles]     = useState<string[]>([])
