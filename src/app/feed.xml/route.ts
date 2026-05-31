@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+export const revalidate = 86400
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dwijesh.dev'
 
 const projects = [
@@ -21,7 +23,7 @@ const projects = [
     title: 'Production ML Pipeline',
     description:
       'End-to-end machine learning pipeline with FastAPI serving, Azure Functions, and Firestore — ships models to production.',
-    link: `${SITE_URL}/?file=skills.json`,
+    link: `${SITE_URL}/?file=server.ts`,
     pubDate: 'Wed, 01 May 2024 00:00:00 GMT',
   },
 ]
