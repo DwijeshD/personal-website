@@ -17,23 +17,15 @@ export const HOME_HTML = `<!DOCTYPE html>
 
     html,body{
       overflow-x:hidden;
+      background:transparent;
     }
 
     body{
-      background:#121212;
       color:#f5f5f5;
       font-family:'Space Grotesk',sans-serif;
     }
 
-    .noise{
-      position:fixed;
-      inset:0;
-      opacity:.03;
-      background-image:url("https://grainy-gradients.vercel.app/noise.svg");
-      pointer-events:none;
-    }
-
-    .container{
+.container{
       max-width:1200px;
       margin:auto;
       padding:80px 60px;
@@ -325,8 +317,6 @@ export const HOME_HTML = `<!DOCTYPE html>
 </head>
 
 <body>
-
-<div class="noise"></div>
 
 <div class="container">
 
