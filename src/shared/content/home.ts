@@ -149,38 +149,6 @@ export const HOME_HTML = `<!DOCTYPE html>
       font-size:1.05rem;
     }
 
-    .buttons{
-      margin-top:40px;
-      display:flex;
-      gap:18px;
-      flex-wrap:wrap;
-    }
-
-    .btn{
-      padding:15px 28px;
-      border:none;
-      cursor:pointer;
-      font-size:15px;
-      border-radius:12px;
-      transition:.3s;
-      font-weight:500;
-    }
-
-    .btn-primary{
-      background:#f0b52d;
-      color:#111;
-    }
-
-    .btn-secondary{
-      background:transparent;
-      border:1px solid rgba(255,255,255,.2);
-      color:white;
-    }
-
-    .btn:hover{
-      transform:translateY(-4px);
-      opacity:.9;
-    }
 
     .right{
       flex:1;
@@ -394,12 +362,6 @@ export const HOME_HTML = `<!DOCTYPE html>
         local LLM orchestration, RAG pipelines, real-time integrations,
         and machine learning systems that actually ship.
       </p>
-
-      <div class="buttons fade">
-        <button class="btn btn-primary">Projects</button>
-        <button class="btn btn-secondary">About Me</button>
-        <button class="btn btn-secondary">Contact</button>
-      </div>
 
     </div>
 
