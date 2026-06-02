@@ -171,6 +171,21 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
         fill: #6c6c6c;
         font-size: 12px;
       }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .anim-0 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0s    both; }
+      .anim-1 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.12s  both; }
+      .anim-2 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.28s  both; }
+      .anim-3 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.42s  both; }
+      .anim-4 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.56s  both; }
+      .anim-5 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.70s  both; }
+      .anim-6 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.84s  both; }
+      .anim-7 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.98s  both; }
+      .anim-8 { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 1.12s  both; }
     </style>
   </defs>
 
@@ -184,6 +199,7 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   </g>
 
   <!-- HEADER -->
+  <g class="anim-0">
   <rect x="40" y="34" width="1320" height="76" rx="12" fill="#252526" stroke="#3c3c3c"/>
 
   <text x="70" y="68" fill="#569cd6" font-size="15" font-weight="bold" letter-spacing="3">DWIJESH.DEV</text>
@@ -191,9 +207,10 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
 
   <text x="1330" y="69" text-anchor="end" fill="#6c6c6c" font-size="12">Next.js 15 · React 19 · TypeScript · Vercel</text>
   <text x="1330" y="93" text-anchor="end" fill="#4ec9b0" font-size="12">AI Copilot · APIs · Monitoring · PWA</text>
+  </g>
 
   <!-- HERO -->
-  <g class="hero-wrap">
+  <g class="hero-wrap anim-1">
     <rect x="250" y="145" width="900" height="170" rx="18" class="hero"/>
 
     <circle cx="335" cy="230" r="38" fill="url(#blue)"/>
@@ -225,6 +242,7 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   </g>
 
   <!-- SIMPLE SYSTEM LINE -->
+  <g class="anim-2">
   <line x1="220" y1="365" x2="1180" y2="365" stroke="#3c3c3c" stroke-width="2"/>
   <circle cx="220" cy="365" r="6" fill="#007acc"/>
   <circle cx="540" cy="365" r="6" fill="#4ec9b0"/>
@@ -235,9 +253,10 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   <text x="540" y="390" text-anchor="middle" fill="#6c6c6c" font-size="11">APIs</text>
   <text x="860" y="390" text-anchor="middle" fill="#6c6c6c" font-size="11">Services</text>
   <text x="1180" y="390" text-anchor="middle" fill="#6c6c6c" font-size="11">Monitoring</text>
+  </g>
 
   <!-- FRONTEND -->
-  <g class="card frontend">
+  <g class="card frontend anim-3">
     <rect x="75" y="425" width="285" height="225" rx="16" class="panel"/>
 
     <text x="105" y="465" class="eyebrow">FRONTEND</text>
@@ -256,7 +275,7 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   </g>
 
   <!-- API -->
-  <g class="card api">
+  <g class="card api anim-4">
     <rect x="395" y="425" width="285" height="225" rx="16" class="panel"/>
 
     <text x="425" y="465" class="eyebrow">API LAYER</text>
@@ -275,7 +294,7 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   </g>
 
   <!-- INTEGRATIONS -->
-  <g class="card integrations">
+  <g class="card integrations anim-5">
     <rect x="715" y="425" width="285" height="225" rx="16" class="panel"/>
 
     <text x="745" y="465" class="eyebrow">INTEGRATIONS</text>
@@ -294,7 +313,7 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   </g>
 
   <!-- OPERATIONS -->
-  <g class="card operations">
+  <g class="card operations anim-6">
     <rect x="1035" y="425" width="285" height="225" rx="16" class="panel"/>
 
     <text x="1065" y="465" class="eyebrow">OPERATIONS</text>
@@ -313,7 +332,7 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   </g>
 
   <!-- PRODUCTION CONTROLS -->
-  <g class="controls">
+  <g class="controls anim-7">
     <rect x="75" y="700" width="1245" height="112" rx="16" class="panel"/>
 
     <text x="105" y="739" class="eyebrow">PRODUCTION CONTROLS</text>
@@ -347,9 +366,11 @@ export const ABOUT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" h
   </g>
 
   <!-- FOOTER -->
+  <g class="anim-8">
   <line x1="40" y1="850" x2="1360" y2="850" stroke="#3c3c3c"/>
   <text x="70" y="878" class="footer">
     Signal: modern frontend, API design, edge runtime, AI integration, observability, caching, security, and production awareness.
   </text>
   <text x="1330" y="878" text-anchor="end" fill="#569cd6" font-size="12" font-weight="bold">dwijesh.dev</text>
+  </g>
 </svg>`
