@@ -1,11 +1,30 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import type { Components } from 'react-markdown'
+
+const MermaidDiagram = dynamic(() => import('./MermaidDiagram'), { ssr: false })
 
 interface Props {
   content: string
+}
+
+const components: Components = {
+  code({ className, children }) {
+    const lang = (className ?? '').replace('language-', '')
+    const raw = String(children).replace(/\n$/, '')
+    if (lang === 'mermaid') {
+      return <MermaidDiagram chart={raw} />
+    }
+    return (
+      <code className={className}>
+        {children}
+      </code>
+    )
+  },
 }
 
 export default function MarkdownRenderer({ content }: Props) {
@@ -18,7 +37,7 @@ export default function MarkdownRenderer({ content }: Props) {
 
   return (
     <div className="h-full overflow-y-auto panel-scroll px-8 py-6 prose-vsc" style={{ maxWidth: 'none' }}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {debounced}
       </ReactMarkdown>
     </div>

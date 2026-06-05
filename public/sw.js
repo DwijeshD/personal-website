@@ -1,5 +1,14 @@
-const CACHE = 'portfolio-v1'
-const PRECACHE = ['/', '/vscode-icon.png', '/manifest.webmanifest']
+const CACHE = 'portfolio-v2'
+const PRECACHE = [
+  '/',
+  '/vscode-icon.png',
+  '/manifest.webmanifest',
+  '/fonts/file-icons.woff2',
+  '/fonts/octicons.woff2',
+  '/fonts/fontawesome.woff2',
+  '/fonts/devopicons.woff2',
+  '/fonts/mfixx.woff2',
+]
 
 self.addEventListener('install', e => {
   e.waitUntil(

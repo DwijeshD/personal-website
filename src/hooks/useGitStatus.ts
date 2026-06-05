@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { startTransition, useEffect, useState } from 'react'
 
 export interface GitStatus {
   branch:       string
@@ -13,7 +13,7 @@ export function useGitStatus(): GitStatus | null {
   useEffect(() => {
     fetch('/api/git-status')
       .then(r => r.json())
-      .then(d => setGitStatus({ branch: d.branch, totalCommits: d.totalCommits }))
+      .then(d => startTransition(() => setGitStatus({ branch: d.branch, totalCommits: d.totalCommits })))
       .catch(() => {})
   }, [])
 

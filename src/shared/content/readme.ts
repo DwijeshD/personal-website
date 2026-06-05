@@ -1,103 +1,133 @@
-export const README_MD = `# Dwijesh Dookraz — Portfolio
+export const README_MD = `# portfolio.dwijesh.dev
 
-> A VS Code-themed portfolio. Navigate like an editor. Everything is interactive.
+> An interactive VS Code-themed portfolio. Navigate like an editor. Everything is live.
+
+\`Next.js 15\` · \`TypeScript\` · \`Monaco Editor\` · \`Claude AI\` · \`Vercel\` · \`MIT\`
+
+A portfolio designed to feel exactly like working in VS Code — Monaco editor, live file previews, an AI Copilot, a real terminal, and GitHub integrations. Built as a full-stack Next.js app and deployed on Vercel.
 
 ---
 
-## How to Use This Site
+## 🚀 Features
 
-This portfolio is built to look and feel like VS Code. Here's how to get around:
+- **VS Code shell** — title bar, activity bar, sidebar, tab bar, status bar, all pixel-matched
+- **Monaco editor** — full syntax highlighting, IntelliSense, and multi-file editing
+- **Live preview** — split-pane view renders HTML, SVG, CSS, TypeScript, and Markdown in real time
+- **AI Copilot** — Claude-backed assistant with full context about my background and projects
+- **Integrated terminal** — xterm.js-powered with real portfolio commands (\`whoami\`, \`projects\`, \`dino\`)
+- **File system** — create, rename, delete files; all state persisted across tabs
+- **Source control panel** — GitHub commit count, live branch info via GraphQL API
+- **Command palette** — \`Ctrl+Shift+P\` for fuzzy-search navigation
+- **Quick open** — \`Ctrl+P\` to jump to any file instantly
+- **URL sync** — every open file syncs to \`?file=<name>\` — bookmarkable and shareable
+- **PWA** — installable with offline support via service worker
+- **SEO** — OpenGraph tags, JSON-LD structured data, sitemap, RSS feed
 
-### File Tree (left sidebar)
-Click any file in the **Explorer** panel to open it in a tab. Each file contains a different section of the portfolio:
+---
+
+## 🚧 Planned Features
+
+- 💡 Items below represent features that are scoped or in progress
+- 🤝 Reach out if you want to see something added
+
+| Status | Feature | Area |
+|--------|---------|------|
+| 🟡 In progress | Mobile-responsive layout | UI |
+| 🟡 In progress | Persist workspace to \`localStorage\` across sessions | Core |
+| 🔵 Planned | Theme switcher — Light+, Monokai, Solarized | UI |
+| 🔵 Planned | Minimap toggle in editor toolbar | Editor |
+| 🔵 Planned | Multi-cursor editing support | Editor |
+| 🟣 Idea | Drag-to-reorder tabs | UI |
+| 🟣 Idea | File diff view (before / after AI edits) | Editor |
+| 🟣 Idea | Vim keybinding mode | Editor |
+
+---
+
+## 🛠️ How to Use
+
+### File Tree
+Click any file in the **Explorer** panel to open it in a tab:
 
 | File | Contents |
 |------|----------|
-| \`readme.md\` | This file — overview and navigation guide |
-| \`home.html\` | Homepage with GitHub activity graph and stats |
-| \`about.svg\` | Visual profile card — stack, education, experience |
-| \`server.ts\` | Featured projects with descriptions and links |
-| \`styles.css\` | Skills breakdown — languages, tools, frameworks |
+| \`home.html\` | Homepage — GitHub activity graph and stats |
+| \`about.svg\` | Architecture diagram — production stack |
+| \`skills.css\` | Skills breakdown — languages, tools, frameworks |
+| \`projects.ts\` | Projects with descriptions and tech stack |
+| \`README.md\` | This file |
 
 ### Tabs
-Open files appear as **tabs** at the top. Click to switch between them. Middle-click or click **×** to close.
+Open files appear as **tabs** at the top. Click to switch. Middle-click or **×** to close.
 
-### Activity Bar (icon rail, far left)
+### Activity Bar
+
 | Icon | Panel |
 |------|-------|
 | Files | Explorer — file tree |
-| Search | Find text across all files |
-| Source Control | GitHub commit count and branch info |
-| Copilot | AI assistant (ask anything about me) |
+| Search | Find text across files |
+| Source Control | GitHub commits and branch info |
+| Copilot | AI assistant |
 | Settings | Theme and font size |
 
-### AI Copilot
-Click the **Copilot icon** in the activity bar (or press \`Ctrl+Shift+I\`) to open the AI assistant. You can ask it anything:
-- *"What projects have you worked on?"*
-- *"What's your experience with machine learning?"*
-- *"Are you available for freelance work?"*
-
-The AI has full context about my background, stack, and projects.
-
-### Terminal
-Press \`Ctrl+\`\` (backtick) or click **Terminal** in the bottom panel to open a terminal. Try these commands:
-
-\`\`\`
-help          — list all available commands
-whoami        — quick bio
-skills        — list technologies
-projects      — show project list
-contact       — contact details
-dino          — play a game
-clear         — clear terminal
-\`\`\`
-
 ### Keyboard Shortcuts
+
 | Shortcut | Action |
 |----------|--------|
-| \`Ctrl+P\` | Quick open — jump to any file |
+| \`Ctrl+P\` | Quick open |
 | \`Ctrl+Shift+P\` | Command palette |
 | \`Ctrl+Shift+I\` | Toggle AI Copilot |
 | \`Ctrl+\`\` | Toggle terminal |
 | \`Ctrl+B\` | Toggle sidebar |
-| \`Ctrl+,\` | Open settings |
-| \`Ctrl+?\` | Keyboard shortcuts reference |
+| \`Ctrl+,\` | Settings |
+| \`Ctrl+?\` | Shortcut reference |
 
-### URL Navigation
-Every open file syncs to the URL — e.g. \`?file=server.ts\`. You can bookmark or share a direct link to any file.
+### Terminal
+Press \`Ctrl+\`\` or click **Terminal** in the bottom panel:
+
+\`\`\`
+help        list all commands
+whoami      quick bio
+skills      list technologies
+projects    show projects
+contact     contact details
+dino        secret game
+clear       clear terminal
+\`\`\`
 
 ---
 
-## About Me
+## 💬 FAQ
 
-**Dwijesh Dookraz** — Backend Engineer & Applied ML Practitioner
+#### Why build a portfolio as a VS Code clone?
+Most portfolios are static pages. This one is an actual application — it demonstrates the kind of UI engineering, API integration, and system design I do professionally. It also makes navigating a portfolio more interesting than scrolling a landing page.
 
-BSc Computer Science, First Class Honours — University of Southampton.
+#### Is the AI Copilot actually intelligent?
+Yes — it's backed by Claude (Anthropic) with a custom system prompt giving it full context about my background, projects, and experience. Ask it anything: *"What's your ML stack?"*, *"Are you open to contract work?"*, *"Explain the rPPG project"*.
 
-I build production-grade APIs, AI pipelines, and deep learning systems. I care about systems that are reliable, observable, and actually deployed — not just prototyped.
+#### Can I edit the files?
+Absolutely. Every file is fully editable in the Monaco editor. Changes stay in your session — the live preview updates in real time. Nothing is persisted server-side.
 
-### Stack
+#### Does the terminal actually run code?
+The terminal runs a custom command interpreter — not a real shell. It's designed for portfolio navigation, not arbitrary code execution. For live code execution, use the **Split** view on a \`.ts\` or \`.tsx\` file.
 
-- **Languages:** Python · TypeScript · SQL
-- **Backend:** FastAPI · Flask · Next.js · Node.js
-- **ML/AI:** PyTorch · scikit-learn · OpenRouter · RAG pipelines
-- **Infrastructure:** Azure Functions · Firestore · Vercel · Docker
+#### What is the rPPG project?
+Open \`thesis.md\` (via \`Ctrl+P\`) for a full deep-dive. Short version: a PyTorch implementation of DeepPhys for non-contact heart rate estimation from facial video, with a focus on fairness across skin tones.
 
-### Projects
+#### Is this open source?
+The source is on GitHub. Feel free to use it as inspiration — just swap in your own content.
 
-| Project | Stack | Status |
-|---------|-------|--------|
-| AI Calendar Integration | Python, FastAPI, OAuth2, Webhooks | Production |
-| rPPG Heart Rate Prediction | PyTorch, Deep Learning | 82% accuracy |
-| ML Pipelines | PyTorch, Optuna, k-Fold CV | Research |
-| Recommender System | Matrix Factorization, SGD | Complete |
-| Gene Expression Analysis | scikit-learn, PCA | Complete |
-
-### Contact
-
+#### How do I contact you?
 - **GitHub:** [github.com/DwijeshD](https://github.com/DwijeshD)
 - **LinkedIn:** [linkedin.com/in/dwijesh-dookraz](https://linkedin.com/in/dwijesh-dookraz)
 - **Email:** dwijeshdookraz1@gmail.com
+
+Or just ask the AI Copilot — it can relay any message.
+
+---
+
+## 📄 License
+
+MIT — see [LICENSE](https://opensource.org/licenses/MIT) for details.
 
 > Currently open to backend / ML engineer roles.
 `

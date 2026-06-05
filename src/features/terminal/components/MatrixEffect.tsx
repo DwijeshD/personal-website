@@ -77,10 +77,11 @@ export default function MatrixEffect({ onStop }: MatrixEffectProps) {
   }, [onStop])
 
   return (
-    <div className="flex-1 relative overflow-hidden">
+    <div className="flex-1 relative overflow-hidden" onClick={onStop}>
       <canvas ref={canvasRef} className="w-full h-full" />
       <div className="absolute bottom-2 left-0 right-0 text-center text-[10px] text-green-400/40 pointer-events-none select-none">
-        press any key to exit
+        <span className="hidden sm:inline">press any key to exit</span>
+        <span className="sm:hidden">tap to exit</span>
       </div>
     </div>
   )

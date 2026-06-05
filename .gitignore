@@ -17,8 +17,9 @@ tsconfig.tsbuildinfo
 .playwright-mcp/
 .agents/
 
-# Local Claude Code settings (personal overrides)
-.claude/settings.local.json
+# Claude Code project config (not committed)
+.claude/
+CLAUDE.md
 
 # Debug / temp screenshots
 /*.png

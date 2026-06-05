@@ -19,7 +19,7 @@ export default function LiveCodeRenderer({ filename, content }: Props) {
   return (
     <iframe
       key={isScript ? debounced : undefined}
-      sandbox={isScript ? 'allow-scripts allow-popups' : 'allow-popups'}
+      sandbox={isScript ? 'allow-scripts' : 'allow-popups'}
       srcDoc={html}
       className="w-full h-full border-0 bg-[#1e1e1e]"
       title="Code Preview"

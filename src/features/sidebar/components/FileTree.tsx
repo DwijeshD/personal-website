@@ -31,6 +31,7 @@ interface Props {
   openTabs: string[]
   onNavigate: (id: string) => void
   onFileDeleted: (id: string) => void
+  onFileRenamed: (oldId: string, newId: string, newName: string) => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ export function FileTree({
   openTabs,
   onNavigate,
   onFileDeleted,
+  onFileRenamed,
 }: Props) {
   const setWorkspaceFiles   = onWorkspaceFilesChange
   const setWorkspaceFolders = onWorkspaceFoldersChange
@@ -159,12 +161,9 @@ export function FileTree({
   function commitRename(id: string) {
     const name = renameVal.trim()
     if (name) {
-      setNameOverrides(prev => ({ ...prev, [id]: name }))
-      setWorkspaceFiles(workspaceFiles.map(f => f.id === id ? { ...f, name } : f))
-      setWorkspaceFolders(workspaceFolders.map(folder => ({
-        ...folder,
-        files: folder.files.map(f => f.id === id ? { ...f, name } : f),
-      })))
+      const newId = 'file:' + name
+      setNameOverrides(prev => ({ ...prev, [newId]: name }))
+      onFileRenamed(id, newId, name)
     }
     setRenamingId(null)
   }

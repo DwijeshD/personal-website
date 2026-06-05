@@ -9,7 +9,7 @@ const projects = [
     title: 'rPPG Heart Rate Monitor',
     description:
       'Remote photoplethysmography system using deep learning to measure heart rate from webcam video — no wearables required.',
-    link: `${SITE_URL}/?file=server.ts`,
+    link: `${SITE_URL}/?file=projects.ts`,
     pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
   },
   {
@@ -23,7 +23,7 @@ const projects = [
     title: 'Production ML Pipeline',
     description:
       'End-to-end machine learning pipeline with FastAPI serving, Azure Functions, and Firestore — ships models to production.',
-    link: `${SITE_URL}/?file=server.ts`,
+    link: `${SITE_URL}/?file=projects.ts`,
     pubDate: 'Wed, 01 May 2024 00:00:00 GMT',
   },
 ]

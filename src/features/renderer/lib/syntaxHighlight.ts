@@ -3,7 +3,7 @@
 
 import { stripTs } from './stripTypeScript'
 
-const DARK_BASE = `*{box-sizing:border-box}body{margin:0;font-family:'Consolas',Consolas,monospace;background:#1e1e1e;color:#d4d4d4;font-size:13px;line-height:1.6;}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#424242;border-radius:2px}::-webkit-scrollbar-thumb:hover{background:#555}`
+const DARK_BASE = `*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:'Consolas',Consolas,monospace;background:#1e1e1e;color:#d4d4d4;font-size:13px;line-height:1.6;}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#424242;border-radius:2px}::-webkit-scrollbar-thumb:hover{background:#555}`
 
 function jsDoc(code: string): string {
   const safe = code.replace(/<\/script>/gi, '<\\/script>')
@@ -12,8 +12,11 @@ function jsDoc(code: string): string {
 var _o=[];
 ['log','info','warn','error'].forEach(function(m){var orig=console[m].bind(console);console[m]=function(){var s=Array.from(arguments).map(function(x){return typeof x==='object'?JSON.stringify(x,null,2):String(x)}).join(' ');_o.push({t:m,s:s});orig.apply(console,arguments)};});
 window.addEventListener('error',function(e){_o.push({t:'error',s:e.message||String(e)})});
+var _b=document.body.innerHTML;
 try{(function(){'use strict';${safe}})()}catch(e){_o.push({t:'error',s:String(e)})}
-if(!_o.length){document.body.innerHTML='<div class="mt">// No console output</div>';}
+var _bodyChanged=document.body.innerHTML!==_b;
+if(_bodyChanged&&!_o.length){}
+else if(!_o.length){document.body.innerHTML='<div class="mt">// No console output</div>';}
 else{_o.forEach(function(l){var d=document.createElement('div');d.className='ln'+(l.t==='error'?' err':l.t==='warn'?' warn':'');d.textContent=l.s;document.body.appendChild(d);});}
 </script></body></html>`
 }

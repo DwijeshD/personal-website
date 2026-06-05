@@ -89,6 +89,30 @@ export function useEditorState() {
     setFileModes(prev => { const n = { ...prev }; delete n[id]; return n })
   }
 
+  function renameFileInState(oldId: string, newId: string, newName: string) {
+    setOpenTabs(prev => prev.map(t => t === oldId ? newId : t))
+    setActiveTab(prev => prev === oldId ? newId : prev)
+    setFileContents(prev => {
+      const oldContent = oldId in prev ? prev[oldId] : DEFAULT_CONTENT[idToFilename(oldId)]
+      if (oldContent === undefined) return prev
+      const n = { ...prev, [newId]: oldContent }
+      delete n[oldId]
+      return n
+    })
+    setFileModes(prev => {
+      if (!(oldId in prev)) return prev
+      const n = { ...prev, [newId]: prev[oldId] }
+      delete n[oldId]
+      return n
+    })
+    setRecentFiles(prev => prev.map(r => r === oldId ? newId : r))
+    setWorkspaceFiles(prev => prev.map(f => f.id === oldId ? { id: newId, name: newName } : f))
+    setWorkspaceFolders(prev => prev.map(folder => ({
+      ...folder,
+      files: folder.files.map(f => f.id === oldId ? { id: newId, name: newName } : f),
+    })))
+  }
+
   return {
     openTabs, setOpenTabs,
     activeTab, setActiveTab,
@@ -103,5 +127,6 @@ export function useEditorState() {
     executeAiAction,
     updateFileContent,
     deleteFileFromState,
+    renameFileInState,
   }
 }
