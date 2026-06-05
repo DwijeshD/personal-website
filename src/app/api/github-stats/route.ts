@@ -25,12 +25,23 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
     repositories(privacy: PUBLIC, ownerAffiliations: OWNER) {
       totalCount
     }
+    topRepos: repositories(first: 20, privacy: PUBLIC, ownerAffiliations: OWNER, orderBy: {field: PUSHED_AT, direction: DESC}) {
+      nodes {
+        languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+          edges {
+            size
+            node { name color }
+          }
+        }
+      }
+    }
   }
 }
 `
 
 type ContribDay = { date: string; contributionCount: number }
 type Week = { contributionDays: ContribDay[] }
+type LangEdge = { size: number; node: { name: string; color: string | null } }
 
 function calcStreak(weeks: Week[]): number {
   const today = new Date().toISOString().split('T')[0]
@@ -50,7 +61,7 @@ function calcStreak(weeks: Week[]): number {
 export async function GET() {
   const token = process.env.GITHUB_ISSUES_TOKEN
   if (!token) {
-    return NextResponse.json({ weeks: [], total: 0, commits: 0, repos: 0, streak: 0, activity: null })
+    return NextResponse.json({ weeks: [], total: 0, commits: 0, repos: 0, streak: 0, languages: [], activity: null })
   }
 
   const now = new Date()
@@ -85,12 +96,30 @@ export async function GET() {
     const reviews  = col.totalPullRequestReviewContributions
     const actTotal = commits + issues + prs + reviews
 
+    // Aggregate language bytes across 20 most-recently-pushed repos
+    const langMap: Record<string, { bytes: number; color: string }> = {}
+    for (const repo of user.topRepos?.nodes ?? []) {
+      for (const edge of (repo.languages?.edges ?? []) as LangEdge[]) {
+        const { name, color } = edge.node
+        if (!langMap[name]) langMap[name] = { bytes: 0, color: color ?? '#888' }
+        langMap[name].bytes += edge.size
+      }
+    }
+    const totalBytes = Object.values(langMap).reduce((s, v) => s + v.bytes, 0)
+    const languages = totalBytes > 0
+      ? Object.entries(langMap)
+          .sort((a, b) => b[1].bytes - a[1].bytes)
+          .slice(0, 6)
+          .map(([name, { bytes, color }]) => ({ name, color, pct: Math.round(bytes / totalBytes * 100) }))
+      : []
+
     return NextResponse.json({
       weeks,
       total:  col.contributionCalendar.totalContributions,
       commits,
       repos:  user.repositories.totalCount,
       streak: calcStreak(weeks),
+      languages,
       activity: actTotal > 0 ? {
         commits: Math.round(commits  / actTotal * 100),
         issues:  Math.round(issues   / actTotal * 100),
@@ -100,6 +129,6 @@ export async function GET() {
     })
   } catch (err) {
     console.error('[github-stats]', err)
-    return NextResponse.json({ weeks: [], total: 0, commits: 0, repos: 0, streak: 0, activity: null })
+    return NextResponse.json({ weeks: [], total: 0, commits: 0, repos: 0, streak: 0, languages: [], activity: null })
   }
 }

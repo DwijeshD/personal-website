@@ -8,7 +8,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['300', '400', '500', '700'],
   style: ['normal', 'italic'],
-  display: 'swap',
+  display: 'optional',
   variable: '--font-jetbrains-mono',
 })
 
@@ -134,6 +134,7 @@ const PRELOAD_ICONS = [
   '/icons/files/css.svg',
   '/icons/files/json.svg',
   '/icons/files/typescript.svg',
+  '/icons/files/image.svg',
   // Sidebar folder/file
   '/icons/files/folder.svg',
   '/icons/files/folder-open.svg',
@@ -144,6 +145,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={jetbrainsMono.variable}>
       <head>
+        {/* Preconnect to Monaco CDN — resolves DNS+TLS in parallel with page load */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+
+        {/* Preload icon fonts — font-display:block means these block render; starting early cuts wait */}
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/file-icons.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/octicons.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/fontawesome.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/devopicons.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/mfixx.woff2" />
+
         {PRELOAD_ICONS.map(href => (
           <link key={href} rel="preload" as="image" type="image/svg+xml" href={href} />
         ))}
@@ -159,7 +170,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Analytics />
         <script
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`,
+            __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}`,
           }}
         />
         {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (

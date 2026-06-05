@@ -17,6 +17,7 @@ interface Props {
   onToggleCopilot: () => void
   copilotOpen: boolean
   onFileDeleted: (id: string) => void
+  onFileRenamed: (oldId: string, newId: string, newName: string) => void
   workspaceFiles:          CustomFile[]
   workspaceFolders:        CustomFolder[]
   onWorkspaceFilesChange:  (files: CustomFile[]) => void
@@ -35,6 +36,7 @@ export default function Sidebar({
   onToggleCopilot,
   copilotOpen: _copilotOpen,
   onFileDeleted,
+  onFileRenamed,
   workspaceFiles,
   workspaceFolders,
   onWorkspaceFilesChange,
@@ -73,6 +75,7 @@ export default function Sidebar({
             openTabs={openTabs}
             onNavigate={onNavigate}
             onFileDeleted={onFileDeleted}
+            onFileRenamed={onFileRenamed}
           />
           <div className="shrink-0 px-3 py-2 flex">
             <button

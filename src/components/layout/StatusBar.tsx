@@ -6,13 +6,15 @@ interface Props {
   activeTab: string
   aiThinking: boolean
   onToggleAI: () => void
+  onToggleTerminal: () => void
+  terminalOpen: boolean
   zoom: number
   errorCount: number
   warningCount: number
   onShowProblems: () => void
 }
 
-export default function StatusBar({ activeTab, aiThinking, onToggleAI, zoom, errorCount, warningCount, onShowProblems }: Props) {
+export default function StatusBar({ activeTab, aiThinking, onToggleAI, onToggleTerminal, terminalOpen, zoom, errorCount, warningCount, onShowProblems }: Props) {
   const filename = activeTab.startsWith('file:') ? activeTab.slice(5) : activeTab
   const lang = filename.split('.').pop()?.toUpperCase() ?? 'TSX'
 
@@ -53,6 +55,16 @@ export default function StatusBar({ activeTab, aiThinking, onToggleAI, zoom, err
             <span>⚙</span> AI thinking…
           </span>
         )}
+        <button
+          onClick={onToggleTerminal}
+          className={`sm:hidden hover:bg-white/20 px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${terminalOpen ? 'bg-white/20' : ''}`}
+          title="Toggle Terminal"
+        >
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2.5 2.5l3 2.5-3 2.5V8.5l1.5-1.5-1.5-1.5V5.5zM9 10h3v1H9v-1z"/>
+          </svg>
+          Terminal
+        </button>
         <button
           onClick={onToggleAI}
           className="hover:bg-white/20 px-2 py-0.5 rounded transition-colors flex items-center gap-1"

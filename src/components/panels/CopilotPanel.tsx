@@ -121,7 +121,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       fetch('/api/model-info')
         .then(r => r.json())
         .then(({ model }) => {
-          if (model && model !== activeModelRef.current) {
+          if (model && model !== activeModelRef.current && formatModel(model)) {
             activeModelRef.current = model
             setActiveModel(model)
           }
@@ -246,10 +246,11 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
           if (data === '[DONE]') { pushLog('info', 'STREAM', '[DONE] received'); break }
           try {
             const parsed = JSON.parse(data)
-            if (parsed.model && parsed.model !== activeModelRef.current) {
+            if (parsed.model && parsed.model !== activeModelRef.current && formatModel(parsed.model)) {
               activeModelRef.current = parsed.model
               setActiveModel(parsed.model)
               localStorage.setItem('copilot:resolvedModel', parsed.model)
+              localStorage.setItem('copilot:resolvedModelAt', String(Date.now()))
             }
             const choice = parsed.choices?.[0]
             const delta  = choice?.delta?.content

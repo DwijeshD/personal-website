@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 const DARK_BASE = `<style>
-html, body { margin: 0; padding: 0; background: #1e1e1e; }
+html, body { margin: 0; padding: 0; height: 100%; background: #1e1e1e; }
 svg { display: block; width: 100%; height: auto; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }

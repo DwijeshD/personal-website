@@ -213,13 +213,17 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
         ) : matrixActive ? (
           <MatrixEffect onStop={stopMatrix} />
         ) : donutActive ? (
-          <div className="flex flex-col items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center h-full" onClick={() => stopMode(setDonutActive)}>
             <pre className="text-vsc-fn text-[9px] leading-[1.15] font-mono select-none">{donutFrame}</pre>
-            <div className="text-vsc-muted text-[10px] mt-2">Ctrl+C or Esc to stop</div>
+            <div className="text-vsc-muted text-[10px] mt-2">
+              <span className="hidden sm:inline">Ctrl+C or Esc to stop</span>
+              <span className="sm:hidden">Tap to stop</span>
+            </div>
           </div>
         ) : monitorActive ? (
-          <div className="flex flex-col items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center h-full" onClick={() => stopMode(setMonitorActive)}>
             <pre className="text-vsc-fn text-[11px] leading-[1.6] font-mono select-none">{monitorFrame}</pre>
+            <div className="sm:hidden text-vsc-muted text-[10px] mt-2">Tap to stop</div>
           </div>
         ) : (
           <FixedSizeList
@@ -249,20 +253,62 @@ const TerminalTab = forwardRef<TerminalHandle, Props>(({ onNavigate, onLastComma
         )}
       </div>
 
-      <div className="shrink-0 flex items-center px-4 py-1.5 border-t border-vsc-border/30">
-        <span className="text-vsc-fn mr-2 shrink-0 select-none">{PROMPT}</span>
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={onKeyDown}
-          autoFocus
-          className="flex-1 bg-transparent text-vsc-text outline-none caret-vsc-text"
-          spellCheck={false}
-          autoComplete="off"
-          autoCorrect="off"
-        />
+      <div className="shrink-0 flex items-center px-4 py-1.5 border-t border-vsc-border/30 gap-1">
+        {!(donutActive || dinoActive || matrixActive || monitorActive) && (
+          <>
+            <span className="text-vsc-fn mr-2 shrink-0 select-none">{PROMPT}</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={onKeyDown}
+              autoFocus
+              className="flex-1 bg-transparent text-vsc-text outline-none caret-vsc-text"
+              spellCheck={false}
+              autoComplete="off"
+              autoCorrect="off"
+            />
+            <div className="sm:hidden flex items-center gap-0.5 shrink-0 ml-1">
+              <button
+                onPointerDown={e => { e.preventDefault(); const nx = Math.min(histIdx + 1, history.length - 1); setHistIdx(nx); setInput(history[nx] ?? '') }}
+                className="w-7 h-7 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-vsc-hover active:bg-vsc-hover border border-vsc-border/40"
+                title="Previous command"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15" /></svg>
+              </button>
+              <button
+                onPointerDown={e => { e.preventDefault(); const nx = histIdx - 1; if (nx < 0) { setHistIdx(-1); setInput('') } else { setHistIdx(nx); setInput(history[nx]) } }}
+                className="w-7 h-7 flex items-center justify-center text-vsc-muted hover:text-vsc-text rounded hover:bg-vsc-hover active:bg-vsc-hover border border-vsc-border/40"
+                title="Next command"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9" /></svg>
+              </button>
+              <button
+                onPointerDown={e => { e.preventDefault(); submit() }}
+                className="w-7 h-7 flex items-center justify-center text-vsc-fn rounded hover:bg-vsc-hover active:bg-vsc-hover border border-vsc-border/40"
+                title="Run command"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
+              </button>
+            </div>
+          </>
+        )}
+        {(donutActive || dinoActive || matrixActive || monitorActive) && (
+          <button
+            className="sm:hidden flex-1 flex items-center justify-center gap-1.5 py-1 text-[12px] text-red-400 border border-red-400/40 rounded hover:bg-red-400/10 active:bg-red-400/10 transition-colors"
+            onPointerDown={e => {
+              e.preventDefault()
+              if (donutActive)   stopMode(setDonutActive)
+              if (dinoActive)    stopDino()
+              if (matrixActive)  stopMatrix()
+              if (monitorActive) stopMode(setMonitorActive)
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
+            Stop
+          </button>
+        )}
       </div>
     </div>
   )

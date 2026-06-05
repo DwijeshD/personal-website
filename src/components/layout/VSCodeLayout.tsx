@@ -156,6 +156,7 @@ export default function VSCodeLayout() {
           onWorkspaceFilesChange={editor.setWorkspaceFiles}
           onWorkspaceFoldersChange={editor.setWorkspaceFolders}
           onFileDeleted={editor.deleteFileFromState}
+          onFileRenamed={editor.renameFileInState}
           fileContents={editor.fileContents}
           defaultContents={DEFAULT_CONTENT}
         />
@@ -268,6 +269,8 @@ export default function VSCodeLayout() {
         activeTab={editor.activeTab}
         aiThinking={panels.aiThinking}
         onToggleAI={panels.toggleCopilot}
+        onToggleTerminal={panels.toggleTerminal}
+        terminalOpen={panels.terminalOpen}
         zoom={zoom}
         errorCount={diagnostics.filter(d => d.severity === 'error').length}
         warningCount={diagnostics.filter(d => d.severity === 'warning').length}

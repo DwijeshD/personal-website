@@ -139,27 +139,31 @@ export default function FileEditorPanel({ filename, content, onChange, mode, onM
         ))}
       </div>
 
-      {/* Content area */}
-      <div className="flex-1 overflow-hidden flex">
+      {/* Content area — relative + z-10 creates a stacking context above the mode toggle
+          bar, so Monaco's context-view tooltip (z-index:2576) can overlap it when needed.
+          Code panes use min-h-0 instead of overflow-hidden so the tooltip isn't clipped;
+          Monaco's own .overflow-guard handles editor content clipping.
+          Preview panes keep overflow-hidden for arbitrary HTML/SVG containment. */}
+      <div className="flex-1 min-h-0 flex relative z-10">
         {mode === 'code' && (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0">
             <CodePane filename={filename} content={content} onChange={onChange} />
           </div>
         )}
 
         {mode === 'split' && (
           <>
-            <div className="flex-1 overflow-hidden border-r border-vsc-border/40">
+            <div className="flex-1 min-h-0 border-r border-vsc-border/40">
               <CodePane filename={filename} content={content} onChange={onChange} />
             </div>
-            <div className="flex-1 overflow-hidden bg-vsc-bg">
+            <div className="flex-1 h-full overflow-hidden bg-vsc-bg">
               {splitPane}
             </div>
           </>
         )}
 
         {mode === 'preview' && (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 h-full overflow-hidden">
             {previewPane}
           </div>
         )}

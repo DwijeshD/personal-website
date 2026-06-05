@@ -165,6 +165,15 @@ textarea.ime-text-area {
   background-color: #1e1e1e !important;
 }
 
+/* Monaco action-bar tooltip (find widget buttons) overlaps the button by ~0.34px via
+   the arrow pointer, causing a hover flicker loop. The compact tooltip is display-only
+   so the entire tooltip chain (context-view → container → content) is non-interactive. */
+.context-view.monaco-component:has(.workbench-hover.compact),
+.workbench-hover.compact,
+.workbench-hover-container:has(.workbench-hover.compact) {
+  pointer-events: none !important;
+}
+
 /* Resizable AI panel */
 .ai-panel-resize {
   cursor: row-resize;

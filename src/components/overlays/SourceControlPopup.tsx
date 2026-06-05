@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { PERSON } from '@/lib/profile'
-import type { GitHubStats, GitHubWeek, GitHubActivity } from '@/hooks/useGitHubStats'
+import type { GitHubStats, GitHubWeek, GitHubLanguage } from '@/hooks/useGitHubStats'
 
 interface GitStatus {
   branch: string
@@ -68,29 +68,30 @@ function Heatmap({ weeks }: { weeks: GitHubWeek[] }) {
   )
 }
 
-function RadarChart({ activity }: { activity: GitHubActivity }) {
-  const CX = 46; const CY = 46; const R = 36
-
-  const pts: [number, number][] = [
-    [CX - (activity.commits  / 100) * R, CY],
-    [CX,                                  CY - (activity.reviews / 100) * R],
-    [CX + (activity.issues   / 100) * R, CY],
-    [CX,                                  CY + (activity.prs     / 100) * R],
-  ]
-  const poly = pts.map(([x, y]) => `${x},${y}`).join(' ')
-
+function LanguageBar({ languages }: { languages: GitHubLanguage[] }) {
   return (
-    <svg width={92} height={92} viewBox="0 0 92 92" className="shrink-0">
-      {([0, 90, 180, 270] as const).map((deg, i) => {
-        const rad = (deg - 90) * (Math.PI / 180)
-        return <line key={i} x1={CX} y1={CY} x2={CX + Math.cos(rad) * R} y2={CY + Math.sin(rad) * R} stroke="#3c3c3c" strokeWidth={0.75} />
-      })}
-      {[R * 0.33, R * 0.66, R].map((r, i) => (
-        <circle key={i} cx={CX} cy={CY} r={r} fill="none" stroke="#3c3c3c" strokeWidth={0.5} />
-      ))}
-      <polygon points={poly} fill="rgba(38,166,65,0.2)" stroke="#26a641" strokeWidth={1.5} />
-      {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={3} fill="#39d353" />)}
-    </svg>
+    <div className="pt-1 border-t border-[#3c3c3c]">
+      <div className="text-[9px] text-vsc-muted uppercase tracking-[0.15em] mb-2">Languages</div>
+      <div className="flex h-[6px] gap-[2px] mb-3">
+        {languages.map(lang => (
+          <div
+            key={lang.name}
+            style={{ width: `${lang.pct}%`, background: lang.color }}
+            className="rounded-[2px]"
+            title={`${lang.name} ${lang.pct}%`}
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-y-1.5 gap-x-3">
+        {languages.map(lang => (
+          <div key={lang.name} className="flex items-center gap-1.5 min-w-0">
+            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: lang.color }} />
+            <span className="text-[10px] text-vsc-text truncate">{lang.name}</span>
+            <span className="text-[10px] text-vsc-muted ml-auto shrink-0">{lang.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -165,40 +166,21 @@ export default function SourceControlPopup({ onClose, gitStatus, ghStats: gh }: 
             )}
           </div>
 
-          {/* Activity overview */}
-          {gh?.activity && (
-            <div className="pt-1 border-t border-[#3c3c3c]">
-              <div className="text-[9px] text-vsc-muted uppercase tracking-[0.15em] mb-2">Activity overview</div>
-              <div className="flex items-center justify-between">
-                {/* Left labels (Commits / PRs) */}
-                <div className="flex flex-col gap-3 text-right" style={{ width: 72 }}>
-                  <div>
-                    <div className="text-[11px] font-semibold text-[#39d353]">{gh.activity.commits}%</div>
-                    <div className="text-[9px] text-vsc-muted">Commits</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-semibold text-[#569cd6]">{gh.activity.prs}%</div>
-                    <div className="text-[9px] text-vsc-muted">Pull requests</div>
-                  </div>
-                </div>
-
-                {/* Radar */}
-                <RadarChart activity={gh.activity} />
-
-                {/* Right labels (Reviews / Issues) */}
-                <div className="flex flex-col gap-3 text-left" style={{ width: 72 }}>
-                  <div>
-                    <div className="text-[11px] font-semibold text-[#4ec9b0]">{gh.activity.reviews}%</div>
-                    <div className="text-[9px] text-vsc-muted">Code review</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-semibold text-[#ce9178]">{gh.activity.issues}%</div>
-                    <div className="text-[9px] text-vsc-muted">Issues</div>
-                  </div>
+          {/* Language bar */}
+          {gh
+            ? gh.languages.length > 0 && <LanguageBar languages={gh.languages} />
+            : (
+              <div className="pt-1 border-t border-[#3c3c3c]">
+                <div className="text-[9px] text-vsc-muted uppercase tracking-[0.15em] mb-2">Languages</div>
+                <div className="h-[6px] rounded bg-vsc-border/10 animate-pulse mb-3" />
+                <div className="grid grid-cols-2 gap-y-1.5 gap-x-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-3 rounded bg-vsc-border/10 animate-pulse" />
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
+            )
+          }
 
           {/* GitHub profile link */}
           <a

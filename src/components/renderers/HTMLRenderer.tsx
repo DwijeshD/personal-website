@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 
 const SCROLLBAR_CSS = `<style>
+html, body { height: 100%; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #424242; border-radius: 2px; }
@@ -26,14 +27,13 @@ document.addEventListener('click', function(e) {
     return;
   }
 
-  // mailto — sandbox blocks direct navigation; use window.open via allow-popups
-  if (href.indexOf('mailto:') === 0) {
+  // all external links (mailto, http, https) — delegate to parent via postMessage
+  // so the parent opens them natively without needing allow-popups-to-escape-sandbox
+  if (href.indexOf('mailto:') === 0 || href.indexOf('http') === 0 || href.indexOf('//') === 0) {
     e.preventDefault();
-    window.open(href, '_blank');
+    window.parent.postMessage({ type: 'open-url', url: href }, '*');
     return;
   }
-
-  // external http(s) — let native target="_blank" handle (allow-popups-to-escape-sandbox)
 });
 </script>`
 
@@ -51,6 +51,8 @@ interface Props {
   content: string
 }
 
+const ALLOWED_SCHEMES = /^(https?:|mailto:)\/?\//i
+
 export default function HTMLRenderer({ content }: Props) {
   const [debounced, setDebounced] = useState(() => inject(content))
 
@@ -59,9 +61,22 @@ export default function HTMLRenderer({ content }: Props) {
     return () => clearTimeout(t)
   }, [content])
 
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (!e.data || e.data.type !== 'open-url') return
+      const url: unknown = e.data.url
+      if (typeof url !== 'string') return
+      // only allow http, https, mailto — block data:, javascript:, blob: etc.
+      if (!ALLOWED_SCHEMES.test(url)) return
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
+
   return (
     <iframe
-      sandbox="allow-scripts allow-forms allow-popups"
+      sandbox="allow-scripts allow-forms"
       srcDoc={debounced}
       className="w-full h-full border-0 bg-[#1e1e1e]"
       title="HTML Preview"
