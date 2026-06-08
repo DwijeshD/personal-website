@@ -39,7 +39,7 @@ body {
   width: 210mm;
   height: 297mm;
   overflow: hidden;
-  padding: 10mm 14mm 10mm;
+  padding: 10mm 20mm 10mm;
   box-shadow:
     0 2px 4px rgba(0,0,0,0.06),
     0 8px 32px rgba(0,0,0,0.10),
@@ -251,9 +251,9 @@ ul.bul li:last-child { margin-bottom: 0; }
     </div>
     <div class="ent-sub">Backend Engineer</div>
     <ul class="bul">
-      <li>Built bidirectional Google Calendar and Outlook sync using Python, OAuth2, and FastAPI — handling webhook subscriptions, sync token refresh, and transactional Firestore writes to eliminate duplicate calendar events in production</li>
-      <li>Developed WhatsApp AI assistant using Python, Flask, and WhatsApp Cloud API with NLP-driven task extraction across text, audio, and image pipelines — deployed on GCP Cloud Run for automated event creation and user onboarding</li>
-      <li>Engineered multi-channel notification service using Python, Firestore, and Google Calendar API integrated with Microsoft Graph API, routing reminders and mobile push across cross-provider event lifecycle</li>
+      <li>Built bidirectional Google Calendar and Outlook sync (Python, OAuth2, FastAPI) — webhook subscriptions, sync token refresh, and Firestore transactions to eliminate duplicate events in production</li>
+      <li>Developed WhatsApp AI assistant (Python, Flask, Cloud API) with NLP task extraction across text, audio, and image — deployed on GCP Cloud Run for automated event creation and onboarding</li>
+      <li>Engineered multi-channel notification service (Firestore, Google Calendar, Microsoft Graph) routing reminders and mobile push across cross-provider event lifecycle</li>
     </ul>
   </div>
 </section>
@@ -268,9 +268,9 @@ ul.bul li:last-child { margin-bottom: 0; }
       <span class="ent-date">2025</span>
     </div>
     <ul class="bul">
-      <li>Implemented DeepPhys dual-stream attention CNN using PyTorch and OpenCV to estimate heart rate from facial video without sensors — achieving Pearson r = 0.87 and MAE 8.85 BPM on the UBFC-rPPG benchmark</li>
-      <li>Collected 15-subject dataset spanning Fitzpatrick skin types II–VI, combined with UBFC-rPPG in Python and NumPy training pipelines to address demographic bias — recovering cross-population correlation from r = −0.23 to r = +0.59</li>
-      <li>Applied Optuna hyperparameter search with subject-aware k-fold cross-validation in PyTorch, benchmarking against ICA, PCA, frequency-domain, and band-pass signal-processing baselines</li>
+      <li>Implemented DeepPhys dual-stream CNN (PyTorch, OpenCV) for sensor-free heart rate estimation — Pearson r = 0.87, MAE 8.85 BPM on UBFC-rPPG benchmark</li>
+      <li>Collected 15-subject dataset (Fitzpatrick II–VI) combined with UBFC-rPPG to address demographic bias — recovering cross-population correlation from r = −0.23 to r = +0.59</li>
+      <li>Applied Optuna hyperparameter search with subject-aware k-fold CV, benchmarking against ICA, PCA, and band-pass baselines</li>
     </ul>
   </div>
 
@@ -280,7 +280,7 @@ ul.bul li:last-child { margin-bottom: 0; }
       <span class="ent-date">2026</span>
     </div>
     <ul class="bul">
-      <li>Built matrix factorisation and hybrid collaborative filtering (user-CF + item-CF + content signals) from scratch using Python and NumPy with streaming SGD, Nesterov momentum, and Optuna Bayesian search — achieving MAE 0.587 on 20M MovieLens ratings without full dataset in RAM</li>
+      <li>Built hybrid collaborative filtering (user-CF + item-CF + content signals) from scratch in Python/NumPy with streaming SGD and Optuna Bayesian search — MAE 0.587 on 20M MovieLens ratings, no full dataset in RAM</li>
     </ul>
   </div>
 
@@ -290,8 +290,8 @@ ul.bul li:last-child { margin-bottom: 0; }
       <span class="ent-date">2024 – 2026</span>
     </div>
     <ul class="bul">
-      <li>Built browser-based VS Code shell using Next.js 15, TypeScript, and React with Monaco Editor — integrating GitHub API via server-side route handlers, Sentry error monitoring, Vercel Analytics, and Playwright UI test suite for production deployment</li>
-      <li>Designed proxy API route in Next.js to server-side fetch shields.io and skillicons.dev badges, bypassing browser Content Security Policy restrictions for dynamic badge rendering in the editor preview</li>
+      <li>Built browser-based VS Code shell (Next.js 15, TypeScript, Monaco Editor) — GitHub API, Sentry monitoring, Vercel Analytics, and Playwright test suite for production deployment</li>
+      <li>Designed server-side proxy route to fetch shields.io badges, bypassing CSP restrictions for dynamic badge rendering in the editor preview</li>
     </ul>
   </div>
 
@@ -301,7 +301,7 @@ ul.bul li:last-child { margin-bottom: 0; }
       <span class="ent-date">2025</span>
     </div>
     <ul class="bul">
-      <li>Built ML pipeline on GSE1000 microarray data using Python and scikit-learn — ANOVA feature selection across 22,283 probes, Shrinkage LDA with LOOCV (balanced accuracy 0.80), Random Forest (2,000 trees), and k-means clustering (k=3) to confirm 26 ECM genes downregulated at 32h via GO enrichment</li>
+      <li>Built scikit-learn pipeline on GSE1000 microarray data — ANOVA selection across 22,283 probes, Shrinkage LDA/LOOCV (accuracy 0.80), Random Forest, and k-means (k=3) confirming 26 ECM genes downregulated via GO enrichment</li>
     </ul>
   </div>
 
