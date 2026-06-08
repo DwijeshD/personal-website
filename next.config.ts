@@ -50,17 +50,29 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   async headers() {
+    // Security headers without framing restrictions (used as a base for PDF routes)
+    const securityHeadersNoFrame = securityHeaders.filter(
+      (h) => h.key !== 'X-Frame-Options' && h.key !== 'Content-Security-Policy'
+    )
+
+    // CSP for PDF routes: identical to the global CSP but with frame-ancestors 'self'
+    const pdfCSP = securityHeaders
+      .find((h) => h.key === 'Content-Security-Policy')!
+      .value.replace("frame-ancestors 'none'", "frame-ancestors 'self'")
+
     return [
       {
-        source: '/(.*)',
+        // Apply full security headers to all non-PDF routes
+        source: '/((?!.*\\.pdf).*)',
         headers: securityHeaders,
       },
       {
-        // Allow same-origin iframe embedding for PDF files served from this origin
-        source: '/:file*.pdf',
+        // For PDF routes: allow same-origin framing, keep all other security headers
+        source: '/:path*.pdf',
         headers: [
+          ...securityHeadersNoFrame,
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+          { key: 'Content-Security-Policy', value: pdfCSP },
         ],
       },
     ]
