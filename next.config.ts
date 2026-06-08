@@ -28,7 +28,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com data:",
       // External image services used by README badges + GitHub profile widgets
-      "img-src 'self' data: blob: https://capsule-render.vercel.app https://readme-typing-svg.demolab.com https://media.giphy.com https://img.shields.io https://github-profile-summary-cards.vercel.app https://github-readme-streak-stats.herokuapp.com https://github-readme-activity-graph.vercel.app https://komarev.com https://raw.githubusercontent.com",
+      "img-src 'self' data: blob: https://capsule-render.vercel.app https://readme-typing-svg.demolab.com https://media.giphy.com https://img.shields.io https://skillicons.dev https://github-profile-summary-cards.vercel.app https://github-readme-streak-stats.herokuapp.com https://github-readme-activity-graph.vercel.app https://komarev.com https://raw.githubusercontent.com",
       // Client calls own API; Monaco fetches from jsdelivr; Clarity telemetry; Sentry error reporting
       "connect-src 'self' https://cdn.jsdelivr.net https://www.clarity.ms https://*.clarity.ms https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
       // Monaco editor spawns web workers via blob: URLs
@@ -54,6 +54,14 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: securityHeaders,
+      },
+      {
+        // Allow same-origin iframe embedding for PDF files served from this origin
+        source: '/:file*.pdf',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
       },
     ]
   },

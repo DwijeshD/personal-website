@@ -1,20 +1,22 @@
 'use client'
 
-import { RESUME_HTML } from '@/shared/content/resume'
+interface Props {
+  src: string
+  title?: string
+}
 
-export default function ResumePanel() {
+export default function PDFRenderer({ src, title = 'PDF Document' }: Props) {
   return (
-    <div className="panel-fade-in w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <iframe
-        srcDoc={RESUME_HTML}
-        title="Dwijesh Dookraz — Resume"
-        sandbox="allow-scripts"
-        className="flex-1 w-full border-0"
+        src={src}
+        title={title}
+        className="flex-1 w-full border-0 bg-[#1e1e1e]"
         referrerPolicy="no-referrer"
       />
       <div className="shrink-0 flex justify-center py-2 border-t border-vsc-border/20 bg-vsc-bg">
         <a
-          href="/resume.pdf"
+          href={src}
           download
           className="flex items-center gap-2 px-3 py-1.5 text-[11px] rounded text-vsc-muted hover:text-vsc-text hover:bg-vsc-hover transition-colors"
         >

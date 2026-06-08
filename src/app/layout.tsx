@@ -131,7 +131,7 @@ const PRELOAD_ICONS = [
   // Default tab file icons
   '/icons/files/html.svg',
   '/icons/files/markdown.svg',
-  '/icons/files/css.svg',
+  '/icons/files/pdf.svg',
   '/icons/files/json.svg',
   '/icons/files/typescript.svg',
   '/icons/files/image.svg',

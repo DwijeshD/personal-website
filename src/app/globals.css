@@ -417,4 +417,6 @@ textarea.ime-text-area {
 }
 .prose-vsc th { background: var(--vsc-hover); font-weight: 600; }
 .prose-vsc hr { border: none; border-top: 1px solid var(--vsc-border); margin: 1.5em 0; }
-.prose-vsc img { max-width: 100%; border-radius: 4px; }
+.prose-vsc img { max-width: 100%; border-radius: 4px; display: inline-block; vertical-align: middle; }
+.prose-vsc a img { border-radius: 3px; margin: 2px 3px 2px 0; }
+.prose-vsc p:has(> a > img), .prose-vsc p:has(> img) { line-height: 2; }

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dwijesh Dookraz — CV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700&family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --ink:        #161614;
+  --ink-2:      #3c3c38;
+  --ink-3:      #717169;
+  --accent:     #0d4f3c;
+  --accent-mid: #1a7057;
+  --rule:       #dddbd5;
+  --bg:         #ffffff;
+}
+
+html {
+  font-size: 9.2pt;
+  background: #e8e5de;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  line-height: 1.44;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  padding: 12mm 15mm 12mm;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.06),
+    0 8px 32px rgba(0,0,0,0.10),
+    0 24px 64px rgba(0,0,0,0.06);
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 0 24px 24px 0;
+  border-color: transparent var(--rule) transparent transparent;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────── */
+.hd {
+  padding-bottom: 9px;
+  border-bottom: 1.5px solid var(--ink);
+  margin-bottom: 12px;
+}
+
+.hd-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 30pt;
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+
+.hd-role {
+  font-size: 7.2pt;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+
+.hd-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 8.2pt;
+  font-weight: 400;
+}
+
+.hd-contact a { color: var(--accent); text-decoration: none; }
+
+.sep {
+  display: inline-block;
+  width: 1px;
+  height: 9px;
+  background: var(--rule);
+  margin: 0 9px;
+  vertical-align: middle;
+}
+
+/* ── SECTIONS ───────────────────────────────────────────────────── */
+.sec { margin-bottom: 10px; }
+
+.sec-label {
+  font-size: 6.2pt;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 7px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── ENTRIES ─────────────────────────────────────────────────────── */
+.ent { margin-bottom: 8px; }
+.ent:last-child { margin-bottom: 0; }
+
+.ent-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1px;
+}
+
+.ent-title {
+  font-weight: 600;
+  font-size: 9.4pt;
+  color: var(--ink);
+}
+
+.ent-date {
+  font-size: 7.8pt;
+  font-weight: 300;
+  color: var(--ink-3);
+  white-space: nowrap;
+  margin-left: 8px;
+  font-style: italic;
+}
+
+.ent-sub {
+  font-size: 8.4pt;
+  color: var(--ink-2);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+/* ── BULLETS ─────────────────────────────────────────────────────── */
+ul.bul { list-style: none; padding: 0; margin: 0; }
+
+ul.bul li {
+  position: relative;
+  padding-left: 10px;
+  font-size: 8.6pt;
+  line-height: 1.44;
+  color: var(--ink-2);
+  margin-bottom: 2.5px;
+}
+
+ul.bul li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: var(--accent-mid);
+  font-weight: 600;
+}
+
+ul.bul li:last-child { margin-bottom: 0; }
+
+/* ── EDUCATION ───────────────────────────────────────────────────── */
+.diss-line {
+  font-size: 8.2pt;
+  color: var(--ink-2);
+  margin-top: 3px;
+}
+
+.diss-line strong { color: var(--ink); font-weight: 600; }
+
+.edu-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 20px;
+  margin-top: 4px;
+}
+
+.edu-mod {
+  font-size: 7.8pt;
+  color: var(--ink-3);
+}
+
+.edu-mod strong { color: var(--accent); font-weight: 600; }
+
+/* ── PRINT ───────────────────────────────────────────────────────── */
+@page { size: A4; margin: 0; }
+
+@media print {
+  html { background: white; padding: 0; display: block; }
+  body { width: 100%; height: auto; overflow: visible; box-shadow: none; }
+  body::before { display: none; }
+  .hd-contact a { color: var(--ink); }
+  .ent { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hd">
+  <h1 class="hd-name">Dwijesh Dookraz</h1>
+  <p class="hd-role">Software Engineer &nbsp;·&nbsp; Backend &nbsp;·&nbsp; AI Systems &nbsp;·&nbsp; Applied Machine Learning</p>
+  <div class="hd-contact">
+    <span>dwijeshdookraz1@gmail.com</span>
+    <span class="sep"></span>
+    <a href="https://linkedin.com/in/dwijesh-dookraz">linkedin.com/in/dwijesh-dookraz</a>
+    <span class="sep"></span>
+    <a href="https://github.com/DwijeshD">github.com/DwijeshD</a>
+    <span class="sep"></span>
+    <a href="https://dwijesh.dev">dwijesh.dev</a>
+  </div>
+</header>
+
+<!-- EDUCATION -->
+<section class="sec">
+  <div class="sec-label">Education</div>
+  <div class="ent">
+    <div class="ent-row">
+      <span class="ent-title">University of Southampton</span>
+      <span class="ent-date">2021 – 2024</span>
+    </div>
+    <div class="ent-sub">BSc Computer Science &nbsp;·&nbsp; First Class Honours</div>
+    <div class="diss-line">Dissertation: <strong>Machine Learning-Based Heart Rate Measurement Using rPPG — 82%</strong></div>
+    <div class="edu-modules">
+      <span class="edu-mod">Machine Learning Technologies <strong>80%</strong></span>
+      <span class="edu-mod">Social Computing Techniques <strong>83%</strong></span>
+      <span class="edu-mod">Cloud Application Development <strong>79%</strong></span>
+      <span class="edu-mod">Software Engineering Group Project <strong>73%</strong></span>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="sec">
+  <div class="sec-label">Experience</div>
+  <div class="ent">
+    <div class="ent-row">
+      <span class="ent-title">Nusmark</span>
+      <span class="ent-date">2024 – Present</span>
+    </div>
+    <div class="ent-sub">Backend Engineer</div>
+    <ul class="bul">
+      <li>Built bidirectional Google Calendar and Outlook sync using Python, OAuth2, and FastAPI — handling webhook subscriptions, sync token refresh, and transactional Firestore writes to eliminate duplicate calendar events in production</li>
+      <li>Developed WhatsApp AI assistant using Python, Flask, and WhatsApp Cloud API with NLP-driven task extraction across text, audio, and image pipelines — deployed on GCP Cloud Run for automated event creation and user onboarding</li>
+      <li>Engineered multi-channel notification service using Python, Firestore, and Google Calendar API integrated with Microsoft Graph API, routing reminders and mobile push across cross-provider event lifecycle</li>
+    </ul>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="sec">
+  <div class="sec-label">Projects</div>
+
+  <div class="ent">
+    <div class="ent-row">
+      <span class="ent-title">rPPG Heart Rate Estimation &nbsp;·&nbsp; Final-Year Dissertation</span>
+      <span class="ent-date">2025</span>
+    </div>
+    <ul class="bul">
+      <li>Implemented DeepPhys dual-stream attention CNN using PyTorch and OpenCV to estimate heart rate from facial video without sensors — achieving Pearson r = 0.87 and MAE 8.85 BPM on the UBFC-rPPG benchmark</li>
+      <li>Collected 15-subject dataset spanning Fitzpatrick skin types II–VI, combined with UBFC-rPPG in Python and NumPy training pipelines to address demographic bias — recovering cross-population correlation from r = −0.23 to r = +0.59</li>
+      <li>Applied Optuna hyperparameter search with subject-aware k-fold cross-validation in PyTorch, benchmarking against ICA, PCA, frequency-domain, and band-pass signal-processing baselines</li>
+    </ul>
+  </div>
+
+  <div class="ent">
+    <div class="ent-row">
+      <span class="ent-title">Hybrid Recommender System</span>
+      <span class="ent-date">2026</span>
+    </div>
+    <ul class="bul">
+      <li>Built matrix factorisation and hybrid collaborative filtering (user-CF + item-CF + content signals) from scratch using Python and NumPy with streaming SGD, Nesterov momentum, and Optuna Bayesian search — achieving MAE 0.587 on 20M MovieLens ratings without full dataset in RAM</li>
+    </ul>
+  </div>
+
+  <div class="ent">
+    <div class="ent-row">
+      <span class="ent-title">VS Code Portfolio &nbsp;·&nbsp; dwijesh.dev</span>
+      <span class="ent-date">2024 – 2026</span>
+    </div>
+    <ul class="bul">
+      <li>Built browser-based VS Code shell using Next.js 15, TypeScript, and React with Monaco Editor — integrating GitHub API via server-side route handlers, Sentry error monitoring, Vercel Analytics, and Playwright UI test suite for production deployment</li>
+      <li>Designed proxy API route in Next.js to server-side fetch shields.io and skillicons.dev badges, bypassing browser Content Security Policy restrictions for dynamic badge rendering in the editor preview</li>
+    </ul>
+  </div>
+
+  <div class="ent">
+    <div class="ent-row">
+      <span class="ent-title">Gene Expression Analysis — Osteosarcoma</span>
+      <span class="ent-date">2025</span>
+    </div>
+    <ul class="bul">
+      <li>Built ML pipeline on GSE1000 microarray data using Python and scikit-learn — ANOVA feature selection across 22,283 probes, Shrinkage LDA with LOOCV (balanced accuracy 0.80), Random Forest (2,000 trees), and k-means clustering (k=3) to confirm 26 ECM genes downregulated at 32h via GO enrichment</li>
+    </ul>
+  </div>
+
+</section>
+
+</body>
+</html>

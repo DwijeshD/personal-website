@@ -1,6 +1,6 @@
 const B = '/icons/files'
 
-export const FILE_ICON_MAP: Record<string, string> = {
+const FILE_ICON_MAP: Record<string, string> = {
   // Web
   tsx:   `${B}/react_ts.svg`,
   jsx:   `${B}/react.svg`,

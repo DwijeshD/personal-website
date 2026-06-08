@@ -38,6 +38,80 @@ type TimelineEvent = {
 
 const projects: readonly GithubProject[] = [
   {
+    id: "portfolio-website",
+    title: "VS Code Portfolio",
+    repo: "DwijeshD/PortfolioWebsite",
+    type: "frontend",
+    status: "active",
+    featured: true,
+    year: "2024–2026",
+    language: "TypeScript · Next.js · React",
+    summary: "Personal portfolio built as an interactive VS Code environment running in the browser — full editor shell, file tree, live previews, Monaco editor, integrated terminal, GitHub integration, and an AI copilot.",
+    problem: "Static portfolio pages don't demonstrate frontend engineering depth. Building one that replicates a real development environment requires non-trivial decisions: Monaco Editor integration, tab/editor state management, Content Security Policy for external assets, real-time GitHub data, server-side rendering, and a functioning terminal command interpreter.",
+    solution: "Next.js 15 App Router with TypeScript throughout. Monaco Editor for syntax-highlighted code viewing. File-system state with tab management, split views, and URL-synced editor state. GitHub API proxied through Next.js route handlers. Image proxy API route for shields.io and skillicons.dev to bypass CSP restrictions. Sentry for error monitoring with source maps. Vercel Analytics, Speed Insights, and Microsoft Clarity for layered observability. Playwright for UI testing and screenshot verification.",
+    impact: "Production deployment at dwijesh.dev. Full VS Code shell with keyboard shortcuts, command palette, quick open, file tree, split editor, and integrated terminal. Mermaid diagram rendering in the Markdown preview. Shields.io badges with logos rendered server-side through a proxy.",
+    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Monaco Editor", "GitHub API", "Sentry", "Vercel Analytics", "Vercel Speed Insights", "Microsoft Clarity", "Jest", "ESLint", "Playwright", "Mermaid", "react-markdown", "Vercel"],
+    highlights: [
+      "Monaco Editor: same engine as VS Code — syntax highlighting for TypeScript, HTML, SVG, Markdown, JSON with full language intelligence.",
+      "GitHub API proxied through Next.js route handlers: live repo metadata, commits, and contribution data without exposing tokens to the browser.",
+      "Image proxy API (/api/proxy-image): server-side fetch for shields.io and skillicons.dev badges, bypassing CSP restrictions and browser-level network filters.",
+      "Sentry error monitoring: production errors captured with source maps, session replay, and stack traces via @sentry/nextjs.",
+      "Layered observability: Vercel Analytics (pageviews), Vercel Speed Insights (Web Vitals), Microsoft Clarity (heatmaps and session recordings).",
+      "Playwright test suite: headless Chromium UI verification and screenshot-based regression testing via the MCP Playwright plugin.",
+      "Mermaid diagram rendering: architecture diagrams in the Markdown preview via dynamic import to avoid SSR hydration issues.",
+      "URL sync: open tabs, active file, and view mode serialised to query params — editor state fully shareable via URL.",
+    ],
+    links: { github: "https://github.com/DwijeshD/PortfolioWebsite", website: "https://dwijesh.dev" },
+  },
+  {
+    id: "nusmark",
+    title: "Nusmark — AI Productivity Platform",
+    repo: "private · commercial",
+    type: "platform",
+    status: "completed",
+    featured: true,
+    year: "2024-2026",
+    language: "Python · TypeScript · React",
+    summary: "AI-powered productivity platform combining calendar management, reminders, notifications, scheduling, messaging, and analytics. Integrated with WhatsApp, Google Calendar, Outlook, and mobile apps.",
+    problem: "Unified productivity platforms require deep third-party integrations across calendar providers, communication channels, and mobile surfaces — with real-time sync, conflict handling, and consistent state across all of them.",
+    solution: "Built calendar sync with OAuth2 + webhooks for both Google and Outlook, a multi-channel notification service (push + WhatsApp), an AI assistant on WhatsApp with NLP-driven task extraction, and an internal analytics dashboard. Designed a unified abstraction layer treating calendar and database items identically.",
+    impact: "Production system serving real users. Bidirectional sync, cross-provider consistency, and WhatsApp AI onboarding deployed on GCP Cloud Run. Internal dashboard with cohort analysis tracking user behaviour at scale.",
+    stack: ["Python", "Flask", "FastAPI", "Firestore", "Google Calendar API", "Microsoft Graph API", "WhatsApp Cloud API", "React", "GCP", "Cloud Run"],
+    highlights: [
+      "Google Calendar + Outlook bidirectional sync: OAuth2, webhook subscriptions, token refresh, conflict handling, and a unified calendar/DB abstraction layer.",
+      "Notification service routing across calendar events, reminders, scheduled notifications, mobile push, and WhatsApp — refactored into modular service-oriented architecture.",
+      "AI assistant on WhatsApp: text / audio / image / interactive message pipelines, NLP task extraction, event creation, and account onboarding flows.",
+      "Internal insights dashboard: cohort analysis, user analytics, pagination and filtering across large datasets, large component refactors into maintainable modules.",
+      "Internal APIs supporting mobile applications: user profile management, scalable service separation, production deployments on GCP Cloud Run.",
+      "Engineering challenges: real-time sync, duplicate event prevention, transaction-safe Firestore updates, cross-provider consistency, high-volume analytics.",
+    ],
+    links: {},
+  },
+  {
+    id: "rppg-heartrate",
+    title: "Heart Rate Estimation via rPPG",
+    repo: "private · dissertation",
+    type: "research",
+    status: "completed",
+    featured: true,
+    year: "2025",
+    language: "Python · PyTorch",
+    summary: "Final-year dissertation implementing DeepPhys for non-contact heart rate estimation from facial video, focusing on fairness across diverse skin tones by combining UBFC-rPPG with a custom-collected dataset.",
+    problem: "Benchmark rPPG datasets (UBFC-rPPG, COHFACE) are demographically narrow — zero Fitzpatrick Type V–VI subjects. Models trained on them exhibit systematic accuracy drops for darker skin tones, a hidden failure mode in deployed systems.",
+    solution: "Implemented DeepPhys (dual-stream attention CNN) with full training, subject-aware cross-validation, and inference pipelines. Collected 15-subject custom dataset spanning Fitzpatrick II–VI. Applied Optuna hyperparameter search. Benchmarked against signal-processing baselines: ICA, PCA, frequency-domain estimation, and band-pass filtering.",
+    impact: "UBFC-trained model: MAE 8.85 BPM, Pearson r = 0.87. Skin-tone generalisation: r = −0.23, R² = −0.35 (UBFC-only) → r = +0.59 (combined dataset). Demonstrated that diverse training data is necessary and sufficient to recover cross-population correlation.",
+    stack: ["Python", "PyTorch", "OpenCV", "NumPy", "Optuna", "Jupyter", "Signal Processing", "UBFC-rPPG", "COHFACE"],
+    highlights: [
+      "Implemented DeepPhys architecture from literature: dual-stream attention CNN with appearance and motion pathways.",
+      "Custom dataset: 15 subjects spanning Fitzpatrick skin types II–VI — purpose-built to address the demographic gap in public benchmarks.",
+      "Subject-aware cross-validation to prevent data leakage; Optuna search over network depth, LR, augmentation, and training configurations.",
+      "Signal-processing baselines: ICA, PCA, frequency-domain heart-rate estimation, band-pass filtering — all implemented as independent benchmarks.",
+      "UBFC-only model collapses on diverse skin (r = −0.23, R² = −0.35); combined-dataset training recovers correlation (r = +0.59, p = 0.043).",
+      "Investigated real-time inference pipelines and deployment constraints for mobile and embedded rPPG systems.",
+    ],
+    links: {},
+  },
+  {
     id: "hybrid-recommender",
     title: "Hybrid Recommender System",
     repo: "DwijeshD/hybrid-recommender",
@@ -116,7 +190,7 @@ const projects: readonly GithubProject[] = [
     type: "frontend",
     status: "completed",
     featured: true,
-    year: "2024",
+    year: "2023",
     language: "Java",
     summary: "Fast-paced Tetris-inspired block placement game on a 5×5 grid. Clear lines, rack up score multipliers, and survive escalating speed — three lives stand between you and game over.",
     problem: "Build a complete game with real-time mechanics, a satisfying difficulty curve, a strategic storage mechanic, and a persistent score/lives system — all within a full Java + JavaFX architecture.",
@@ -158,18 +232,26 @@ const projects: readonly GithubProject[] = [
 ];
 
 const techGroups: readonly TechGroup[] = [
-  { category: "Machine Learning",   tools: ["PyTorch", "scikit-learn", "NumPy", "Optuna", "SGD", "UMAP", "LDA", "Random Forest", "K-means"] },
-  { category: "Data & NLP",         tools: ["NLTK", "Affymetrix", "GEO / GSE1000", "Co-occurrence matrices", "TF-IDF", "Dimensionality reduction"] },
-  { category: "Languages",          tools: ["Python", "Java", "TypeScript", "SQL"] },
-  { category: "Tools & Frameworks", tools: ["Pygame", "JavaFX", "Maven", "Jupyter", "Bash"] },
+  { category: "Frontend & Platform", tools: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Monaco Editor", "react-markdown", "Mermaid"] },
+  { category: "Observability",        tools: ["Sentry", "Vercel Analytics", "Vercel Speed Insights", "Microsoft Clarity"] },
+  { category: "Testing & Tooling",    tools: ["Jest", "Playwright", "ESLint", "TypeScript"] },
+  { category: "Machine Learning",     tools: ["PyTorch", "scikit-learn", "NumPy", "Optuna", "SGD", "UMAP", "LDA", "Random Forest", "K-means", "OpenCV", "Signal Processing"] },
+  { category: "Backend & Cloud",      tools: ["Python", "Flask", "FastAPI", "Firestore", "GCP", "Cloud Run", "Node.js"] },
+  { category: "APIs & Integrations",  tools: ["GitHub API", "Google Calendar API", "Microsoft Graph API", "WhatsApp Cloud API", "OAuth2", "Webhooks"] },
+  { category: "Data & NLP",           tools: ["NLTK", "Affymetrix", "GEO / GSE1000", "Co-occurrence matrices", "Dimensionality reduction"] },
+  { category: "Languages",            tools: ["Python", "Java", "TypeScript", "SQL"] },
+  { category: "Tools & Frameworks",   tools: ["React", "Pygame", "JavaFX", "Maven", "Jupyter", "Bash"] },
 ];
 
 const timeline: readonly TimelineEvent[] = [
-  { period: "2019", title: "2D Space Invader",         category: "Game Dev / Python", detail: "First full project — game loop, sprite collision, dual input scheme in Pygame." },
-  { period: "2024", title: "Tetrecs block game",       category: "Java / JavaFX",     detail: "Full game with line clearing, piece store, score multiplier, and difficulty escalation." },
-  { period: "2024", title: "K-means cluster discovery", category: "NLP / ML",         detail: "Semantic word clusters in 17M-token corpus — UMAP pipeline, validated k-selection." },
-  { period: "2025", title: "Osteosarcoma gene ML",     category: "Computational Bio", detail: "LDA + RF + DE pipeline on GSE1000 microarray. ECM regulatory signature confirmed." },
-  { period: "2026", title: "Hybrid recommender",       category: "ML / Data Eng",     detail: "CF + matrix factorisation from scratch. MAE 0.587 on 20M ratings via streaming SGD." },
+  { period: "2019", title: "2D Space Invader",          category: "Game Dev / Python",   detail: "First full project — game loop, sprite collision, dual input scheme in Pygame." },
+  { period: "2023", title: "Tetrecs block game",        category: "Java / JavaFX",       detail: "Full game with line clearing, piece store, score multiplier, and difficulty escalation." },
+  { period: "2024", title: "K-means cluster discovery", category: "NLP / ML",            detail: "Semantic word clusters in 17M-token corpus — UMAP pipeline, validated k-selection." },
+  { period: "2024", title: "Nusmark platform",          category: "Backend / Cloud",     detail: "Calendar sync, WhatsApp AI assistant, notification service, and analytics dashboard on GCP." },
+  { period: "2025", title: "Osteosarcoma gene ML",      category: "Computational Bio",   detail: "LDA + RF + DE pipeline on GSE1000 microarray. ECM regulatory signature confirmed." },
+  { period: "2025", title: "rPPG heart-rate estimation",category: "ML / Computer Vision",detail: "DeepPhys on UBFC + custom dataset. r = +0.59 with diverse skin-tone training." },
+  { period: "2026", title: "Hybrid recommender",        category: "ML / Data Eng",       detail: "CF + matrix factorisation from scratch. MAE 0.587 on 20M ratings via streaming SGD." },
+  { period: "2026", title: "VS Code Portfolio",          category: "Next.js / TypeScript", detail: "Full VS Code shell in the browser — Monaco, GitHub API, Sentry, Vercel Analytics, Playwright, Mermaid." },
 ];
 
 function getAllTechnologies(): readonly string[] {
@@ -216,8 +298,10 @@ function renderProjectCard(p: GithubProject): string {
         \${p.highlights.map((h) => \`<li>\${escapeHtml(h)}</li>\`).join("")}
       </ul>
     </div>
-    <div style="margin-top:12px">
-      <a href="\${p.links.github}" target="_blank" style="color:#4ec9b0;font-size:12px;text-decoration:none;border:1px solid rgba(78,201,176,.3);border-radius:6px;padding:4px 10px">↗ GitHub</a>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      \${p.links.github ? \`<a href="\${p.links.github}" target="_blank" style="color:#4ec9b0;font-size:12px;text-decoration:none;border:1px solid rgba(78,201,176,.3);border-radius:6px;padding:4px 10px">↗ GitHub</a>\` : ""}
+      \${p.links.demo ? \`<a href="\${p.links.demo}" target="_blank" style="color:#9cdcfe;font-size:12px;text-decoration:none;border:1px solid rgba(156,220,254,.3);border-radius:6px;padding:4px 10px">↗ Demo</a>\` : ""}
+      \${p.links.docs ? \`<a href="\${p.links.docs}" target="_blank" style="color:#dcdcaa;font-size:12px;text-decoration:none;border:1px solid rgba(220,220,170,.3);border-radius:6px;padding:4px 10px">↗ Docs</a>\` : ""}
     </div>
   </article>\`;
 }
@@ -236,7 +320,7 @@ function renderPage(): string {
 
   return \`<!DOCTYPE html><html><head><style>
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;background:radial-gradient(circle at top left,rgba(14,99,156,.2),transparent 360px),radial-gradient(circle at bottom right,rgba(78,201,176,.1),transparent 420px),#1e1e1e;color:#d4d4d4;font-family:Consolas,"Courier New",monospace;line-height:1.65}
+    body{margin:0;min-height:100vh;background:radial-gradient(circle at top left,rgba(14,99,156,.2),transparent 55vmax),radial-gradient(circle at bottom right,rgba(78,201,176,.1),transparent 55vmax),#1e1e1e;background-attachment:fixed;color:#d4d4d4;font-family:Consolas,"Courier New",monospace;line-height:1.65}
     .page{width:min(1100px,100%);padding:32px}
     .hero{border:1px solid #3c3c3c;border-radius:22px;padding:32px;background:linear-gradient(135deg,rgba(37,37,38,.98),rgba(30,30,30,.96));position:relative;overflow:hidden}
     .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(14,99,156,.14),transparent);transform:translateX(-100%);animation:scan 5.5s ease-in-out infinite}
@@ -259,9 +343,9 @@ function renderPage(): string {
       <div style="color:#6a9955;font-size:11px;text-transform:uppercase;letter-spacing:.16em;margin-bottom:8px">projects.ts</div>
       <h1>GitHub Projects</h1>
       <div style="color:#4ec9b0;font-size:15px;margin-bottom:10px">Dwijesh Dookraz · github.com/DwijeshD</div>
-      <p style="color:rgba(212,212,212,.7);font-size:14px;max-width:800px;margin:0">All public GitHub repositories — ML pipelines, NLP research, game development, and recommender systems. Built from scratch, validated on real data, documented in detail.</p>
+      <p style="color:rgba(212,212,212,.7);font-size:14px;max-width:800px;margin:0">Selected projects — production platforms, ML research, NLP experiments, and game development. From professional backend work to academic research and open-source side projects.</p>
       <div class="metrics">
-        <div class="metric"><strong>\${allProjects.length}</strong><span>public repos</span></div>
+        <div class="metric"><strong>\${allProjects.length}</strong><span>projects</span></div>
         <div class="metric"><strong>\${tech.length}</strong><span>technologies</span></div>
         <div class="metric"><strong>2019</strong><span>first project</span></div>
         <div class="metric"><strong>2026</strong><span>latest work</span></div>
@@ -280,8 +364,9 @@ function renderPage(): string {
       "├─ github:       github.com/DwijeshD\\n" +
       "├─ public repos: " + allProjects.length + "\\n" +
       "├─ technologies: " + tech.length + " tracked\\n" +
-      "├─ languages:    Python, Java, Jupyter\\n" +
-      "├─ domains:      ML / NLP / Game Dev / Recommender Systems\\n" +
+      "├─ languages:    Python, TypeScript, Java, Jupyter\\n" +
+      "├─ portfolio:    dwijesh.dev — Next.js, Monaco, Sentry, Vercel, Playwright\\n" +
+      "├─ domains:      Platform Eng / ML / NLP / Computer Vision / Game Dev\\n" +
       "└─ span:         2019 – 2026"
     )}</pre>
   </div></body></html>\`;
