@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
@@ -11,11 +12,11 @@ import { ContextMenu } from './ContextMenu'
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 const FolderIcon = ({ open }: { open: boolean }) => (
-  <img src={open ? '/icons/files/folder-open.svg' : '/icons/files/folder.svg'} width={16} height={16} alt="" aria-hidden />
+  <Image src={open ? '/icons/files/folder-open.svg' : '/icons/files/folder.svg'} width={16} height={16} alt="" aria-hidden />
 )
 
 function iconForFile(name: string): React.ReactNode {
-  return <img src={iconSrcForFile(name)} width={16} height={16} alt="" aria-hidden />
+  return <Image src={iconSrcForFile(name)} width={16} height={16} alt="" aria-hidden />
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────

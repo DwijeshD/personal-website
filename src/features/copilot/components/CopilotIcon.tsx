@@ -1,8 +1,10 @@
 'use client'
 
+import Image from 'next/image'
+
 export function CopilotIcon({ size = 48, muted = false }: { size?: number; muted?: boolean }) {
   return (
-    <img
+    <Image
       src="/vscode-copilot.png"
       width={size}
       height={size}

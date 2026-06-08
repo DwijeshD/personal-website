@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import MenuBar from './MenuBar'
 import { buildMenus, type MenuHandlers } from '@/features/titlebar/lib/menuDefinitions'
 
@@ -17,7 +18,7 @@ export default function TitleBar({ copilotActive, ...handlers }: Props) {
     >
       {/* VS Code icon */}
       <div className="w-[46px] h-full flex items-center justify-center shrink-0">
-        <img src="/vscode-icon.png" width={16} height={16} alt="VS Code" />
+        <Image src="/vscode-icon.png" width={16} height={16} alt="VS Code" />
       </div>
 
       {/* Menu bar */}

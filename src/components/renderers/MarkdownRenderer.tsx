@@ -21,6 +21,7 @@ const components: Components = {
       s.includes('shields.io') || s.includes('skillicons.dev')
         ? `/api/proxy-image?url=${encodeURIComponent(s)}`
         : s
+    // eslint-disable-next-line @next/next/no-img-element
     return <img src={proxied} alt={alt ?? ''} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
   },
   code({ className, children }) {

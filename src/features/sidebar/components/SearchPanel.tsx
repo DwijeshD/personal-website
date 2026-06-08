@@ -1,10 +1,11 @@
 'use client'
 
+import Image from 'next/image'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
 import { iconSrcForFile } from '@/lib/fileIcons'
 
 function iconForFile(name: string): React.ReactNode {
-  return <img src={iconSrcForFile(name)} width={16} height={16} alt="" aria-hidden />
+  return <Image src={iconSrcForFile(name)} width={16} height={16} alt="" aria-hidden />
 }
 
 interface Props {

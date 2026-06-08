@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { TABS } from '@/lib/tabs'
 import { iconSrcForFile } from '@/lib/fileIcons'
 
@@ -39,7 +40,7 @@ export default function TabBar({ openTabs, activeTab, onSelect, onClose }: Props
             `}
           >
             {tab.iconSrc
-              ? <img src={tab.iconSrc} width={14} height={14} alt="" className="shrink-0" />
+              ? <Image src={tab.iconSrc} width={14} height={14} alt="" className="shrink-0" />
               : <span className={`text-[11px] ${tab.iconClass}`}>{tab.icon}</span>
             }
             <span className="text-xs">{tab.label}</span>

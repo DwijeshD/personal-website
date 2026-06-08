@@ -250,6 +250,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
               activeModelRef.current = parsed.model
               setActiveModel(parsed.model)
               localStorage.setItem('copilot:resolvedModel', parsed.model)
+              // eslint-disable-next-line react-hooks/purity
               localStorage.setItem('copilot:resolvedModelAt', String(Date.now()))
             }
             const choice = parsed.choices?.[0]

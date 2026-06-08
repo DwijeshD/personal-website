@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import type { CustomFile, CustomFolder } from '@/lib/fileSystem'
 import { iconSrcForFile } from '@/lib/fileIcons'
@@ -78,7 +79,7 @@ export default function CommandPalette({ open, onClose, onNavigate, workspaceFil
               onClick={() => { onNavigate(tab.id); onClose() }}
               className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-vsc-selection transition-colors"
             >
-              <img src={tab.iconSrc} width={16} height={16} alt="" aria-hidden />
+              <Image src={tab.iconSrc} width={16} height={16} alt="" aria-hidden />
               <span className="text-sm text-vsc-text">{tab.label}</span>
               <span className="ml-auto text-xs text-vsc-muted">{tab.path}</span>
             </li>
