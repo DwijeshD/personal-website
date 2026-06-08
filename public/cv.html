@@ -22,7 +22,7 @@
 }
 
 html {
-  font-size: 9.2pt;
+  font-size: 8.6pt;
   background: #e8e5de;
   min-height: 100vh;
   display: flex;
@@ -35,11 +35,11 @@ body {
   color: var(--ink);
   font-family: 'Jost', sans-serif;
   font-weight: 400;
-  line-height: 1.44;
+  line-height: 1.38;
   width: 210mm;
   height: 297mm;
   overflow: hidden;
-  padding: 12mm 15mm 12mm;
+  padding: 10mm 14mm 10mm;
   box-shadow:
     0 2px 4px rgba(0,0,0,0.06),
     0 8px 32px rgba(0,0,0,0.10),
@@ -59,28 +59,28 @@ body::before {
 
 /* ── HEADER ─────────────────────────────────────────────────────── */
 .hd {
-  padding-bottom: 9px;
+  padding-bottom: 7px;
   border-bottom: 1.5px solid var(--ink);
-  margin-bottom: 12px;
+  margin-bottom: 9px;
 }
 
 .hd-name {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 700;
-  font-size: 30pt;
+  font-size: 26pt;
   line-height: 0.9;
   letter-spacing: -0.025em;
   color: var(--ink);
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .hd-role {
-  font-size: 7.2pt;
+  font-size: 6.8pt;
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-3);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .hd-contact {
@@ -103,7 +103,7 @@ body::before {
 }
 
 /* ── SECTIONS ───────────────────────────────────────────────────── */
-.sec { margin-bottom: 10px; }
+.sec { margin-bottom: 7px; }
 
 .sec-label {
   font-size: 6.2pt;
@@ -111,13 +111,13 @@ body::before {
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 7px;
-  padding-bottom: 4px;
+  margin-bottom: 5px;
+  padding-bottom: 3px;
   border-bottom: 1px solid var(--rule);
 }
 
 /* ── ENTRIES ─────────────────────────────────────────────────────── */
-.ent { margin-bottom: 8px; }
+.ent { margin-bottom: 5px; }
 .ent:last-child { margin-bottom: 0; }
 
 .ent-row {
@@ -143,10 +143,10 @@ body::before {
 }
 
 .ent-sub {
-  font-size: 8.4pt;
+  font-size: 8pt;
   color: var(--ink-2);
   font-style: italic;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 /* ── BULLETS ─────────────────────────────────────────────────────── */
@@ -155,10 +155,10 @@ ul.bul { list-style: none; padding: 0; margin: 0; }
 ul.bul li {
   position: relative;
   padding-left: 10px;
-  font-size: 8.6pt;
-  line-height: 1.44;
+  font-size: 8.2pt;
+  line-height: 1.38;
   color: var(--ink-2);
-  margin-bottom: 2.5px;
+  margin-bottom: 1.5px;
 }
 
 ul.bul li::before {
@@ -184,7 +184,7 @@ ul.bul li:last-child { margin-bottom: 0; }
   display: flex;
   flex-wrap: wrap;
   gap: 2px 20px;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .edu-mod {
@@ -199,10 +199,9 @@ ul.bul li:last-child { margin-bottom: 0; }
 
 @media print {
   html { background: white; padding: 0; display: block; }
-  body { width: 100%; height: auto; overflow: visible; box-shadow: none; }
+  body { width: 210mm; height: 297mm; overflow: hidden; box-shadow: none; }
   body::before { display: none; }
   .hd-contact a { color: var(--ink); }
-  .ent { page-break-inside: avoid; }
 }
 </style>
 </head>
