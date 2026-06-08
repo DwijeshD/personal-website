@@ -35,7 +35,7 @@ function isPrivateIp(ip: string): boolean {
   )
 }
 
-export function resetRateLimit(ip: string): void {
+function resetRateLimit(ip: string): void {
   rateLimitMap.delete(ip)
 }
 

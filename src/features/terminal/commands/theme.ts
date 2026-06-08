@@ -9,7 +9,6 @@ const THEMES: Record<string, string> = {
   'solarized-dark': 'Solarized Dark',
 }
 
-export { THEMES }
 
 export default function handler(args: string, ctx: CommandContext): CommandResult {
   const o = (t: string): TerminalLine => ({ type: 'output', text: t })

@@ -18,7 +18,7 @@ export interface AiFileAction {
   content?: string
 }
 
-export const ALLOWED_AI_ACTIONS: ReadonlySet<string> = new Set([
+const ALLOWED_AI_ACTIONS: ReadonlySet<string> = new Set([
   'create_file', 'update_file', 'delete_file', 'create_folder',
 ])
 

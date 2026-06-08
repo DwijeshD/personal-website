@@ -192,7 +192,7 @@ export default function VSCodeLayout() {
               <div className="h-full overflow-hidden">
                 {editor.openTabs.includes(editor.activeTab) && (() => {
                   const filename = idToFilename(editor.activeTab)
-                  if (filename === 'Dwijesh_Dookraz_Resume.pdf') return <ResumePanel />
+                  if (filename === 'resume.pdf') return <ResumePanel />
                   return (
                     <FileEditorPanel
                       key={editor.activeTab}

@@ -51,7 +51,7 @@ export function ContextMenu({
   )
 }
 
-export function CtxBtn({ label, shortcut, onClick, disabled, danger }: {
+function CtxBtn({ label, shortcut, onClick, disabled, danger }: {
   label: string; shortcut?: string; onClick: () => void; disabled?: boolean; danger?: boolean
 }) {
   return (
@@ -69,6 +69,6 @@ export function CtxBtn({ label, shortcut, onClick, disabled, danger }: {
   )
 }
 
-export function CtxSep() {
+function CtxSep() {
   return <div className="my-1 border-t border-[#3c3c3c]" />
 }

@@ -1,4 +1,4 @@
-export const SUGGESTED = [
+const SUGGESTED = [
   { label: 'What has he built?',     query: 'What projects has Dwijesh built and what problems do they solve?' },
   { label: 'Tech stack',             query: "What is Dwijesh's full tech stack and what systems has he worked on?" },
   { label: 'rPPG dissertation',      query: 'Tell me about the rPPG heart rate prediction dissertation.' },

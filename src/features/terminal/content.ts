@@ -98,7 +98,7 @@ export const STACK_LINES = [
   '',
 ]
 
-export const MUSIC_LINES = [
+const MUSIC_LINES = [
   '',
   '  ♪  Now Playing                       lo-fi coding vibes',
   '  ────────────────────────────────────────────────────────',
