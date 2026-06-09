@@ -36,6 +36,8 @@ export const metadata: Metadata = {
   verification: { google: 'QchqJ-794tSYJ4m3tCeC2b-wLST5ZQJyjtXasG6vJ2Q' },
   robots: { index: true, follow: true },
   icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
     apple: '/vscode-icon.png',
   },
   openGraph: {
