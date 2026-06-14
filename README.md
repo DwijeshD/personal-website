@@ -2,7 +2,7 @@
 
 # VS Code Portfolio
 
-**An interactive VS Code environment — not a static page.**
+**An interactive VS Code experience**
 
 <p>
   <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,vscode,vercel,sentry,github,git,jest,eslint" />
