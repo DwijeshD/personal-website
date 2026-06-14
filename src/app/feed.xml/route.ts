@@ -6,25 +6,46 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dwijesh.dev'
 
 const projects = [
   {
-    title: 'rPPG Heart Rate Monitor',
+    title: 'VS Code Portfolio',
     description:
-      'Remote photoplethysmography system using deep learning to measure heart rate from webcam video — no wearables required.',
+      'Personal portfolio built as an interactive VS Code environment — Monaco Editor, file tree, integrated terminal, GitHub integration, and an AI copilot. Built with Next.js 15, TypeScript, and deployed on Vercel.',
     link: `${SITE_URL}/?file=projects.ts`,
-    pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
+    pubDate: 'Wed, 01 Jan 2026 00:00:00 GMT',
   },
   {
-    title: 'AI Agent Orchestration Framework',
+    title: 'Hybrid Recommender System',
     description:
-      'Autonomous multi-agent system with LLM orchestration, RAG pipelines, and real-time tool integrations.',
-    link: `${SITE_URL}/?file=about.md`,
-    pubDate: 'Fri, 01 Mar 2024 00:00:00 GMT',
+      'Two-approach recommender built from scratch in pure Python + NumPy. Combines collaborative filtering and matrix factorisation with streaming SGD — scales to 20M ratings. MAE 0.587 on MovieLens.',
+    link: `${SITE_URL}/?file=projects.ts`,
+    pubDate: 'Sun, 01 Mar 2026 00:00:00 GMT',
   },
   {
-    title: 'Production ML Pipeline',
+    title: 'Heart Rate Estimation via rPPG',
     description:
-      'End-to-end machine learning pipeline with FastAPI serving, Azure Functions, and Firestore — ships models to production.',
+      'Final-year dissertation implementing DeepPhys for non-contact heart rate estimation from facial video. Collected custom dataset spanning Fitzpatrick II–VI to address demographic gaps in public benchmarks.',
     link: `${SITE_URL}/?file=projects.ts`,
-    pubDate: 'Wed, 01 May 2024 00:00:00 GMT',
+    pubDate: 'Sun, 01 Jun 2025 00:00:00 GMT',
+  },
+  {
+    title: 'Gene Expression Analysis — Osteosarcoma',
+    description:
+      'ML and statistical genomics pipeline on GSE1000 microarray data. LDA + Random Forest + differential expression converge on the same ECM regulatory signature across 22,283 probes.',
+    link: `${SITE_URL}/?file=projects.ts`,
+    pubDate: 'Sat, 01 Mar 2025 00:00:00 GMT',
+  },
+  {
+    title: 'Nusmark — AI Productivity Platform',
+    description:
+      'AI-powered productivity platform with calendar sync (Google + Outlook), WhatsApp AI assistant, multi-channel notifications, and internal analytics. Deployed on GCP Cloud Run.',
+    link: `${SITE_URL}/?file=projects.ts`,
+    pubDate: 'Sun, 01 Dec 2024 00:00:00 GMT',
+  },
+  {
+    title: 'Semantic Word Cluster Discovery',
+    description:
+      'Discovers optimal semantic clusters in a 17M-token Wikipedia corpus using co-occurrence embeddings, UMAP reduction, and silhouette-guided K-means — without ground-truth labels. Optimal k=7, validation silhouette 0.698.',
+    link: `${SITE_URL}/?file=projects.ts`,
+    pubDate: 'Sat, 01 Jun 2024 00:00:00 GMT',
   },
 ]
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AI_SYSTEM_PROMPT } from '@/lib/ai/systemPrompt'
 import { buildContext } from '@/lib/contextBuilder'
 import { checkRateLimit, isVpnOrProxy } from '@/lib/rateLimit'
-import { allowedOrigin } from '@/shared/utils/api/security'
+import { allowedOrigin } from '@/lib/security'
 
 export const runtime = 'edge'
 

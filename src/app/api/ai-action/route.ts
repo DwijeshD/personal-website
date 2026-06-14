@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateAiAction } from '@/lib/fileSystem'
 import { isVpnOrProxy } from '@/lib/rateLimit'
-import { allowedOrigin } from '@/shared/utils/api/security'
+import { allowedOrigin } from '@/lib/security'
 
 export const runtime = 'edge'
 
