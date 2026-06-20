@@ -50,8 +50,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: '/og-image.png',
-        width: 1200,
-        height: 630,
+        width: 1440,
+        height: 900,
         alt: 'Dwijesh Dookraz — Backend Engineer & AI Systems',
       },
     ],
