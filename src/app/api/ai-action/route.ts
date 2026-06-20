@@ -20,12 +20,14 @@ function checkRateLimit(ip: string): boolean {
 }
 
 // ── Model fallback chain ─────────────────────────────────────────────────────
-// Ordered by quality. If a model is rate-limited (429) or returns bad JSON,
-// the next one is tried automatically.
+// openrouter/free lets OpenRouter pick the best available free model at
+// request time — no hardcoded slug to go stale when a provider deprecates a
+// model. Repeated here (not deduped) so a bad/rate-limited/invalid-JSON pick
+// gets retried against the router again rather than giving up after one try.
 const MODELS = [
   'openrouter/free',
-  'openai/gpt-oss-120b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
+  'openrouter/free',
+  'openrouter/free',
 ]
 
 const MODEL_TIMEOUT_MS = 45_000
