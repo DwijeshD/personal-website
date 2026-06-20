@@ -63,12 +63,11 @@ export async function isVpnOrProxy(ip: string): Promise<boolean> {
   if (isPrivateIp(ip)) return false
   if (vpnCache.has(ip)) return vpnCache.get(ip)!
 
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 2_500)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 2_500)
 
+  try {
     const res = await fetch(`https://ipinfo.io/${ip}/json`, { signal: controller.signal })
-    clearTimeout(timer)
 
     if (!res.ok) { vpnCache.set(ip, false); return false }
 
@@ -84,5 +83,7 @@ export async function isVpnOrProxy(ip: string): Promise<boolean> {
     // If check fails (timeout, network), fail open — don't block
     vpnCache.set(ip, false)
     return false
+  } finally {
+    clearTimeout(timer)
   }
 }
