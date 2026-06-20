@@ -19,8 +19,8 @@ export const README_MD = `<div align="center">
   <img src="https://img.shields.io/badge/Vercel_Analytics-000000?style=for-the-badge&logo=vercel&logoColor=white" />
   <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white" />
   <img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white" />
-  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/Mermaid-FF3670?style=for-the-badge&logo=mermaid&logoColor=white" />
+  <img src="https://img.shields.io/badge/Microsoft_Clarity-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" />
 </p>
 
 </div>
@@ -65,17 +65,20 @@ The design is intentionally familiar to developers because it borrows the struct
 | **Monaco Editor** | Syntax-highlighted viewing for files such as HTML, SVG, TypeScript, Markdown, and JSON |
 | **Live Preview** | Selected files can render visually inside the app |
 | **Project Explorer** | Browse portfolio content through a file-tree interface |
-| **AI Copilot** | Ask questions about projects, skills, experience, and background |
-| **Integrated Terminal** | Run portfolio and system commands such as \`whoami\`, \`skills\`, \`projects\`, \`timeline\`, \`contact\`, \`ls\`, \`open\`, \`architecture\`, \`stack\`, \`logs\`, \`deploy\`, \`monitor\`, and \`theme\` |
+| **AI Copilot** | Ask questions about projects, skills, experience, and background; can also create/edit/delete workspace files on request |
+| **Integrated Terminal** | Run portfolio and system commands such as \`whoami\`, \`skills\`, \`projects\`, \`timeline\`, \`contact\`, \`ls\`, \`open\`, \`architecture\`, \`stack\`, \`logs\`, \`deploy\`, \`monitor\`, and \`theme\`, plus easter eggs (\`donut\`, \`dino\`, \`matrix\`, \`neofetch\`, \`fortune\`, \`sudo\`) |
 | **GitHub Integration** | Uses GitHub data to support repository and contribution information |
 | **Query Param File Routing** | Open files are shareable through \`?file=filename.ext\` |
 | **Keyboard Navigation** | Supports VS Code-style shortcuts for faster navigation |
 | **Command Palette** | Quickly access actions and workspace commands |
 | **Status Bar** | Shows current file and editor state |
+| **Theme Picker** | 6 editor themes (VS Code Dark+, Dracula, Night Owl, One Dark Pro, Monokai, Solarized Dark) |
+| **Source Control Panel** | Shows live commit count pulled from the GitHub API |
+| **Bug Reporting** | Copilot surfaces a form that files a bug report directly as a GitHub issue |
 | **Analytics Layer** | Tracks usage and visitor behaviour using lightweight analytics |
 | **Monitoring Layer** | Captures errors and runtime issues through Sentry |
 | **Performance Insights** | Measures real-world loading and interaction performance |
-| **Testing Setup** | Supports linting, unit tests, and browser-level tests |
+| **Testing Setup** | Linting, type checking, and unit tests for commands and renderers |
 | **Vercel Deployment** | Uses Vercel for production hosting and preview deployments |
 
 ---
@@ -120,8 +123,7 @@ The design is intentionally familiar to developers because it borrows the struct
 | **VS Code** | Design reference | Familiar developer interface and strong visual identity |
 | **ESLint** | Code quality | Catches avoidable problems and keeps the codebase consistent |
 | **Jest** | Unit testing | Useful for testing helpers, command parsing, and data utilities |
-| **Playwright** | Browser testing | Useful for testing real UI flows such as opening files and using the terminal |
-| **Mermaid** | Diagrams | Useful for architecture diagrams and system explanations |
+| **Mermaid** | Diagrams | Renders the \`architecture\` terminal command and other diagrams |
 
 ---
 
@@ -160,7 +162,7 @@ Other examples:
 https://dwijesh.dev/?file=home.html
 https://dwijesh.dev/?file=about.svg
 https://dwijesh.dev/?file=projects.ts
-https://dwijesh.dev/?file=experience.json
+https://dwijesh.dev/?file=resume.pdf
 \`\`\`
 
 This keeps the whole experience inside one interactive editor shell while still allowing specific files to be shared directly.
@@ -176,6 +178,7 @@ The portfolio includes analytics and monitoring because it behaves like a real f
 | **Vercel Analytics** | Page views and visitor behaviour | Native to the deployment platform, low setup, and cost efficient |
 | **Vercel Speed Insights** | Core Web Vitals and performance | Helps identify slow loads, layout shifts, and poor interaction timing |
 | **Sentry** | Error tracking and runtime monitoring | Captures frontend exceptions and production issues |
+| **Microsoft Clarity** | Session replay and heatmaps | Shows real visitor behaviour and interaction patterns |
 | **Application Logs** | Debugging and terminal output | Helps explain system behaviour inside the portfolio interface |
 
 ### Why These Tools
@@ -230,7 +233,7 @@ Files are opened through query parameters:
 /?file=projects.ts
 /?file=home.html
 /?file=about.svg
-/?file=experience.json
+/?file=resume.pdf
 \`\`\`
 
 The goal is not to pretend every file is a separate traditional page. The goal is to make the interactive workspace discoverable while keeping the VS Code experience intact.
@@ -251,7 +254,7 @@ The SEO strategy is simple: keep the interactive editor experience, but make the
 
 ## AI Copilot
 
-The AI copilot lets visitors ask questions about my work instead of manually searching through every file.
+The AI copilot lets visitors ask questions about my work instead of manually searching through every file. It can also @mention a file to attach its content to the conversation, edit/create/delete files in the workspace on request, and file a bug report straight to GitHub if something's broken.
 
 Example questions:
 
@@ -271,6 +274,9 @@ How does this portfolio work technically?
 |---|---|
 | **Profile Context** | Gives the copilot structured information about my background |
 | **Project Context** | Allows answers about specific projects |
+| **File Mentions** | \`@file.ext\` attaches a workspace file's content to the conversation |
+| **File Editing** | Copilot can create, update, or delete workspace files via a structured action format |
+| **Bug Report Widget** | Files a GitHub issue directly from the chat |
 | **System Prompt** | Keeps answers focused on portfolio-relevant information |
 | **API Route** | Keeps AI calls server-side |
 | **Streaming UI** | Makes responses feel faster |
@@ -308,7 +314,6 @@ The portfolio is public, so the security rule is blunt:
 | **TypeScript** | Catches type errors before runtime |
 | **ESLint** | Catches bad patterns and keeps code consistent |
 | **Jest** | Tests helpers, utilities, command parsing, and data logic |
-| **Playwright** | Tests real browser flows |
 
 ### Useful Test Areas
 
@@ -373,6 +378,7 @@ Testing is included because the site has real application behaviour. It is not j
 │  ├─ Vercel Analytics                        │
 │  ├─ Vercel Speed Insights                   │
 │  ├─ Sentry Monitoring                       │
+│  ├─ Microsoft Clarity                       │
 │  └─ Vercel Deployment                       │
 └─────────────────────────────────────────────┘
 \`\`\`
@@ -413,7 +419,7 @@ https://dwijesh.dev/?file=README.md
 https://dwijesh.dev/?file=home.html
 https://dwijesh.dev/?file=about.svg
 https://dwijesh.dev/?file=projects.ts
-https://dwijesh.dev/?file=experience.json
+https://dwijesh.dev/?file=resume.pdf
 \`\`\`
 
 The \`file\` query parameter controls which workspace file opens by default.
@@ -459,6 +465,15 @@ SYSTEM
   deploy          simulate CI/CD pipeline
   monitor         live system metrics
   theme [name]    list or apply a color theme
+  clear           clear terminal
+
+EXTRAS
+  neofetch        system info card
+  fortune         random dev wisdom
+  sudo            nice try
+  donut           3D ASCII rotating donut
+  dino            chrome dinosaur game
+  matrix          enter the matrix
 \`\`\`
 
 No fake commands are listed here. Only actual supported commands should appear.
@@ -469,12 +484,16 @@ No fake commands are listed here. Only actual supported commands should appear.
 
 | Shortcut | Action |
 |---|---|
-| \`Ctrl + P\` | Quick open |
-| \`Ctrl + Shift + P\` | Command palette |
-| \`Ctrl + Shift + I\` | Toggle AI Copilot |
+| \`Ctrl + P\` | Command palette / go to file |
+| \`Ctrl + Shift + A\` | Toggle AI Copilot |
 | \`Ctrl + Backtick\` | Toggle terminal |
 | \`Ctrl + B\` | Toggle sidebar |
-| \`Ctrl + ,\` | Settings |
+| \`Ctrl + T\` | Open home tab |
+| \`Ctrl + W\` | Close current tab |
+| \`Ctrl + Shift + W\` | Close all tabs |
+| \`Ctrl + =\` / \`Ctrl + -\` / \`Ctrl + 0\` | Zoom in / out / reset |
+| \`F11\` | Fullscreen |
+| \`Esc\` | Close command palette |
 
 ---
 
@@ -485,7 +504,7 @@ No fake commands are listed here. Only actual supported commands should appear.
 | \`home.html\` | Landing page, intro, profile overview, and contact information |
 | \`about.svg\` | Visual explanation of the portfolio system |
 | \`projects.ts\` | Structured project data with technologies, descriptions, and links |
-| \`experience.json\` | Skills, education, experience, and engineering profile |
+| \`resume.pdf\` | Embedded PDF resume |
 | \`README.md\` | Project documentation |
 
 
@@ -502,9 +521,9 @@ This project is designed to look polished without needing expensive infrastructu
 | **Monitoring** | Sentry for focused error visibility |
 | **Icons** | Existing hosted icon services instead of custom asset hosting |
 | **Frontend Stack** | Mostly frontend-driven app to avoid unnecessary backend complexity |
-| **AI Usage** | API route and rate limiting to control spend |
+| **AI Usage** | Free-tier OpenRouter model fallback chain plus rate limiting to control spend |
 | **Preview Deployments** | Vercel previews instead of maintaining a separate staging server |
-| **Testing** | Jest and Playwright instead of heavier enterprise tooling |
+| **Testing** | Jest instead of heavier enterprise tooling |
 
 The stack keeps operational cost low while still showing production-level thinking.
 
@@ -541,7 +560,7 @@ The stack keeps operational cost low while still showing production-level thinki
   <a href="https://github.com/DwijeshD">
     <img src="https://img.shields.io/badge/GitHub-DwijeshD-181717?style=for-the-badge&logo=github&logoColor=white" />
   </a>
-  <a href="https://linkedin.com/in/DwijeshD">
+  <a href="https://linkedin.com/in/dwijesh-dookraz">
     <img src="https://img.shields.io/badge/LinkedIn-Dwijesh_Dookraz-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" />
   </a>
   <a href="mailto:dwijeshdookraz1@gmail.com">

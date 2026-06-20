@@ -9,7 +9,6 @@ import type { Message, LogEntry, IssueState } from '@/features/copilot/types'
 import { detectIntent, BUG_KEYWORDS } from '@/features/copilot/lib/detectIntent'
 import { formatModel } from '@/features/copilot/lib/formatModel'
 import { useStreamingDisplay } from '@/features/copilot/hooks/useStreamingDisplay'
-import { usePrefetchCache } from '@/features/copilot/hooks/usePrefetchCache'
 import { ThinkingIndicator } from '@/features/copilot/components/ThinkingIndicator'
 import { CopilotIcon } from '@/features/copilot/components/CopilotIcon'
 import { LogsView } from '@/features/copilot/components/LogsView'
@@ -68,8 +67,20 @@ function StreamingBubble({
   return <CopilotMarkdown content={content} />
 }
 
+const SESSION_KEY = 'copilot:messages'
+
+function loadStoredMessages(): Message[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    return raw ? (JSON.parse(raw) as Message[]) : []
+  } catch {
+    return []
+  }
+}
+
 export default function CopilotPanel({ onThinkingChange, onClose, onPendingAction, workspaceFiles = [], fileContents = {}, triggerBugReport }: Props) {
-  const [messages, setMessages]           = useState<Message[]>([])
+  const [messages, setMessages]           = useState<Message[]>(loadStoredMessages)
   const [input, setInput]                 = useState('')
   const [streaming, setStreaming]         = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
@@ -94,7 +105,14 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     setStreaming,
     setMessages,
   )
-  const prefetchCache = usePrefetchCache(setMsgsLeft)
+
+  // Persist chat history for the lifetime of the tab — survives panel close/reopen, clears on tab/site close.
+  useEffect(() => {
+    try {
+      if (messages.length > 0) sessionStorage.setItem(SESSION_KEY, JSON.stringify(messages))
+      else sessionStorage.removeItem(SESSION_KEY)
+    } catch { /* storage unavailable — ignore */ }
+  }, [messages])
 
   // Open bug report form when triggered externally (e.g. Help > Report a Bug)
   useEffect(() => {
@@ -179,16 +197,6 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     setStreaming(true)
 
     pushLog('info', 'REQUEST', `msg #${history.length} — "${content.slice(0, 80)}${content.length > 80 ? '…' : ''}"`)
-
-    const cached = prefetchCache.current.get(content)
-    if (cached) {
-      prefetchCache.current.delete(content)
-      rawAccumRef.current = cached
-      networkDoneRef.current = true
-      pushLog('info', 'CACHE', `served from prefetch — ${cached.length} chars buffered`)
-      inputRef.current?.focus()
-      return  // display interval handles rendering + setStreaming(false)
-    }
 
     const fileCtx = attachedFiles(content, workspaceFiles, fileContents)
     if (fileCtx.length > 0) pushLog('info', 'FILES', `attaching ${fileCtx.length} file(s): ${fileCtx.map(f => f.path).join(', ')}`)
