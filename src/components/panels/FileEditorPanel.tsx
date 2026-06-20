@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { getLanguage, configureMonaco } from '@/lib/monacoConfig'
+import type { ViewMode } from '@/hooks/useEditorState'
 import type * as MonacoTypes from 'monaco-editor'
 
 const MonacoEditor     = dynamic(() => import('@monaco-editor/react'),              { ssr: false, loading: () => <EditorSkeleton /> })
@@ -11,8 +12,6 @@ const HTMLRenderer     = dynamic(() => import('../renderers/HTMLRenderer'),     
 const SVGRenderer      = dynamic(() => import('../renderers/SVGRenderer'),           { ssr: false })
 const TxtRenderer      = dynamic(() => import('../renderers/TxtRenderer'),           { ssr: false })
 const LiveCodeRenderer = dynamic(() => import('../renderers/LiveCodeRenderer'),      { ssr: false })
-
-export type ViewMode = 'code' | 'split' | 'preview'
 
 interface Props {
   filename:     string

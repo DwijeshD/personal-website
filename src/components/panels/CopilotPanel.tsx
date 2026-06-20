@@ -8,12 +8,12 @@ import { DEFAULT_CONTENT } from '@/shared/content'
 import type { Message, LogEntry, IssueState } from '@/features/copilot/types'
 import { detectIntent, BUG_KEYWORDS } from '@/features/copilot/lib/detectIntent'
 import { formatModel } from '@/features/copilot/lib/formatModel'
+import { maybeAutoLogBug, streamChatSSE } from '@/features/copilot/lib/streamChat'
 import { useStreamingDisplay } from '@/features/copilot/hooks/useStreamingDisplay'
-import { ThinkingIndicator } from '@/features/copilot/components/ThinkingIndicator'
-import { CopilotIcon } from '@/features/copilot/components/CopilotIcon'
 import { LogsView } from '@/features/copilot/components/LogsView'
 import { BugReportWidget } from '@/features/copilot/components/BugReportWidget'
-import { CopilotMarkdown } from '@/features/copilot/components/CopilotMarkdown'
+import { EmptyState } from '@/features/copilot/components/EmptyState'
+import { MessageList } from '@/features/copilot/components/MessageList'
 
 interface Props {
   onThinkingChange:  (v: boolean) => void
@@ -45,26 +45,6 @@ function attachedFiles(
     .map(n => ({ path: n, content: resolveFileContent(n, fileContents) }))
     .filter(f => f.content.length > 0)
     .slice(0, 5)
-}
-
-// Re-trigger the CSS animation on the same DOM node without remounting.
-// Key-based remounting causes a visible flash; this approach doesn't.
-function StreamingBubble({
-  content,
-  isStreaming,
-  busy,
-}: {
-  content: string
-  isStreaming: boolean
-  busy: boolean
-}) {
-  if (!content) return busy ? <ThinkingIndicator /> : null
-  // During streaming: plain text to avoid markdown reconciliation flicker.
-  // After streaming: full markdown render.
-  if (isStreaming) {
-    return <span className="whitespace-pre-wrap">{content}</span>
-  }
-  return <CopilotMarkdown content={content} />
 }
 
 const SESSION_KEY = 'copilot:messages'
@@ -157,32 +137,13 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   }
 
   const BUG_PREFILL = 'I encountered a bug with the website: '
-  const bugReportRe = /^I encountered a bug with the website:\s*(.+)/i
 
   async function sendChat(text?: string) {
     const content = (text ?? input).trim()
     if (!content || streaming) return
 
-    // Auto-submit bug report if structured format detected
-    let aiContext = content
-    const bugMatch = content.match(bugReportRe)
-    if (bugMatch) {
-      const desc = bugMatch[1].trim()
-      try {
-        const r = await fetch('/api/report-issue', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: desc.slice(0, 100), description: desc }),
-        })
-        const data = await r.json()
-        aiContext = r.ok
-          ? `${content}\n\n[SYSTEM: Bug automatically logged as GitHub Issue #${data.number}. Confirm this to the user and tell them it has been logged.]`
-          : `${content}\n\n[SYSTEM: Bug logging failed — ${data.error}. Apologise and tell the user to try again.]`
-      } catch {
-        aiContext = `${content}\n\n[SYSTEM: Bug logging failed — network error.]`
-      }
-      setPendingBugMsg(null)
-    }
+    const aiContext = await maybeAutoLogBug(content)
+    if (aiContext !== content) setPendingBugMsg(null)
 
     const userMsg: Message = { role: 'user', content }
     const history = [...messages, userMsg]
@@ -201,7 +162,6 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
     const fileCtx = attachedFiles(content, workspaceFiles, fileContents)
     if (fileCtx.length > 0) pushLog('info', 'FILES', `attaching ${fileCtx.length} file(s): ${fileCtx.map(f => f.path).join(', ')}`)
 
-    // eslint-disable-next-line react-hooks/purity
     const requestSentAt = Date.now()
     const controller = new AbortController()
     abortRef.current = controller
@@ -235,48 +195,21 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         return
       }
 
-      const reader  = res.body!.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      let firstTokenAt: number | null = null
-      let totalChars = 0
-      let finishReason: string | null = null
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          const data = line.slice(6).trim()
-          if (data === '[DONE]') { pushLog('info', 'STREAM', '[DONE] received'); break }
-          try {
-            const parsed = JSON.parse(data)
-            if (parsed.model && parsed.model !== activeModelRef.current && formatModel(parsed.model)) {
-              activeModelRef.current = parsed.model
-              setActiveModel(parsed.model)
-              localStorage.setItem('copilot:resolvedModel', parsed.model)
-              // eslint-disable-next-line react-hooks/purity
-              localStorage.setItem('copilot:resolvedModelAt', String(Date.now()))
-            }
-            const choice = parsed.choices?.[0]
-            const delta  = choice?.delta?.content
-            const reason = choice?.finish_reason
-            if (reason) finishReason = reason
-            if (delta) {
-              if (!firstTokenAt) {
-                // eslint-disable-next-line react-hooks/purity
-                firstTokenAt = Date.now()
-                pushLog('info', 'STREAM', `first token — latency ${firstTokenAt - requestSentAt}ms`)
-              }
-              totalChars += delta.length
-              rawAccumRef.current += delta  // buffer only — display interval renders at fixed rate
-            }
-          } catch { /* skip malformed SSE */ }
-        }
-      }
+      const { totalChars, finishReason } = await streamChatSSE(res.body!, {
+        onModel: (model) => {
+          if (model !== activeModelRef.current && formatModel(model)) {
+            activeModelRef.current = model
+            setActiveModel(model)
+            localStorage.setItem('copilot:resolvedModel', model)
+            localStorage.setItem('copilot:resolvedModelAt', String(Date.now()))
+          }
+        },
+        onDelta: (delta) => { rawAccumRef.current += delta }, // buffer only — display interval renders at fixed rate
+        onFirstToken: () => {
+          pushLog('info', 'STREAM', `first token — latency ${Date.now() - requestSentAt}ms`)
+        },
+        onLog: pushLog,
+      })
 
       // Strip <file-action> from rawAccum before display interval types it out
       const fileActionMatch = rawAccumRef.current.match(/<file-action>([\s\S]*?)<\/file-action>/i)
@@ -512,147 +445,28 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
       {/* ── Chat / Empty state ── */}
       <div className={`flex-1 overflow-y-auto panel-scroll ${activeView !== 'chat' ? 'hidden' : ''}`}>
         {isEmpty ? (
-          <div className="flex flex-col items-center justify-center h-full gap-5 px-6">
-            {/* Logo */}
-            <CopilotIcon size={72} />
-
-            {/* Heading + disclaimer */}
-            <div className="text-center space-y-2">
-              <div className="text-[15px] font-semibold text-vsc-text">Ask Copilot</div>
-              <div className="text-[11px] text-vsc-muted leading-[1.6] max-w-[230px]">
-                Copilot is powered by AI, so mistakes are possible. Review output carefully before use.
-              </div>
-            </div>
-
-            {/* Action icon buttons */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => sendChat("What projects has Dwijesh built and what problems do they solve?")}
-                title="What has he built?"
-                className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-vsc-border/50 hover:border-vsc-border hover:bg-vsc-hover transition-colors group"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-vsc-muted group-hover:text-vsc-text transition-colors">
-                  <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
-                </svg>
-                <span className="text-[10px] text-vsc-muted group-hover:text-vsc-text transition-colors">Projects</span>
-              </button>
-              <button
-                onClick={() => sendChat("What is Dwijesh's full tech stack and what systems has he worked on?")}
-                title="Tech stack"
-                className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-vsc-border/50 hover:border-vsc-border hover:bg-vsc-hover transition-colors group"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-vsc-muted group-hover:text-vsc-text transition-colors">
-                  <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-                </svg>
-                <span className="text-[10px] text-vsc-muted group-hover:text-vsc-text transition-colors">Stack</span>
-              </button>
-              <button
-                onClick={() => sendChat("Is Dwijesh open to new roles? What kind of work is he looking for?")}
-                title="Open to work?"
-                className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-vsc-border/50 hover:border-vsc-border hover:bg-vsc-hover transition-colors group"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-vsc-muted group-hover:text-vsc-text transition-colors">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span className="text-[10px] text-vsc-muted group-hover:text-vsc-text transition-colors">Hire</span>
-              </button>
-              <button
-                onClick={() => sendChat("Tell me about the rPPG heart rate prediction dissertation.")}
-                title="Dissertation"
-                className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-vsc-border/50 hover:border-vsc-border hover:bg-vsc-hover transition-colors group"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-vsc-muted group-hover:text-vsc-text transition-colors">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-                <span className="text-[10px] text-vsc-muted group-hover:text-vsc-text transition-colors">Research</span>
-              </button>
-              <button
-                onClick={() => { setInput(BUG_PREFILL); setTimeout(() => inputRef.current?.focus(), 0) }}
-                title="Report a bug"
-                className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-vsc-border/50 hover:border-[#f14c4c]/40 hover:bg-vsc-hover transition-colors group"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-vsc-muted group-hover:text-[#f14c4c] transition-colors">
-                  <path d="M9 2h6l1 4H8L9 2z"/><path d="M5 8h14l-1 13H6L5 8z"/><line x1="12" y1="12" x2="12" y2="17"/>
-                </svg>
-                <span className="text-[10px] text-vsc-muted group-hover:text-[#f14c4c] transition-colors">Bug</span>
-              </button>
-            </div>
-
-            <div className="flex flex-col items-center gap-0.5">
-              {activeModel && formatModel(activeModel) && (
-                <div className="text-[11px] text-vsc-muted/70 font-mono text-center break-all" title={activeModel}>
-                  {formatModel(activeModel)}
-                </div>
-              )}
-              <div className="text-[10px] text-vsc-muted/40 font-mono">
-                Powered by OpenRouter
-              </div>
-            </div>
-          </div>
+          <EmptyState
+            activeModel={activeModel}
+            onQuickAsk={(text) => sendChat(text)}
+            onBugPrefill={() => { setInput(BUG_PREFILL); setTimeout(() => inputRef.current?.focus(), 0) }}
+          />
         ) : (
-          <div className="space-y-4 px-3 py-4 font-mono text-sm">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {m.role === 'assistant' && (
-                  <div className="shrink-0 mt-0.5"><CopilotIcon size={20} muted /></div>
-                )}
-                <div className="flex flex-col gap-1 max-w-[88%]">
-                  {m.role === 'assistant' && m.thinking && (
-                    <div className="rounded-md border border-vsc-border/40 bg-[#1e1e1e] text-[11px] overflow-hidden">
-                      <button
-                        onClick={() => setThinkExpanded(prev => ({ ...prev, [i]: !prev[i] }))}
-                        className="flex items-center gap-1.5 w-full px-2.5 py-1.5 text-vsc-muted/60 hover:text-vsc-muted transition-colors"
-                      >
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" className={`transition-transform ${thinkExpanded[i] ? 'rotate-90' : ''}`}>
-                          <path d="M2 1l4 3-4 3V1z" />
-                        </svg>
-                        <span className="italic">Thinking…</span>
-                      </button>
-                      {thinkExpanded[i] && (
-                        <div className="px-3 pb-2.5 pt-0.5 text-vsc-muted/50 leading-5 whitespace-pre-wrap border-t border-vsc-border/30">
-                          {m.thinking}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className={`px-3 py-2 rounded-lg text-[12px] leading-5 ${
-                    m.role === 'user'
-                      ? 'bg-[#094771] border border-[#007acc]/40 text-vsc-text whitespace-pre-wrap'
-                      : 'bg-[#252526] border border-vsc-border/60 text-vsc-text/90'
-                  }`}>
-                    {m.role === 'assistant'
-                      ? <StreamingBubble
-                          content={m.content}
-                          isStreaming={streaming && i === messages.length - 1}
-                          busy={busy && i === messages.length - 1}
-                        />
-                      : m.content}
-                  </div>
-                  {m.action && !busy && (
-                    <button
-                      onClick={() => { onPendingAction(m.action!, () => { setMessages(prev => { const c = [...prev]; c[i] = { ...c[i], action: undefined }; return c }) }) }}
-                      className="self-start flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-[#4ec9b0] border border-[#4ec9b0]/40 rounded hover:bg-[#4ec9b0]/10 transition-colors font-mono"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                      Apply {m.action.action.replace('_', ' ')} → {m.action.path}
-                    </button>
-                  )}
-                  {failedIdx === i && lastEditMsg && !busy && (
-                    <button
-                      onClick={() => sendEditRequest(lastEditMsg)}
-                      className="self-start flex items-center gap-1 px-2 py-0.5 text-[11px] text-[#4ec9b0] border border-[#4ec9b0]/40 rounded hover:bg-[#4ec9b0]/10 transition-colors"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
-                      </svg>
-                      Try again
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
+          <MessageList
+            messages={messages}
+            streaming={streaming}
+            busy={busy}
+            thinkExpanded={thinkExpanded}
+            onToggleThink={(idx) => setThinkExpanded(prev => ({ ...prev, [idx]: !prev[idx] }))}
+            failedIdx={failedIdx}
+            lastEditMsg={lastEditMsg}
+            onApplyAction={(idx, action) => {
+              onPendingAction(action, () => {
+                setMessages(prev => { const c = [...prev]; c[idx] = { ...c[idx], action: undefined }; return c })
+              })
+            }}
+            onRetry={(msg) => sendEditRequest(msg)}
+            bottomRef={bottomRef}
+          />
         )}
       </div>
 

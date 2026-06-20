@@ -96,7 +96,7 @@ const jsonLd = {
       },
       knowsAbout: [
         'Python', 'FastAPI', 'Flask', 'PyTorch', 'Deep Learning',
-        'OAuth2', 'Webhooks', 'REST APIs', 'Firestore', 'Azure Functions',
+        'OAuth2', 'Webhooks', 'REST APIs', 'Firestore', 'Google Cloud Platform', 'GCP Cloud Run',
         'rPPG', 'Signal Processing', 'Machine Learning',
       ],
     },
