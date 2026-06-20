@@ -224,15 +224,22 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
 
       networkDoneRef.current = true  // signal display interval to stop after draining
 
+      // Some free models leak a bare moderation verdict instead of an actual reply
+      const isJunkOnly = /^\s*(user\s+)?safety\s*:\s*\w+\.?\s*$/i.test(rawAccumRef.current)
+
       pushLog(
-        totalChars === 0 ? 'warn' : 'info',
+        totalChars === 0 || isJunkOnly ? 'warn' : 'info',
         'STREAM',
         `ended — ${totalChars} chars buffered, finish_reason: ${finishReason ?? 'not provided'}`,
       )
-      if (totalChars === 0) {
+      if (totalChars === 0 || isJunkOnly) {
         setStreaming(false)
-        pushLog('warn', 'EMPTY', 'stream closed with no content — model may have hit context limit or been filtered')
-        const hint = finishReason === 'length'
+        pushLog('warn', 'EMPTY', isJunkOnly
+          ? 'model returned a moderation tag instead of a reply'
+          : 'stream closed with no content — model may have hit context limit or been filtered')
+        const hint = isJunkOnly
+          ? 'The model returned an empty response — try sending your message again.'
+          : finishReason === 'length'
           ? 'The model hit its context limit — try a shorter message or attach a smaller file.'
           : 'No response received. The model may be unavailable — try again.'
         setMessages((m) => {

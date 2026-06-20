@@ -13,7 +13,8 @@ const MODEL_TIMEOUT  = 45_000
 
 // Ordered by quality — skips 429s automatically until one works
 const CHAT_MODELS = [
-  'openrouter/free',
+  'openai/gpt-oss-120b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
 ]
 
 interface Message {
