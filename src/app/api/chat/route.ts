@@ -11,10 +11,13 @@ const MAX_MSG_LENGTH = 2000
 const MAX_BODY_BYTES = 50_000
 const MODEL_TIMEOUT  = 45_000
 
-// Ordered by quality — skips 429s automatically until one works
+// openrouter/free lets OpenRouter pick the best available free model at
+// request time — no hardcoded slug to go stale when a provider deprecates
+// a model. Occasional bad picks (e.g. a model leaking a moderation tag
+// instead of a real reply) are caught client-side, see isJunkOnly in
+// CopilotPanel.
 const CHAT_MODELS = [
-  'openai/gpt-oss-120b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
+  'openrouter/free',
 ]
 
 interface Message {
