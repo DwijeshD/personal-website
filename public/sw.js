@@ -46,8 +46,9 @@ self.addEventListener('fetch', e => {
     caches.match(request).then(cached => {
       if (cached) return cached
       return fetch(request).then(res => {
+        const toCache = res.clone()
         if (res.ok && request.url.startsWith(self.location.origin)) {
-          caches.open(CACHE).then(c => c.put(request, res.clone()))
+          caches.open(CACHE).then(c => c.put(request, toCache))
         }
         return res
       })

@@ -129,17 +129,8 @@ const PRELOAD_ICONS = [
   '/icons/dark/search.svg',
   '/icons/dark/source-control.svg',
   '/icons/dark/settings-gear.svg',
-  // Default tab file icons
+  // Default tab file icon (home.html is open on first paint)
   '/icons/files/html.svg',
-  '/icons/files/markdown.svg',
-  '/icons/files/pdf.svg',
-  '/icons/files/json.svg',
-  '/icons/files/typescript.svg',
-  '/icons/files/image.svg',
-  // Sidebar folder/file
-  '/icons/files/folder.svg',
-  '/icons/files/folder-open.svg',
-  '/icons/files/file.svg',
 ]
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -148,13 +139,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Preconnect to Monaco CDN — resolves DNS+TLS in parallel with page load */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-
-        {/* Preload icon fonts — font-display:block means these block render; starting early cuts wait */}
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/file-icons.woff2" />
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/octicons.woff2" />
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/fontawesome.woff2" />
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/devopicons.woff2" />
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/fonts/mfixx.woff2" />
 
         {PRELOAD_ICONS.map(href => (
           <link key={href} rel="preload" as="image" type="image/svg+xml" href={href} />

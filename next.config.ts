@@ -22,15 +22,15 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Next.js App Router requires unsafe-inline; Monaco loads from jsdelivr CDN; Microsoft Clarity
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.clarity.ms",
+      // Next.js App Router requires unsafe-inline; Monaco loads from jsdelivr CDN; Microsoft Clarity; Vercel Speed Insights/Analytics
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.clarity.ms https://scripts.clarity.ms https://va.vercel-scripts.com",
       // Tailwind and Google Fonts need unsafe-inline + font CDN
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com data:",
       // External image services used by README badges + GitHub profile widgets
       "img-src 'self' data: blob: https://capsule-render.vercel.app https://readme-typing-svg.demolab.com https://media.giphy.com https://img.shields.io https://skillicons.dev https://github-profile-summary-cards.vercel.app https://github-readme-streak-stats.herokuapp.com https://github-readme-activity-graph.vercel.app https://komarev.com https://raw.githubusercontent.com",
       // Client calls own API; Monaco fetches from jsdelivr; Clarity telemetry; Sentry error reporting
-      "connect-src 'self' https://cdn.jsdelivr.net https://www.clarity.ms https://*.clarity.ms https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
+      "connect-src 'self' https://cdn.jsdelivr.net https://www.clarity.ms https://*.clarity.ms https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://va.vercel-scripts.com https://vitals.vercel-insights.com",
       // Monaco editor spawns web workers via blob: URLs
       "worker-src blob: 'self'",
       // No plugins (Flash etc.)
