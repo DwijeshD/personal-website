@@ -1,6 +1,5 @@
-const CACHE = 'portfolio-v2'
+const CACHE = 'portfolio-v3'
 const PRECACHE = [
-  '/',
   '/vscode-icon.png',
   '/manifest.webmanifest',
   '/fonts/file-icons.woff2',
@@ -41,7 +40,17 @@ self.addEventListener('fetch', e => {
     return
   }
 
-  // Cache-first for everything else
+  // Network-first for HTML documents — a cached shell can reference JS chunk
+  // hashes from a previous deploy that no longer exist, 404ing every asset.
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    e.respondWith(
+      fetch(request).catch(() => caches.match(request).then(cached => cached || Response.error()))
+    )
+    return
+  }
+
+  // Cache-first for everything else (hashed static assets — safe forever, a
+  // new build never reuses an old filename)
   e.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached
