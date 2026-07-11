@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Personal portfolio built as a VS Code clone — Monaco editor, file tree, AI copilot, source control panel.",
   "private": true,
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
