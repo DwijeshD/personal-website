@@ -26,13 +26,16 @@ export function useEditorState() {
   const [workspaceFiles, setWorkspaceFiles]     = useState<CustomFile[]>(() => TABS.map(t => ({ id: t.id, name: t.label })))
   const [workspaceFolders, setWorkspaceFolders] = useState<CustomFolder[]>([])
   const [recentFiles, setRecentFiles]     = useState<string[]>([])
+  const [gotoTarget, setGotoTarget]       = useState<{ id: string; line: number } | null>(null)
 
   const defaultFileIds = useMemo(() => new Set(TABS.map(t => t.id)), [])
 
-  const navigate = useCallback((id: string) => {
+  const navigate = useCallback((id: string, line?: number) => {
     setOpenTabs(prev => prev.includes(id) ? prev : [...prev, id])
     setActiveTab(id)
     setRecentFiles(prev => [id, ...prev.filter(r => r !== id)].slice(0, 8))
+    setGotoTarget(line ? { id, line } : null)
+    if (line) setFileModes(prev => prev[id] === 'preview' ? { ...prev, [id]: 'code' } : prev)
   }, [])
 
   const closeTab = useCallback((id: string) => {
@@ -123,6 +126,7 @@ export function useEditorState() {
     recentFiles,
     defaultFileIds,
     navigate,
+    gotoTarget,
     closeTab,
     executeAiAction,
     updateFileContent,

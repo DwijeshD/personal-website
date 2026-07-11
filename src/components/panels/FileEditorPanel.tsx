@@ -21,6 +21,8 @@ interface Props {
   onModeChange: (m: ViewMode) => void
   /** Optional custom preview renderer — used for built-in panels (preview mode only) */
   previewNode?: React.ReactNode
+  /** Line to scroll to and place the cursor on (e.g. from a search-result click) */
+  gotoLine?: number
 }
 
 function liveRenderer(filename: string, content: string): React.ReactNode {
@@ -48,7 +50,7 @@ function EditorSkeleton() {
 
 // Monaco-backed code editor pane — uncontrolled to preserve cursor/selection.
 // External content changes (e.g. AI writes) are pushed imperatively via ref.
-function CodePane({ filename, content, onChange }: { filename: string; content: string; onChange: (v: string) => void }) {
+function CodePane({ filename, content, onChange, gotoLine }: { filename: string; content: string; onChange: (v: string) => void; gotoLine?: number }) {
   const editorRef     = useRef<MonacoTypes.editor.IStandaloneCodeEditor | null>(null)
   const internalValue = useRef(content)
 
@@ -62,6 +64,14 @@ function CodePane({ filename, content, onChange }: { filename: string; content: 
     model.setValue(content)
     if (pos) ed.setPosition(pos)
   }, [content])
+
+  useEffect(() => {
+    const ed = editorRef.current
+    if (!ed || !gotoLine) return
+    ed.revealLineInCenter(gotoLine)
+    ed.setPosition({ lineNumber: gotoLine, column: 1 })
+    ed.focus()
+  }, [gotoLine])
 
   return (
     <div className="h-full w-full bg-[#1e1e1e]">
@@ -80,6 +90,11 @@ function CodePane({ filename, content, onChange }: { filename: string; content: 
         root?.querySelectorAll<HTMLElement>('.view-lines, .lines-content').forEach(el => {
           el.style.setProperty('background', 'transparent', 'important')
         })
+        if (gotoLine) {
+          ed.revealLineInCenter(gotoLine)
+          ed.setPosition({ lineNumber: gotoLine, column: 1 })
+          ed.focus()
+        }
       }}
       onChange={(val) => {
         const v = val ?? ''
@@ -114,7 +129,7 @@ function CodePane({ filename, content, onChange }: { filename: string; content: 
   )
 }
 
-export default function FileEditorPanel({ filename, content, onChange, mode, onModeChange, previewNode }: Props) {
+export default function FileEditorPanel({ filename, content, onChange, mode, onModeChange, previewNode, gotoLine }: Props) {
   // All file types support preview — split uses live renderer, preview uses static panel if available
   const splitPane   = liveRenderer(filename, content)
   const previewPane = previewNode ?? liveRenderer(filename, content)
@@ -146,14 +161,14 @@ export default function FileEditorPanel({ filename, content, onChange, mode, onM
       <div className="flex-1 min-h-0 flex relative z-10">
         {mode === 'code' && (
           <div className="flex-1 min-h-0">
-            <CodePane filename={filename} content={content} onChange={onChange} />
+            <CodePane filename={filename} content={content} onChange={onChange} gotoLine={gotoLine} />
           </div>
         )}
 
         {mode === 'split' && (
           <>
             <div className="flex-1 min-h-0 border-r border-vsc-border/40">
-              <CodePane filename={filename} content={content} onChange={onChange} />
+              <CodePane filename={filename} content={content} onChange={onChange} gotoLine={gotoLine} />
             </div>
             <div className="flex-1 h-full overflow-hidden bg-vsc-bg">
               {splitPane}

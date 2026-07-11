@@ -201,6 +201,7 @@ export default function VSCodeLayout() {
                       onChange={(v) => editor.updateFileContent(editor.activeTab, v, filename)}
                       mode={editor.fileModes[editor.activeTab] ?? defaultMode(filename)}
                       onModeChange={(m) => editor.setFileModes(prev => ({ ...prev, [editor.activeTab]: m }))}
+                      gotoLine={editor.gotoTarget?.id === editor.activeTab ? editor.gotoTarget.line : undefined}
                     />
                   )
                 })()}

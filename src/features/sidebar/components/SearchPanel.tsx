@@ -15,7 +15,7 @@ interface Props {
   workspaceFolders: CustomFolder[]
   fileContents: Record<string, string>
   defaultContents: Record<string, string>
-  onNavigate: (id: string) => void
+  onNavigate: (id: string, line?: number) => void
 }
 
 export function SearchPanel({
@@ -81,7 +81,7 @@ export function SearchPanel({
                   {file.hits.map(({ line, lineNum }) => (
                     <div
                       key={lineNum}
-                      onClick={() => { onNavigate(file.id); onSearchChange('') }}
+                      onClick={() => { onNavigate(file.id, lineNum); onSearchChange('') }}
                       className="flex items-start gap-2 pl-8 pr-2 py-0.5 cursor-pointer hover:bg-vsc-hover/50 transition-colors"
                     >
                       <span className="text-[10px] text-vsc-muted w-6 text-right shrink-0 pt-px">{lineNum}</span>
