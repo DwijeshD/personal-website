@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 interface Props {
   activeTab: string
@@ -9,7 +9,6 @@ interface Props {
 }
 
 export default function UrlSync({ activeTab, navigate }: Props) {
-  const router = useRouter()
   const params = useSearchParams()
   const initialised = useRef(false)
 
@@ -21,15 +20,18 @@ export default function UrlSync({ activeTab, navigate }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Sync active tab → URL
+  // Sync active tab → URL. Use the History API, not router.replace: this only
+  // needs the address bar updated. router.replace triggers a Next navigation
+  // (RSC refetch + useSearchParams update) which can remount the tree and
+  // feed back into this effect — a loop the PDF iframe makes visible/heavy.
   useEffect(() => {
     if (!initialised.current) return
     const filename = activeTab.startsWith('file:') ? activeTab.slice(5) : null
     if (!filename) return
     const url = new URL(window.location.href)
     url.searchParams.set('file', filename)
-    router.replace(url.pathname + url.search, { scroll: false })
-  }, [activeTab, router])
+    window.history.replaceState(null, '', url.pathname + url.search)
+  }, [activeTab])
 
   return null
 }
