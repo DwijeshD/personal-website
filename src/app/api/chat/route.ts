@@ -11,12 +11,14 @@ const MAX_MSG_LENGTH = 2000
 const MAX_BODY_BYTES = 50_000
 const MODEL_TIMEOUT  = 45_000
 
-// openrouter/free lets OpenRouter pick the best available free model at
-// request time — no hardcoded slug to go stale when a provider deprecates
-// a model. Occasional bad picks (e.g. a model leaking a moderation tag
-// instead of a real reply) are caught client-side, see isJunkOnly in
-// CopilotPanel.
+// openrouter/auto-beta lets OpenRouter route each request to the best
+// available model (incl. paid) at request time — no hardcoded slug to go
+// stale when a provider deprecates a model. openrouter/free kept as a
+// fallback: the loop below skips to it on 429/404. Occasional bad picks
+// (e.g. a model leaking a moderation tag instead of a real reply) are
+// caught client-side, see isJunkOnly in CopilotPanel.
 const CHAT_MODELS = [
+  'openrouter/auto-beta',
   'openrouter/free',
 ]
 
