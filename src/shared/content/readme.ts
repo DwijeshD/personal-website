@@ -335,52 +335,45 @@ Testing is included because the site has real application behaviour. It is not j
 
 ## Architecture
 
-\`\`\`txt
-┌─────────────────────────────────────────────┐
-│                 Browser User                │
-└─────────────────────┬───────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────┐
-│              Next.js Application            │
-│                                             │
-│  VS Code Shell                              │
-│  ├─ Activity Bar                            │
-│  ├─ Sidebar / Explorer                      │
-│  ├─ Tabs                                    │
-│  ├─ Monaco Editor                           │
-│  ├─ Live Preview                            │
-│  ├─ Terminal                                │
-│  ├─ Command Palette                         │
-│  └─ Status Bar                              │
-└─────────────────────┬───────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────┐
-│              Internal App Logic             │
-│                                             │
-│  ├─ Virtual File System                     │
-│  ├─ File Query Routing                      │
-│  ├─ Project Data                            │
-│  ├─ Profile / Experience Data               │
-│  ├─ Terminal Command Parser                 │
-│  ├─ Theme State                             │
-│  ├─ Editor State                            │
-│  └─ Preview Rendering                       │
-└─────────────────────┬───────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────┐
-│              External Integrations          │
-│                                             │
-│  ├─ GitHub API                              │
-│  ├─ AI API Route                            │
-│  ├─ Vercel Analytics                        │
-│  ├─ Vercel Speed Insights                   │
-│  ├─ Sentry Monitoring                       │
-│  ├─ Microsoft Clarity                       │
-│  └─ Vercel Deployment                       │
-└─────────────────────────────────────────────┘
+\`\`\`mermaid
+graph TD
+    User["Browser User"]
+
+    subgraph Shell["Next.js Application — VS Code Shell"]
+        ActivityBar["Activity Bar"]
+        Sidebar["Sidebar / Explorer"]
+        Tabs["Tabs"]
+        Monaco["Monaco Editor"]
+        Preview["Live Preview"]
+        Terminal["Terminal"]
+        Palette["Command Palette"]
+        StatusBar["Status Bar"]
+    end
+
+    subgraph Logic["Internal App Logic"]
+        VFS["Virtual File System"]
+        Routing["File Query Routing"]
+        ProjectData["Project Data"]
+        ProfileData["Profile / Experience Data"]
+        CmdParser["Terminal Command Parser"]
+        ThemeState["Theme State"]
+        EditorState["Editor State"]
+        RenderEngine["Preview Rendering"]
+    end
+
+    subgraph External["External Integrations"]
+        GitHub["GitHub API"]
+        AIRoute["AI API Route"]
+        Analytics["Vercel Analytics"]
+        SpeedInsights["Vercel Speed Insights"]
+        Sentry["Sentry Monitoring"]
+        Clarity["Microsoft Clarity"]
+        Deploy["Vercel Deployment"]
+    end
+
+    User --> Shell
+    Shell --> Logic
+    Logic --> External
 \`\`\`
 
 ---

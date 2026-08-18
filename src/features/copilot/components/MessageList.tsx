@@ -45,9 +45,9 @@ export function MessageList({
   return (
     <div className="space-y-4 px-3 py-4 font-mono text-sm">
       {messages.map((m, i) => (
-        <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+        <div key={i} className={`flex gap-2 items-center ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
           {m.role === 'assistant' && (
-            <div className="shrink-0 mt-0.5"><CopilotIcon size={20} muted /></div>
+            <div className="shrink-0 self-center"><CopilotIcon size={20} muted /></div>
           )}
           <div className="flex flex-col gap-1 max-w-[88%]">
             {m.role === 'assistant' && m.thinking && (
