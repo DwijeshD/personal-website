@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "test:copilot-smoke": "node --experimental-strip-types scripts/copilot-smoke-test.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
