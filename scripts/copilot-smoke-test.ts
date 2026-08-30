@@ -25,7 +25,8 @@ const CASES = [
 // pre-check before spending a judge call.
 function looksJunk(text: string): string | null {
   if (!text.trim()) return 'empty response'
-  if (/^\s*(user\s+)?safety\s*:\s*\w+\.?\s*$/i.test(text)) return 'bare moderation tag'
+  const lines = text.trim().split('\n').filter(l => l.trim())
+  if (lines.length > 0 && lines.every(l => /^\s*(user\s+)?safety(\s+categories)?\s*:\s*.+$/i.test(l))) return 'bare moderation tag'
   if (/^\s*here'?s\s+a?\s*thinking\s+process/i.test(text)) return 'leaked chain-of-thought'
   if (/^\s*(let\s+me\s+think|analyz(e|ing)\s+user\s+input)/i.test(text)) return 'leaked chain-of-thought'
   if (/<think>|<\|im_end\|>|<\/assistant>/i.test(text)) return 'leaked template/reasoning tags'

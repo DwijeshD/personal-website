@@ -224,11 +224,15 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
 
       networkDoneRef.current = true  // signal display interval to stop after draining
 
-      // Some free models leak a bare moderation verdict, or narrate their raw
-      // chain-of-thought as prose instead of an actual reply (untagged, so
-      // parseThinkBlocks' <think> stripping never sees it)
+      // Some free models leak a bare moderation verdict (sometimes as two
+      // lines — "User Safety: ..." + "Safety Categories: ..." — so this
+      // checks every non-empty line matches a moderation-line shape, not
+      // just the first), or narrate their raw chain-of-thought as prose
+      // instead of an actual reply (untagged, so parseThinkBlocks' <think>
+      // stripping never sees it)
+      const moderationLines = rawAccumRef.current.trim().split('\n').filter(l => l.trim())
       const isJunkOnly =
-        /^\s*(user\s+)?safety\s*:\s*\w+\.?\s*$/i.test(rawAccumRef.current) ||
+        (moderationLines.length > 0 && moderationLines.every(l => /^\s*(user\s+)?safety(\s+categories)?\s*:\s*.+$/i.test(l))) ||
         /^\s*here'?s\s+a?\s*thinking\s+process/i.test(rawAccumRef.current) ||
         /^\s*(let\s+me\s+think|analyz(e|ing)\s+user\s+input)/i.test(rawAccumRef.current)
 
