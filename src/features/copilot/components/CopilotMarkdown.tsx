@@ -15,7 +15,7 @@ export function CopilotMarkdown({ content }: { content: string }) {
         h1: ({ children }) => <div className="font-semibold text-vsc-text text-[12px] mt-1.5 mb-0.5">{children}</div>,
         h2: ({ children }) => <div className="font-semibold text-vsc-text text-[12px] mt-1.5 mb-0.5">{children}</div>,
         h3: ({ children }) => <div className="font-semibold text-vsc-text text-[12px] mt-1.5 mb-0.5">{children}</div>,
-        p: ({ children }) => <div>{children}</div>,
+        p: ({ children }) => <div className="mt-2 first:mt-0">{children}</div>,
       }}
     >{content}</ReactMarkdown>
   )

@@ -81,7 +81,7 @@ export default function DinoGame({ onStop }: DinoGameProps) {
 
     let started = false, over = false
     let dy = GY - DH, vy = 0, grounded = true, ducking = false
-    let speed = 6, score = 0, hi = 0, tick = 0
+    let speed = 4.5, score = 0, hi = 0, tick = 0
     let nextObs = 60 + Math.random() * 60, horizX = 0
     type Obs = { x: number; w: number; h: number; type: 'S'|'L'|'P'; py?: number }
     let obs: Obs[] = []
@@ -90,11 +90,11 @@ export default function DinoGame({ onStop }: DinoGameProps) {
     function jump() {
       if (!started) { started = true; return }
       if (over)     { doRestart(); return }
-      if (grounded) { vy = -8; grounded = false; ducking = false }
+      if (grounded) { vy = -10; grounded = false; ducking = false }
     }
     function doRestart() {
       dy = GY - DH; vy = 0; grounded = true; ducking = false
-      speed = 6; score = 0; tick = 0; nextObs = 60 + Math.random() * 60
+      speed = 4.5; score = 0; tick = 0; nextObs = 60 + Math.random() * 60
       over = false; started = true; horizX = 0; obs = []
     }
     function onKey(e: KeyboardEvent) {
@@ -117,7 +117,7 @@ export default function DinoGame({ onStop }: DinoGameProps) {
         tick++
         vy += 0.55; dy += vy
         if (dy >= GY - DH) { dy = GY - DH; vy = 0; grounded = true }
-        speed = 6 + Math.floor(score / 200) * 0.5
+        speed = 4.5 + Math.floor(score / 200) * 0.5
         score++; horizX += speed
         for (const c of clouds) {
           c.x -= speed * 0.3

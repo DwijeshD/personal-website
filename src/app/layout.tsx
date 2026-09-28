@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     'Backend engineer and applied ML practitioner. BSc Computer Science (First Class Honours), University of Southampton. Building production-grade APIs, AI pipelines, and automation systems.',
   keywords: [
     'Dwijesh Dookraz', 'backend engineer', 'AI systems', 'machine learning',
-    'Python', 'FastAPI', 'PyTorch', 'rPPG', 'software engineer', 'portfolio',
+    'Python', 'FastAPI', 'PyTorch', 'rPPG', 'software engineer', 'personal website',
     'University of Southampton', 'applied ML', 'deep learning',
   ],
   authors: [{ name: 'Dwijesh Dookraz', url: SITE_URL }],
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
       'Backend engineer and applied ML practitioner. Building production-grade APIs, AI pipelines, and deep learning systems.',
     type: 'profile',
     url: SITE_URL,
-    siteName: 'Dwijesh Dookraz — Portfolio',
+    siteName: 'Dwijesh Dookraz — Personal Website',
     images: [
       {
         url: '/og-image.png',
@@ -104,19 +104,19 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: 'Dwijesh Dookraz — Portfolio',
+      name: 'Dwijesh Dookraz — Personal Website',
       description:
-        'Portfolio of Dwijesh Dookraz — backend engineer and applied ML practitioner.',
+        'Personal Website of Dwijesh Dookraz — backend engineer and applied ML practitioner.',
       author: { '@id': `${SITE_URL}/#person` },
     },
     {
       '@type': 'SoftwareApplication',
       '@id': `${SITE_URL}/#app`,
-      name: 'Portfolio — VS Code',
+      name: 'Personal Website — VS Code',
       applicationCategory: 'DeveloperApplication',
       url: SITE_URL,
       description:
-        'Interactive portfolio built as a VS Code clone — Monaco editor, file tree, AI copilot, and terminal.',
+        'Interactive personal website built as a VS Code clone — Monaco editor, file tree, AI copilot, and terminal.',
       author: { '@id': `${SITE_URL}/#person` },
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'GBP' },
     },
@@ -143,7 +143,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {PRELOAD_ICONS.map(href => (
           <link key={href} rel="preload" as="image" type="image/svg+xml" href={href} />
         ))}
-        <link rel="alternate" type="application/rss+xml" title="Dwijesh Dookraz — Portfolio" href="/feed.xml" />
+        <link rel="alternate" type="application/rss+xml" title="Dwijesh Dookraz — Personal Website" href="/feed.xml" />
       </head>
       <body suppressHydrationWarning>
         <script

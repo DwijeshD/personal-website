@@ -1,6 +1,6 @@
 export const README_MD = `<div align="center">
 
-# VS Code Portfolio
+# VS Code Personal Website
 
 **An interactive VS Code environment — not a static page.**
 
@@ -29,23 +29,23 @@ export const README_MD = `<div align="center">
 
 ## Overview
 
-This portfolio is a browser-based VS Code-style environment.
+This personal website is a browser-based VS Code-style environment.
 
 Instead of presenting my work through a normal static landing page, the site gives visitors an interactive developer workspace. Users can browse files, open tabs, inspect project data, use a Monaco-powered editor, view rendered previews, run terminal commands, and ask an AI copilot about my background and technical work.
 
-The interface itself is part of the portfolio. It demonstrates frontend architecture, UI state management, API integration, developer tooling, analytics, monitoring, deployment, and performance-aware design.
+The interface itself is part of the personal website. It demonstrates frontend architecture, UI state management, API integration, developer tooling, analytics, monitoring, deployment, and performance-aware design.
 
-> **Goal:** make the portfolio feel like real software, not a generic personal website.
+> **Goal:** make the personal website feel like real software, not a generic static site.
 
 ---
 
 ## Core Idea
 
-Most portfolios show project cards.
+Most personal websites show project cards.
 
-This portfolio behaves like a small web-based IDE.
+This personal website behaves like a small web-based IDE.
 
-| Standard Portfolio | VS Code Portfolio |
+| Standard Personal Website | VS Code Personal Website |
 |---|---|
 | Static sections | Interactive file workspace |
 | Scroll-based navigation | Explorer, tabs, terminal, and command palette |
@@ -64,9 +64,9 @@ The design is intentionally familiar to developers because it borrows the struct
 | **VS Code Shell** | Activity bar, sidebar, editor tabs, editor area, terminal, and status bar |
 | **Monaco Editor** | Syntax-highlighted viewing for files such as HTML, SVG, TypeScript, Markdown, and JSON |
 | **Live Preview** | Selected files can render visually inside the app |
-| **Project Explorer** | Browse portfolio content through a file-tree interface |
+| **Project Explorer** | Browse personal website content through a file-tree interface |
 | **AI Copilot** | Ask questions about projects, skills, experience, and background; can also create/edit/delete workspace files on request |
-| **Integrated Terminal** | Run portfolio and system commands such as \`whoami\`, \`skills\`, \`projects\`, \`timeline\`, \`contact\`, \`ls\`, \`open\`, \`architecture\`, \`stack\`, \`logs\`, \`deploy\`, \`monitor\`, and \`theme\`, plus easter eggs (\`donut\`, \`dino\`, \`matrix\`, \`neofetch\`, \`fortune\`, \`sudo\`) |
+| **Integrated Terminal** | Run personal website and system commands such as \`whoami\`, \`skills\`, \`projects\`, \`timeline\`, \`contact\`, \`ls\`, \`open\`, \`architecture\`, \`stack\`, \`logs\`, \`deploy\`, \`monitor\`, and \`theme\`, plus easter eggs (\`donut\`, \`dino\`, \`matrix\`, \`neofetch\`, \`fortune\`, \`sudo\`) |
 | **GitHub Integration** | Uses GitHub data to support repository and contribution information |
 | **Query Param File Routing** | Open files are shareable through \`?file=filename.ext\` |
 | **Keyboard Navigation** | Supports VS Code-style shortcuts for faster navigation |
@@ -106,7 +106,7 @@ The design is intentionally familiar to developers because it borrows the struct
 |---|---|---|
 | **Monaco Editor** | Code editor | Gives the site an authentic VS Code-like editing/viewing experience |
 | **Custom Preview Renderer** | Live file rendering | Allows files such as \`home.html\`, \`about.svg\`, and \`README.md\` to render visually |
-| **Virtual File System** | Workspace model | Makes the portfolio behave like a small codebase without exposing private internals |
+| **Virtual File System** | Workspace model | Makes the personal website behave like a small codebase without exposing private internals |
 
 ---
 
@@ -135,7 +135,7 @@ The design is intentionally familiar to developers because it borrows the struct
 
 | Platform | Role | Why It Was Chosen |
 |---|---|---|
-| **Vercel** | Hosting and deployment | Best fit for a Next.js portfolio because it is fast, simple, and low maintenance |
+| **Vercel** | Hosting and deployment | Best fit for a Next.js personal website because it is fast, simple, and low maintenance |
 | **Preview Deployments** | Pre-production testing | Every branch can be tested before production |
 | **Custom Domain** | Public identity | \`dwijesh.dev\` gives the site a clean professional URL |
 
@@ -145,7 +145,7 @@ Vercel was chosen because the project does not need heavy backend infrastructure
 
 ## URL Sync
 
-The portfolio uses query-parameter based file routing.
+The personal website uses query-parameter based file routing.
 
 Instead of separate public routes for every section, the app opens files inside the VS Code-style workspace using the \`file\` query parameter.
 
@@ -171,7 +171,7 @@ This keeps the whole experience inside one interactive editor shell while still 
 
 ## Analytics & Monitoring
 
-The portfolio includes analytics and monitoring because it behaves like a real frontend application.
+The personal website includes analytics and monitoring because it behaves like a real frontend application.
 
 | Tool | Used For | Why It Was Chosen |
 |---|---|---|
@@ -179,7 +179,7 @@ The portfolio includes analytics and monitoring because it behaves like a real f
 | **Vercel Speed Insights** | Core Web Vitals and performance | Helps identify slow loads, layout shifts, and poor interaction timing |
 | **Sentry** | Error tracking and runtime monitoring | Captures frontend exceptions and production issues |
 | **Microsoft Clarity** | Session replay and heatmaps | Shows real visitor behaviour and interaction patterns |
-| **Application Logs** | Debugging and terminal output | Helps explain system behaviour inside the portfolio interface |
+| **Application Logs** | Debugging and terminal output | Helps explain system behaviour inside the personal website interface |
 
 ### Why These Tools
 
@@ -188,7 +188,7 @@ The portfolio includes analytics and monitoring because it behaves like a real f
 | **Low cost** | Use Vercel-native tooling where possible |
 | **Low maintenance** | Avoid managing separate analytics servers |
 | **Useful data** | Track real performance and runtime failures |
-| **Production mindset** | Treat the portfolio like an actual deployed product |
+| **Production mindset** | Treat the personal website like an actual deployed product |
 | **Recruiter reliability** | Keep the site stable when someone important opens it |
 
 The analytics stack is intentionally lightweight. No bloated enterprise setup. Just enough visibility to know whether the site is fast, usable, and healthy.
@@ -224,7 +224,7 @@ The site uses rich UI components, editor rendering, live previews, icons, analyt
 
 ## SEO Strategy
 
-The main portfolio experience runs inside a single interactive VS Code-style shell.
+The main personal website experience runs inside a single interactive VS Code-style shell.
 
 Files are opened through query parameters:
 
@@ -265,7 +265,7 @@ Explain the heart rate monitoring project.
 What backend experience does he have?
 What machine learning work has he done?
 What is his strongest project?
-How does this portfolio work technically?
+How does this personal website work technically?
 \`\`\`
 
 ### Copilot Design
@@ -277,7 +277,7 @@ How does this portfolio work technically?
 | **File Mentions** | \`@file.ext\` attaches a workspace file's content to the conversation |
 | **File Editing** | Copilot can create, update, or delete workspace files via a structured action format |
 | **Bug Report Widget** | Files a GitHub issue directly from the chat |
-| **System Prompt** | Keeps answers focused on portfolio-relevant information |
+| **System Prompt** | Keeps answers focused on personal website-relevant information |
 | **API Route** | Keeps AI calls server-side |
 | **Streaming UI** | Makes responses feel faster |
 | **Rate Limiting** | Controls cost and prevents abuse |
@@ -301,7 +301,7 @@ The copilot is included because it demonstrates practical AI product integration
 | **Private Data** | Do not expose private repos, private issues, or sensitive metadata |
 | **Dependencies** | Keep packages maintained and remove unused libraries |
 
-The portfolio is public, so the security rule is blunt:
+The personal website is public, so the security rule is blunt:
 
 > Anything shipped to the browser should be safe for anyone to inspect.
 
@@ -382,13 +382,13 @@ graph TD
 
 | Decision | Reason |
 |---|---|
-| **VS Code-style interface** | Familiar to developers and more memorable than a normal portfolio |
+| **VS Code-style interface** | Familiar to developers and more memorable than a normal personal website |
 | **Monaco Editor** | Makes file viewing feel like a real editor |
-| **Virtual file system** | Lets portfolio content behave like a real workspace |
+| **Virtual file system** | Lets personal website content behave like a real workspace |
 | **Query param file routing** | Allows direct file links without leaving the main editor shell |
 | **Terminal commands** | Adds interaction while keeping the developer theme |
 | **AI copilot** | Lets visitors ask direct questions about my work |
-| **GitHub API integration** | Connects the portfolio to real development activity |
+| **GitHub API integration** | Connects the personal website to real development activity |
 | **Vercel deployment** | Low-cost, low-maintenance, strong Next.js support |
 | **Sentry monitoring** | Gives visibility into production errors |
 | **Vercel analytics** | Lightweight analytics without extra infrastructure |
@@ -427,7 +427,7 @@ The \`file\` query parameter controls which workspace file opens by default.
 | **Editor Tabs** | Switch between opened files |
 | **Editor Area** | View source content through Monaco |
 | **Live Preview** | Render supported files visually |
-| **Terminal** | Run portfolio/system commands |
+| **Terminal** | Run personal website/system commands |
 | **Command Palette** | Quickly trigger actions |
 | **Status Bar** | View current file and app state |
 | **AI Copilot** | Ask questions about projects and background |
@@ -439,7 +439,7 @@ The \`file\` query parameter controls which workspace file opens by default.
 Open the integrated terminal and run:
 
 \`\`\`txt
-PORTFOLIO
+PERSONAL
   whoami          short bio and background
   skills          list technologies and technical areas
   projects        project list
@@ -495,7 +495,7 @@ No fake commands are listed here. Only actual supported commands should appear.
 | File | Contents |
 |---|---|
 | \`home.html\` | Landing page, intro, profile overview, and contact information |
-| \`about.svg\` | Visual explanation of the portfolio system |
+| \`about.svg\` | Visual explanation of the personal website system |
 | \`projects.ts\` | Structured project data with technologies, descriptions, and links |
 | \`resume.pdf\` | Embedded PDF resume |
 | \`README.md\` | Project documentation |

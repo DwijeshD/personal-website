@@ -1,7 +1,7 @@
 {
   "name": "dwijesh-portfolio",
   "version": "1.0.0",
-  "description": "Personal portfolio built as a VS Code clone — Monaco editor, file tree, AI copilot, source control panel.",
+  "description": "Personal website built as a VS Code clone — Monaco editor, file tree, AI copilot, source control panel.",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

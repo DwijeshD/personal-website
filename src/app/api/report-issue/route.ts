@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     description || '_No description provided._',
     '',
     '---',
-    `*Reported via portfolio chat · ${new Date().toUTCString()}*`,
+    `*Reported via site chat · ${new Date().toUTCString()}*`,
   ].join('\n')
 
   const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/issues`, {

@@ -79,6 +79,10 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
   const inputRef       = useRef<HTMLTextAreaElement>(null)
   const abortRef       = useRef<AbortController | null>(null)
   const activeModelRef = useRef<string | null>(null)
+  // ponytail: sticky last-attached file so a follow-up edit request ("add X
+  // to the const") doesn't silently lose context just because the user
+  // didn't re-type @filename — cleared only when a different file is mentioned.
+  const lastFileCtxRef = useRef<Array<{ path: string; content: string }>>([])
 
   const { rawAccumRef, displayIdxRef, networkDoneRef, pendingChatActionRef } = useStreamingDisplay(
     streaming,
@@ -138,20 +142,22 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
 
   const BUG_PREFILL = 'I encountered a bug with the website: '
 
-  async function sendChat(text?: string) {
+  async function sendChat(text?: string, retryCount = 0) {
     const content = (text ?? input).trim()
     if (!content || streaming) return
 
-    const aiContext = await maybeAutoLogBug(content)
-    if (aiContext !== content) setPendingBugMsg(null)
+    const aiContext = retryCount === 0 ? await maybeAutoLogBug(content) : content
+    if (retryCount === 0 && aiContext !== content) setPendingBugMsg(null)
 
     const userMsg: Message = { role: 'user', content }
     const history = [...messages, userMsg]
     const historyForApi = aiContext !== content
       ? [...messages, { role: 'user' as const, content: aiContext }]
       : history
-    setMessages([...history, { role: 'assistant', content: '', thinking: '' }])
-    setInput('')
+    if (retryCount === 0) {
+      setMessages([...history, { role: 'assistant', content: '', thinking: '' }])
+      setInput('')
+    }
     rawAccumRef.current = ''
     displayIdxRef.current = 0
     networkDoneRef.current = false
@@ -159,9 +165,12 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
 
     pushLog('info', 'REQUEST', `msg #${history.length} — "${content.slice(0, 80)}${content.length > 80 ? '…' : ''}"`)
 
-    const fileCtx = attachedFiles(content, workspaceFiles, fileContents)
-    if (fileCtx.length > 0) pushLog('info', 'FILES', `attaching ${fileCtx.length} file(s): ${fileCtx.map(f => f.path).join(', ')}`)
+    const mentioned = attachedFiles(content, workspaceFiles, fileContents)
+    const fileCtx = mentioned.length > 0 ? mentioned : lastFileCtxRef.current
+    if (mentioned.length > 0) lastFileCtxRef.current = mentioned
+    if (fileCtx.length > 0) pushLog('info', 'FILES', `attaching ${fileCtx.length} file(s)${mentioned.length === 0 ? ' (carried over)' : ''}: ${fileCtx.map(f => f.path).join(', ')}`)
 
+    // eslint-disable-next-line react-hooks/purity -- sendChat only ever runs from an event handler, never during render
     const requestSentAt = Date.now()
     const controller = new AbortController()
     abortRef.current = controller
@@ -242,6 +251,14 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         `ended — ${totalChars} chars buffered, finish_reason: ${finishReason ?? 'not provided'}`,
       )
       if (totalChars === 0 || isJunkOnly) {
+        // openrouter/free routes to a different underlying model each call,
+        // so a junk/empty pick is usually a one-off — retry once silently
+        // before bothering the user.
+        if (retryCount === 0) {
+          pushLog('warn', 'RETRY', 'empty/junk response — retrying once automatically')
+          await sendChat(content, 1)
+          return
+        }
         setStreaming(false)
         pushLog('warn', 'EMPTY', isJunkOnly
           ? 'model returned a moderation tag instead of a reply'
@@ -430,7 +447,7 @@ export default function CopilotPanel({ onThinkingChange, onClose, onPendingActio
         <div className="flex items-center gap-0.5 ml-auto pr-1">
           {messages.length > 0 && (
             <button
-              onClick={() => setMessages([])}
+              onClick={() => { setMessages([]); lastFileCtxRef.current = [] }}
               title="New chat"
               className="p-1.5 text-vsc-muted hover:text-vsc-text transition-colors rounded hover:bg-vsc-hover"
             >

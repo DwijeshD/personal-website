@@ -39,7 +39,12 @@ export default function MatrixEffect({ onStop }: MatrixEffectProps) {
     const ro = new ResizeObserver(resize)
     ro.observe(cv)
 
-    function onKey() { onStop() }
+    // ponytail: the Enter keydown that ran the "matrix" command is still
+    // bubbling to window when this effect mounts, so an unguarded listener
+    // catches it and exits instantly. Arm after a short delay.
+    let armed = false
+    const armTimer = setTimeout(() => { armed = true }, 200)
+    function onKey() { if (armed) onStop() }
     window.addEventListener('keydown', onKey)
 
     const randChar = () => CHARS[Math.floor(Math.random() * CHARS.length)]
@@ -71,6 +76,7 @@ export default function MatrixEffect({ onStop }: MatrixEffectProps) {
 
     return () => {
       cancelAnimationFrame(raf)
+      clearTimeout(armTimer)
       ro.disconnect()
       window.removeEventListener('keydown', onKey)
     }
