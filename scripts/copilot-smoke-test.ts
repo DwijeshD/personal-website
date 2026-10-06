@@ -87,9 +87,15 @@ async function main() {
   for (const c of CASES) {
     process.stdout.write(`Running: ${c.label}... `)
     try {
-      const reply = await callModel(MODEL, AI_SYSTEM_PROMPT, c.prompt)
-      const junkReason = looksJunk(reply)
-      const verdict = junkReason ? { ok: false, reason: junkReason } : await judge(c.prompt, reply)
+      // ponytail: openrouter/free routes to a random model per call, so junk is
+      // flaky. The live app retries junk too; mirror that. Fail only if all attempts fail.
+      let reply = ''
+      let verdict = { ok: false, reason: '' }
+      for (let attempt = 0; attempt < 3 && !verdict.ok; attempt++) {
+        reply = await callModel(MODEL, AI_SYSTEM_PROMPT, c.prompt)
+        const junkReason = looksJunk(reply)
+        verdict = junkReason ? { ok: false, reason: junkReason } : await judge(c.prompt, reply)
+      }
       results.push({ label: c.label, prompt: c.prompt, reply, ...verdict })
       console.log(verdict.ok ? 'PASS' : `FAIL (${verdict.reason})`)
     } catch (e) {
